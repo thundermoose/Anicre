@@ -1,6 +1,7 @@
 #ifndef __MR_BASE_READER_HH__
 #define __MR_BASE_READER_HH__
 
+#include "error.hh"
 #include "mr_file_reader.hh"
 
 class mr_base_reader
@@ -38,8 +39,8 @@ public:
 					 &block,sizeof(block)))		\
       return false;							\
     if (_debug >= 1)							\
-      printf (" Got correctly sized block for '" #block			\
-              "' (%" PRIuPTR " bytes).\n",sizeof(block));		\
+      INFO(" Got correctly sized block for '" #block			\
+	   "' (%" PRIuPTR " bytes).",sizeof(block));			\
     cur_offset += sizeof(block) + 2 * sizeof(uint32_t);			\
   } while (0)
 
@@ -49,8 +50,8 @@ public:
 					 sizeof(block)))		\
       return false;							\
     if (_debug >= 1)							\
-      printf (" Got correctly sized block for '" #block			\
-              "' (%" PRIuPTR " bytes).\n",sizeof(block));		\
+      INFO(" Got correctly sized block for '" #block			\
+	   "' (%" PRIuPTR " bytes).",sizeof(block));			\
     offset = cur_offset + sizeof(uint32_t);				\
     cur_offset += sizeof(block) + 2 * sizeof(uint32_t);			\
   } while (0)
@@ -61,10 +62,10 @@ public:
 					 sizeof(block_item)*nitems))	\
       return false;							\
     if (_debug >= 1)							\
-      printf (" Got correctly sized block for %" PRIuPTR		\
-	      " items of '" #block_item					\
-              "' (%" PRIuPTR " bytes).\n",				\
-	      (size_t)nitems,sizeof(block_item)*nitems);		\
+      INFO(" Got correctly sized block for %" PRIuPTR			\
+	   " items of '" #block_item					\
+	   "' (%" PRIuPTR " bytes).",					\
+	   (size_t)nitems,sizeof(block_item)*nitems);			\
     offset = cur_offset + sizeof(uint32_t);				\
     cur_offset += sizeof(block_item) * nitems + 2 * sizeof(uint32_t);	\
   } while (0)
@@ -74,10 +75,9 @@ public:
     size_t __allocsize = sizeof(items[0]) * nitems;			\
     items = (__typeof__(items)) malloc(__allocsize);			\
     if (!items) {							\
-      fprintf(stderr," Memory allocation failure: %" PRIuPTR " bytes "	\
-              "for %" PRIuPTR " items of '" #items "'.\n",		\
-              __allocsize,(size_t)nitems);				\
-      exit(1);								\
+      FATAL(" Memory allocation failure: %" PRIuPTR " bytes "		\
+	    "for %" PRIuPTR " items of '" #items "'.",			\
+	    __allocsize,(size_t)nitems);				\
     }									\
     _file_reader->get_fortran_block_data(offset,items,__allocsize);	\
   } while (0)
@@ -86,9 +86,9 @@ public:
   do {									\
     if ((value) < (min) || (value) > (max)) {				\
       if (_debug > 1)							\
-        printf (" Value '" #value "' (%d) outside "			\
-		"reasonable range [%d,%d].\n",				\
-                (value),(min),(max));					\
+        INFO(" Value '" #value "' (%d) outside "			\
+	     "reasonable range [%d,%d].",				\
+	     (value),(min),(max));					\
       return false;							\
     }									\
   } while (0) 

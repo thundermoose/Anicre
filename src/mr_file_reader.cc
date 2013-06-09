@@ -1,4 +1,5 @@
 
+#include "error.hh"
 #include "mr_file_reader.hh"
 
 #include <stdio.h>
@@ -32,8 +33,7 @@ void mr_file_reader::open(const char *filename)
   if (_fd == -1)
     {
       perror("open");
-      fprintf (stderr,"Failure opening '%s'.",filename);
-      exit(1);
+      FATAL("Failure opening '%s'.",filename);
     }
 }
 
@@ -46,7 +46,7 @@ bool mr_file_reader::has_fortran_block(uint64_t offset,
   if (lseek(_fd,offset,SEEK_SET) == -1)
     {
       perror("lseek");
-      exit(1);
+      FATAL("Seek error.");
     }
 
   n = read(_fd,&check,sizeof(uint32_t));
@@ -54,7 +54,7 @@ bool mr_file_reader::has_fortran_block(uint64_t offset,
   if (n == -1)
     {
       perror("read");
-      exit(1);
+      FATAL("Read error.");
     }
   if (n < (ssize_t) sizeof(uint32_t))
     return false;
@@ -68,7 +68,7 @@ bool mr_file_reader::has_fortran_block(uint64_t offset,
       if (lseek(_fd,offset+sizeof(uint32_t)+check,SEEK_SET) == -1)
 	{
 	  perror("lseek");
-	  exit(1);
+	  FATAL("Seek error.");
 	}
       
       n = read(_fd,&check2,sizeof(uint32_t));
@@ -76,21 +76,21 @@ bool mr_file_reader::has_fortran_block(uint64_t offset,
       if (n == -1)
 	{
 	  perror("read");
-	  exit(1);
+	  FATAL("Read error.");
 	}
       if (n < (ssize_t) sizeof(uint32_t))
-	fprintf (stderr," At offset %" PRIuPTR", "
-		 "no fortran block (head -> tail outside file).\n",
-		 offset);
+	INFO(" At offset %" PRIuPTR", "
+	     "no fortran block (head -> tail outside file).",
+	     offset);
       else if (check2 != check)
-	fprintf (stderr," At offset %" PRIuPTR", "
-		 "no fortran block (head != tail).\n",
-		 offset);
+	INFO(" At offset %" PRIuPTR", "
+	     "no fortran block (head != tail).",
+	     offset);
       else
-	fprintf (stderr," At offset %" PRIuPTR", "
-		 "possible fortran block of size %" PRIuPTR" (head == tail), "
-		 "(expected %" PRIuPTR").\n",
-		 offset,(size_t) check,(size_t) size);
+	INFO(" At offset %" PRIuPTR", "
+	     "possible fortran block (head == tail), size %" PRIuPTR", "
+	     "(expected %" PRIuPTR").",
+	     offset,(size_t) check,(size_t) size);
 
       return false;
     }
@@ -98,7 +98,7 @@ bool mr_file_reader::has_fortran_block(uint64_t offset,
   if (lseek(_fd,offset+sizeof(uint32_t)+size,SEEK_SET) == -1)
     {
       perror("lseek");
-      exit(1);
+      FATAL("Seek error.");
     }
 
   n = read(_fd,&check,sizeof(uint32_t));
@@ -106,7 +106,7 @@ bool mr_file_reader::has_fortran_block(uint64_t offset,
   if (n == -1)
     {
       perror("read");
-      exit(1);
+      FATAL("Read error.");
     }
   if (n < (ssize_t) sizeof(uint32_t) || check != size)
     return false;
@@ -120,7 +120,7 @@ void mr_file_reader::get_fortran_block_data(uint64_t offset_data,
   if (lseek(_fd,offset_data,SEEK_SET) == -1)
     {
       perror("lseek");
-      exit(1);
+      FATAL("Seek error.");
     }
 
   ssize_t n;
@@ -129,12 +129,11 @@ void mr_file_reader::get_fortran_block_data(uint64_t offset_data,
   if (n == -1)
     {
       perror("read");
-      exit(1);
+      FATAL("Read error.");
     }
   if (n != (ssize_t) size)
     {
-      fprintf(stderr," Incomplete read of %" PRIuPTR " bytes.\n",size);
-      exit(1);
+      FATAL(" Incomplete read of %" PRIuPTR " bytes.",size);
     }
 }
 

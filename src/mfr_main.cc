@@ -41,27 +41,23 @@ mr_base_reader *identify_file(mr_file_reader *file_reader)
 
   if (matches > 1)
     {
-      fprintf (stderr,
-	       "Multiple format matches for file '%s':\n",
-	       file_reader->_filename);
+      WARNING("Multiple format matches for file '%s':",
+	      file_reader->_filename);
       bool firstmatch = true;
       for (int i = 0; i < (int) countof(readers); i++)
 	{
 	  if (readers[i])
-	    fprintf (stderr,
-		     "%s%s",
-		     firstmatch ? "" : ", ",
-		     readers[i]->get_format_name());
+	    WARNING("%s%s",
+		    firstmatch ? "" : ", ",
+		    readers[i]->get_format_name());
 	  firstmatch = false;
 	}
-      fprintf (stderr,
-	       "\n");
       return NULL;
     }
 
   if (matching)
-    printf ("Found format '%s' for '%s'.\n",
-	    matching->get_format_name(),file_reader->_filename);
+    INFO("Found format '%s' for '%s'.",
+	 matching->get_format_name(),file_reader->_filename);
 
   return matching;
 }
@@ -122,20 +118,16 @@ int main(int argc,char *argv[])
 
   if (!reader)
     {
-      fprintf (stderr,
-	       "No format match for file '%s'.\n",
-	       file_reader->_filename);
-      exit(1);
+      FATAL("No format match for file '%s'.",
+	    file_reader->_filename);
     }
 
   if (!reader->level2_read())
     {
-      fprintf (stderr,
-	       "File %s does not match detailed expectations "
-	       "for format '%s'.\n",
-	       reader->_file_reader->_filename,
-	       reader->get_format_name());
-      exit(1);
+      FATAL("File %s does not match detailed expectations "
+	    "for format '%s'.",
+	    reader->_file_reader->_filename,
+	    reader->get_format_name());
     }
 
   reader->dump_info();
