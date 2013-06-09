@@ -161,22 +161,45 @@ public:
   virtual void dump_info()
   {
     printf ("===================================\n");
-    printf ("== Header ==\n");
-    printf ("num_of_shell ..: %d\n",_header.num_of_shell);
-    printf ("num_of_jm .....: %d\n",_header.num_of_jm);
-    printf ("nsd ...........: %d\n",_header.nsd);
-    printf ("A[0,1] ........: %3d %3d\n",_header.A[0],_header.A[1]);
-    printf ("nslt[0,1] .....: %3d %3d\n",_header.nslt[0],_header.nslt[1]);
+    printf ("== %sHeader%s ==\n",
+	    CT_OUT(BOLD_GREEN),
+	    CT_OUT(NORM_DEF_COL));
+    printf ("num_of_shell ..: %s%d%s\n",
+	    CT_OUT(BOLD_MAGENTA),
+	    _header.num_of_shell,
+	    CT_OUT(NORM_DEF_COL));
+    printf ("num_of_jm .....: %s%d%s\n",
+	    CT_OUT(BOLD_MAGENTA),
+	    _header.num_of_jm,
+	    CT_OUT(NORM_DEF_COL));
+    printf ("nsd ...........: %s%d%s\n",
+	    CT_OUT(BOLD_MAGENTA),
+	    _header.nsd,
+	    CT_OUT(NORM_DEF_COL));
+    printf ("A[0,1] ........: %s%3d %3d%s\n",
+	    CT_OUT(BOLD_MAGENTA),
+	    _header.A[0],_header.A[1],
+	    CT_OUT(NORM_DEF_COL));
+    printf ("nslt[0,1] .....: %s%3d %3d%s\n",
+	    CT_OUT(BOLD_MAGENTA),
+	    _header.nslt[0],_header.nslt[1],
+	    CT_OUT(NORM_DEF_COL));
 
     printf ("===================================\n");
-    printf ("== nr, ll, jj ==\n");
+    printf ("== %snr, ll, jj%s ==\n",
+	    CT_OUT(BOLD_GREEN),
+	    CT_OUT(NORM_DEF_COL));
 
     for (uint32_t i = 0; i < 10 && i < _header.num_of_shell; i++)
-      printf ("#%3d: %3d %3d %3d\n",
+      printf ("#%s%3d%s: %s%3d %3d %3d%s\n",
+	      CT_OUT(BOLD_BLUE),
 	      i,
+	      CT_OUT(NORM_DEF_COL),
+	      CT_OUT(BOLD_MAGENTA),
 	      _nr_ll_jj[i].nr,
 	      _nr_ll_jj[i].ll,
-	      _nr_ll_jj[i].jj);
+	      _nr_ll_jj[i].jj,
+	      CT_OUT(NORM_DEF_COL));
 
     uint32_t max_nr = 0;
     uint32_t max_ll = 0;
@@ -193,17 +216,25 @@ public:
       }
 
     printf ("...\n");
-    printf (" max: %3d %3d %3d\n",
-	    max_nr, max_ll, max_jj);
+    printf (" max: %s%3d %3d %3d%s\n",
+	    CT_OUT(BOLD_MAGENTA),
+	    max_nr, max_ll, max_jj,
+	    CT_OUT(NORM_DEF_COL));
 
     printf ("===================================\n");
-    printf ("== num, mpr ==\n");
+    printf ("== %snum, mpr%s ==\n",
+	    CT_OUT(BOLD_GREEN),
+	    CT_OUT(NORM_DEF_COL));
 
     for (uint32_t i = 0; i < 10 && i < _header.num_of_jm; i++)
-      printf ("#%3d: %3d %3d\n",
+      printf ("#%s%3d%s: %s%3d %3d%s\n",
+	      CT_OUT(BOLD_BLUE),
 	      i,
+	      CT_OUT(NORM_DEF_COL),
+	      CT_OUT(BOLD_MAGENTA),
 	      _num_mpr[i].num,
-	      _num_mpr[i].mpr);
+	      _num_mpr[i].mpr,
+	      CT_OUT(NORM_DEF_COL));
 
     uint32_t max_num = 0;
     uint32_t max_mpr = 0;
@@ -217,8 +248,10 @@ public:
       }
 
     printf ("...\n");
-    printf (" max: %3d %3d\n",
-	    max_num, max_mpr);
+    printf (" max: %s%3d %3d%s\n",
+	    CT_OUT(BOLD_MAGENTA),
+	    max_num, max_mpr,
+	    CT_OUT(NORM_DEF_COL));
 
     printf ("===================================\n");
   }
