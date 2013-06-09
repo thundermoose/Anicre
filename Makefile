@@ -5,7 +5,7 @@ all: mfr
 
 
 
-mfr: magic_antoine_read.o mr_file_reader.o mr_base_reader.o
+mfr: mfr_main.o mr_file_reader.o mr_base_reader.o
 	$(CXX) $+ -o $@
 
 clean:

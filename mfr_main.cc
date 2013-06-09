@@ -9,11 +9,6 @@
 
 int _debug = 2;
 
-
-
-
-
-
 mr_base_reader *identify_file(mr_file_reader *file_reader)
 {
   mr_base_reader *readers[] = {
