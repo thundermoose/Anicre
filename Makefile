@@ -5,7 +5,8 @@ endif
 
 all: mfr
 
-OBJS = mfr_main.o mr_file_reader.o mr_base_reader.o
+OBJS = mfr_main.o mr_file_reader.o mr_base_reader.o \
+	colourtext.o markconvbold.o
 
 ####################################################################
 
