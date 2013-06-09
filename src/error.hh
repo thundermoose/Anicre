@@ -1,11 +1,12 @@
 
+// File copied more or less directly from UCESB
+
 #ifndef __ERROR_HH__
 #define __ERROR_HH__
 
-#include "location.hh"
-#include "file_line.hh"
 #include "util.hh"
 #include "markconvbold.hh"
+
 #include <stdio.h>
 
 #include <stdarg.h>

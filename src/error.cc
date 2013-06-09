@@ -1,15 +1,14 @@
 
+// File copied more or less directly from UCESB
+
 #include "error.hh"
 
-#include "thread_info_window.hh"
-
-#include "worker_thread.hh"
-#include "thread_buffer.hh"
 #include "colourtext.hh"
 
 #include <sys/types.h>
 
 #include <stdio.h>  // This must be first include
+#include <stdlib.h>
 
 #define FE_DATA_INIT { FE_UNKNOWN,0,0,0 }
 
@@ -143,7 +142,7 @@ struct error_reclaim
   char         _message[0];
 };
 
-extern thread_info_window *_ti_info_window;
+//extern thread_info_window *_ti_info_window;
 
 void formatted_error::eject()
 {

@@ -6,7 +6,7 @@ endif
 all: mfr
 
 OBJS = mfr_main.o mr_file_reader.o mr_base_reader.o \
-	colourtext.o markconvbold.o
+	colourtext.o markconvbold.o error.o
 
 ####################################################################
 
@@ -19,6 +19,8 @@ CXXFLAGS += -ansi -Wall -Wno-unused-function -Wno-unused-label \
         -Wno-non-template-friend -Werror 
 
 SRC_DIRS = src lu_common util
+
+CXXFLAGS += $(addprefix -I ,$(SRC_DIRS))
 
 ####################################################################
 
