@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "error.hh"
+#include "colourtext.hh"
 #include "mr_file_reader.hh"
 #include "mr_base_reader.hh"
 #include "magic_antoine_read.hh"
@@ -23,8 +25,8 @@ mr_base_reader *identify_file(mr_file_reader *file_reader)
 
   for (int i = 0; i < (int) countof(readers); i++)
     {
-      printf ("Trying format '%s' for '%s'.\n",
-	      readers[i]->get_format_name(),file_reader->_filename);
+      INFO("Trying format '%s' for '%s'.",
+	   readers[i]->get_format_name(),file_reader->_filename);
       if (!readers[i]->level1_read())
 	{
 	  delete readers[i];
@@ -75,6 +77,8 @@ void usage(char *cmdname)
 
 int main(int argc,char *argv[])
 {
+  colourtext_init();
+
   const char *_filename = NULL;
 
   for (int i = 1; i < argc; i++)

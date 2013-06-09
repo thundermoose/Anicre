@@ -28,6 +28,8 @@ MFR_OBJS = $(addprefix build_mfr/,$(OBJS))
 
 MFR_AUTO_DEPS = $(MFR_OBJS:%.o=%.d)
 
+include lu_common/makefile_use_curses.inc
+
 ####################################################################
 
 -include $(MFR_AUTO_DEPS) # dependency files (.d)
