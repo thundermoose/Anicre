@@ -72,7 +72,7 @@ public:
 #define ALLOC_GET_FORTRAN_BLOCK_ITEMS(items,nitems,offset)		\
   do {									\
     size_t __allocsize = sizeof(items[0]) * nitems;			\
-    items = (typeof(items)) malloc(__allocsize);			\
+    items = (__typeof__(items)) malloc(__allocsize);			\
     if (!items) {							\
       fprintf(stderr," Memory allocation failure: %" PRIuPTR " bytes "	\
               "for %" PRIuPTR " items of '" #items "'.\n",		\
