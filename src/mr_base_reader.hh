@@ -39,8 +39,8 @@ public:
 					 &block,sizeof(block)))		\
       return false;							\
     if (_debug >= 1)							\
-      INFO(" Got correctly sized block for '" #block			\
-	   "' (%" PRIuPTR " bytes).",sizeof(block));			\
+      INFO(" Good block for '%s' "					\
+	   "(%" PRIuPTR " bytes).", #block, sizeof(block));		\
     cur_offset += sizeof(block) + 2 * sizeof(uint32_t);			\
   } while (0)
 
@@ -50,8 +50,8 @@ public:
 					 sizeof(block)))		\
       return false;							\
     if (_debug >= 1)							\
-      INFO(" Got correctly sized block for '" #block			\
-	   "' (%" PRIuPTR " bytes).",sizeof(block));			\
+      INFO(" Good block for '%s' "					\
+	   "(%" PRIuPTR " bytes).", #block, sizeof(block));		\
     offset = cur_offset + sizeof(uint32_t);				\
     cur_offset += sizeof(block) + 2 * sizeof(uint32_t);			\
   } while (0)
@@ -62,10 +62,10 @@ public:
 					 sizeof(block_item)*nitems))	\
       return false;							\
     if (_debug >= 1)							\
-      INFO(" Got correctly sized block for %" PRIuPTR			\
-	   " items of '" #block_item					\
-	   "' (%" PRIuPTR " bytes).",					\
-	   (size_t)nitems,sizeof(block_item)*nitems);			\
+      INFO(" Good block for %" PRIuPTR					\
+	   " items of '%s' "						\
+	   "(%" PRIuPTR " bytes).",					\
+	   (size_t)nitems, #block_item, sizeof(block_item)*nitems);	\
     offset = cur_offset + sizeof(uint32_t);				\
     cur_offset += sizeof(block_item) * nitems + 2 * sizeof(uint32_t);	\
   } while (0)
@@ -76,8 +76,8 @@ public:
     items = (__typeof__(items)) malloc(__allocsize);			\
     if (!items) {							\
       FATAL(" Memory allocation failure: %" PRIuPTR " bytes "		\
-	    "for %" PRIuPTR " items of '" #items "'.",			\
-	    __allocsize,(size_t)nitems);				\
+	    "for %" PRIuPTR " items of '%s'.",				\
+	    __allocsize, (size_t)nitems, #items);			\
     }									\
     _file_reader->get_fortran_block_data(offset,items,__allocsize);	\
   } while (0)
