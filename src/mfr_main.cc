@@ -96,10 +96,10 @@ int main(int argc,char *argv[])
       }
       else {
 	/* Input file, we hope. */
-	/*
+	
 	if (_filename)
 	  ERROR("Input file already given.");
-	*/
+	
 	_filename = argv[i];
       }
     }
