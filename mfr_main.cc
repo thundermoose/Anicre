@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "mr_file_reader.hh"
 #include "mr_base_reader.hh"
@@ -7,7 +8,7 @@
 
 #define countof(x) (sizeof(x)/sizeof(x[0]))
 
-int _debug = 2;
+int _debug = 0;
 
 mr_base_reader *identify_file(mr_file_reader *file_reader)
 {
@@ -63,17 +64,55 @@ mr_base_reader *identify_file(mr_file_reader *file_reader)
   return matching;
 }
 
+void usage(char *cmdname)
+{
+  printf ("\n");
+  printf ("Reading of m-scheme data files.\n\n");
+  printf ("%s [options] infile\n\n",cmdname);
+  printf ("  -d[=N]             Debug level\n");
+  printf ("\n");
+}
+
 int main(int argc,char *argv[])
 {
-  if (argc < 2)
+  const char *_filename = NULL;
+
+  for (int i = 1; i < argc; i++)
     {
-      fprintf (stderr,"Usage: %s infile\n",argv[0]);
+      char *post;
+
+#define MATCH_PREFIX(prefix,post) (strncmp(argv[i],prefix,strlen(prefix)) == 0 && *(post = argv[i] + strlen(prefix)) != '\0')
+#define MATCH_ARG(name) (strcmp(argv[i],name) == 0)
+
+      if (MATCH_ARG("--help")) {
+        usage(argv[0]);
+        exit(0);
+      }
+      else if (MATCH_ARG("-d")) {
+	_debug = 1;
+      }
+      else if (MATCH_PREFIX("-d=",post)) {
+	_debug = atoi(post);
+      }
+      else {
+	/* Input file, we hope. */
+	/*
+	if (_filename)
+	  ERROR("Input file already given.");
+	*/
+	_filename = argv[i];
+      }
+    }
+
+  if (!_filename)
+    {
+      usage(argv[0]);
       exit(1);
     }
 
   mr_file_reader *file_reader = new mr_file_reader;
 
-  file_reader->open(argv[1]);
+  file_reader->open(_filename);
 
   mr_base_reader *reader = identify_file(file_reader);
 
