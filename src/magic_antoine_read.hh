@@ -162,8 +162,9 @@ public:
   {
     printf ("===================================\n");
     printf ("== %sHeader%s ==\n",
-	    CT_OUT(BOLD_GREEN),
+	    CT_OUT(BOLD_BLUE),
 	    CT_OUT(NORM_DEF_COL));
+
     printf ("num_of_shell ..: %s%d%s\n",
 	    CT_OUT(BOLD_MAGENTA),
 	    _header.num_of_shell,
@@ -187,19 +188,35 @@ public:
 
     printf ("===================================\n");
     printf ("== %snr, ll, jj%s ==\n",
-	    CT_OUT(BOLD_GREEN),
+	    CT_OUT(BOLD_BLUE),
 	    CT_OUT(NORM_DEF_COL));
 
-    for (uint32_t i = 0; i < 10 && i < _header.num_of_shell; i++)
+    for (uint32_t i = 0; i < 10 && i < _header.num_of_shell-1; i++)
       printf ("#%s%3d%s: %s%3d %3d %3d%s\n",
-	      CT_OUT(BOLD_BLUE),
-	      i,
+	      CT_OUT(GREEN),
+	      i+1,
 	      CT_OUT(NORM_DEF_COL),
-	      CT_OUT(BOLD_MAGENTA),
+	      CT_OUT(MAGENTA),
 	      _nr_ll_jj[i].nr,
 	      _nr_ll_jj[i].ll,
 	      _nr_ll_jj[i].jj,
 	      CT_OUT(NORM_DEF_COL));
+
+    if (_header.num_of_shell > 11)
+      printf ("...\n");
+
+    {
+      uint32_t i = _header.num_of_shell-1;
+      printf ("#%s%3d%s: %s%3d %3d %3d%s\n",
+	      CT_OUT(GREEN),
+	      i+1,
+	      CT_OUT(NORM_DEF_COL),
+	      CT_OUT(MAGENTA),
+	      _nr_ll_jj[i].nr,
+	      _nr_ll_jj[i].ll,
+	      _nr_ll_jj[i].jj,
+	      CT_OUT(NORM_DEF_COL));
+    }
 
     uint32_t max_nr = 0;
     uint32_t max_ll = 0;
@@ -215,7 +232,6 @@ public:
 	  max_jj = _nr_ll_jj[i].jj;	
       }
 
-    printf ("...\n");
     printf (" max: %s%3d %3d %3d%s\n",
 	    CT_OUT(BOLD_MAGENTA),
 	    max_nr, max_ll, max_jj,
@@ -223,18 +239,34 @@ public:
 
     printf ("===================================\n");
     printf ("== %snum, mpr%s ==\n",
-	    CT_OUT(BOLD_GREEN),
+	    CT_OUT(BOLD_BLUE),
 	    CT_OUT(NORM_DEF_COL));
 
-    for (uint32_t i = 0; i < 10 && i < _header.num_of_jm; i++)
+    for (uint32_t i = 0; i < 10 && i < _header.num_of_jm-1; i++)
       printf ("#%s%3d%s: %s%3d %3d%s\n",
-	      CT_OUT(BOLD_BLUE),
+	      CT_OUT(GREEN),
 	      i,
 	      CT_OUT(NORM_DEF_COL),
-	      CT_OUT(BOLD_MAGENTA),
+	      CT_OUT(MAGENTA),
 	      _num_mpr[i].num,
 	      _num_mpr[i].mpr,
 	      CT_OUT(NORM_DEF_COL));
+
+    if (_header.num_of_shell > 11)
+      printf ("...\n");
+    
+    {
+      uint32_t i = _header.num_of_jm-1;
+
+      printf ("#%s%3d%s: %s%3d %3d%s\n",
+	      CT_OUT(GREEN),
+	      i,
+	      CT_OUT(NORM_DEF_COL),
+	      CT_OUT(MAGENTA),
+	      _num_mpr[i].num,
+	      _num_mpr[i].mpr,
+	      CT_OUT(NORM_DEF_COL));
+    }
 
     uint32_t max_num = 0;
     uint32_t max_mpr = 0;
@@ -247,7 +279,6 @@ public:
 	  max_mpr = _num_mpr[i].mpr;
       }
 
-    printf ("...\n");
     printf (" max: %s%3d %3d%s\n",
 	    CT_OUT(BOLD_MAGENTA),
 	    max_num, max_mpr,
