@@ -245,7 +245,7 @@ public:
     for (uint32_t i = 0; i < 10 && i < _header.num_of_jm-1; i++)
       printf ("#%s%3d%s: %s%3d %3d%s\n",
 	      CT_OUT(GREEN),
-	      i,
+	      i+1,
 	      CT_OUT(NORM_DEF_COL),
 	      CT_OUT(MAGENTA),
 	      _num_mpr[i].num,
@@ -260,7 +260,7 @@ public:
 
       printf ("#%s%3d%s: %s%3d %3d%s\n",
 	      CT_OUT(GREEN),
-	      i,
+	      i+1,
 	      CT_OUT(NORM_DEF_COL),
 	      CT_OUT(MAGENTA),
 	      _num_mpr[i].num,
