@@ -212,8 +212,6 @@ void mr_antoine_reader<header_version_t>::dump_info()
 
   for (int k = 0; k < 2; k++)
     {
-      /* Try to map for the first 10 items. */
-
       unsigned int chunk = 10;
       if (chunk > _header.nslt[k] - 1)
 	chunk = _header.nslt[k] - 1;
@@ -230,6 +228,22 @@ void mr_antoine_reader<header_version_t>::dump_info()
     }
 
   printf ("===================================\n");
+  printf ("== %sistate%s ==\n",
+	  CT_OUT(BOLD_BLUE),
+	  CT_OUT(NORM_DEF_COL));
+
+  unsigned int chunk = 10;
+  if (chunk > _header.nsd - 1)
+    chunk = _header.nsd - 1;
+
+  dump_istate_chunk(0, chunk);
+
+  if (_header.nsd > 11)
+    printf ("...\n");
+
+  dump_istate_chunk(_header.nsd - 1, 1);
+
+  printf ("===================================\n");
 }
 
 template<class header_version_t>
@@ -243,7 +257,7 @@ dump_occ_chunk(int k,uint32_t start,uint32_t num)
 		   start * _header.A[k] * sizeof(uint32_t),
 		   num * _header.A[k] * sizeof(uint32_t), h);
 
-  uint32_t *pocc = (uint32_t *) data;
+  mr_antoine_occ_item_t *pocc = (mr_antoine_occ_item_t *) data;
 
   for (unsigned int i = 0; i < num; i++)
     {
@@ -255,8 +269,41 @@ dump_occ_chunk(int k,uint32_t start,uint32_t num)
 
       for (unsigned int j = 0; j < _header.A[k]; j++)
 	{
-	  printf (" %3d", *(pocc++));
+	  printf (" %3d", (pocc++)->sp);
 	}
+
+      printf ("%s\n",CT_OUT(NORM_DEF_COL));
+    }
+
+  h.unmap();
+}
+
+template<class header_version_t>
+void mr_antoine_reader<header_version_t>::
+dump_istate_chunk(uint32_t start,uint32_t num)
+{
+  mr_mapped_data h;
+
+  void *data =
+    MAP_BLOCK_DATA(_offset_istate +
+		   start * sizeof(mr_antoine_istate_item_t),
+		   num * sizeof(mr_antoine_istate_item_t), h);
+
+  mr_antoine_istate_item_t *pistate = (mr_antoine_istate_item_t *) data;
+
+  for (unsigned int i = 0; i < num; i++)
+    {
+      printf ("#%s%3d%s:%s",
+	      CT_OUT(GREEN),
+	      start+i+1,
+	      CT_OUT(NORM_DEF_COL),
+	      CT_OUT(MAGENTA));
+
+      for (unsigned int j = 0; j < 2; j++)
+	{
+	  printf (" %3d", pistate->istate[j]);
+	}
+      pistate++;
 
       printf ("%s\n",CT_OUT(NORM_DEF_COL));
     }
@@ -271,6 +318,8 @@ dump_occ_chunk(int k,uint32_t start,uint32_t num)
   template void mr_antoine_reader<header_t>::dump_info();		\
   template void mr_antoine_reader<header_t>::				\
   dump_occ_chunk(int k,uint32_t start,uint32_t num);			\
+  template void mr_antoine_reader<header_t>::				\
+  dump_istate_chunk(uint32_t start,uint32_t num);			\
   ;
 
 INSTANTIATE_ANTOINE(mr_antoine_header_old_t);

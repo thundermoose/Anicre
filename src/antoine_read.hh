@@ -48,6 +48,7 @@ public:
 
 protected:
   void dump_occ_chunk(int k,uint32_t start,uint32_t num);
+  void dump_istate_chunk(uint32_t start,uint32_t num);
 };
 
 #endif/*__ANTOINE_READ_HH__*/
