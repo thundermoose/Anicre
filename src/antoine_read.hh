@@ -45,6 +45,9 @@ public:
 
 public:
   virtual void dump_info();
+
+protected:
+  void dump_occ_chunk(int k,uint32_t start,uint32_t num);
 };
 
 #endif/*__ANTOINE_READ_HH__*/

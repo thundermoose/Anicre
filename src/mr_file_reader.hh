@@ -5,6 +5,23 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+struct mr_mapped_data
+{
+public:
+  mr_mapped_data()
+  {
+    _addr_base = NULL;
+    _map_size = 0;
+  }
+
+public:
+  void  *_addr_base;
+  size_t _map_size;
+
+public:
+  void unmap();
+};
+
 class mr_file_reader
 {
 public:
@@ -24,6 +41,8 @@ public:
 
   void get_fortran_block_data(uint64_t offset_data,void *block,size_t size);
 
+  void *map_block_data(uint64_t offset_data,size_t size,
+		       mr_mapped_data &handle);
 };
 
 #endif/*__MR_FILE_READER_HH__*/

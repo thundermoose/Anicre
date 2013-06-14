@@ -13,6 +13,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <sys/mman.h>
 
 mr_file_reader::mr_file_reader()
 {
@@ -149,4 +150,55 @@ bool mr_file_reader::get_fortran_block(uint64_t offset,
   get_fortran_block_data(offset+sizeof(uint32_t),block,size);
 
   return true;
+}
+
+long _pagesize = sysconf(_SC_PAGE_SIZE);
+
+void *mr_file_reader::map_block_data(uint64_t offset_data,size_t size,
+				     mr_mapped_data &handle)
+{
+  off_t offset = offset_data;
+  off_t end = offset_data + size;
+
+  offset = offset & ~(_pagesize - 1);
+  end = (end + (_pagesize - 1)) & ~(_pagesize - 1);
+
+  size_t length = end - offset;
+
+  void *addr = mmap(NULL, length,
+		    PROT_READ, MAP_SHARED | MAP_POPULATE,
+		    _fd, offset);
+
+  if (addr == MAP_FAILED)
+    {
+      perror("mmap");
+      FATAL("Failure to mmap.");
+    }
+  /*
+  printf ("MMAP: @0x%"PRIx64" %zd (@0x%"PRIx64" %zd) (%ld) -> %p\n",
+	  offset_data, size,
+	  offset, length, _pagesize, addr);
+  */
+
+  handle._addr_base = addr;
+  handle._map_size = length;
+
+  return (void *) (((char *) addr) + (offset_data - offset));
+}
+
+void mr_mapped_data::unmap()
+{
+  if (!_addr_base)
+    return;
+
+  int ret = munmap(_addr_base, _map_size);
+
+  if (ret != 0)
+    {
+      perror("unmap");
+      FATAL("Unmap error.");
+    }
+
+  _addr_base = NULL;
+  _map_size = 0;
 }

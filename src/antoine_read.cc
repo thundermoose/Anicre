@@ -206,6 +206,62 @@ void mr_antoine_reader<header_version_t>::dump_info()
 	  CT_OUT(NORM_DEF_COL));
   
   printf ("===================================\n");
+  printf ("== %socc%s ==\n",
+	  CT_OUT(BOLD_BLUE),
+	  CT_OUT(NORM_DEF_COL));
+
+  for (int k = 0; k < 2; k++)
+    {
+      /* Try to map for the first 10 items. */
+
+      unsigned int chunk = 10;
+      if (chunk > _header.nslt[k] - 1)
+	chunk = _header.nslt[k] - 1;
+
+      dump_occ_chunk(k, 0, chunk);
+
+      if (_header.nslt[k] > 11)
+	printf ("...\n");
+
+      dump_occ_chunk(k, _header.nslt[k] - 1, 1);
+
+      if (k == 0)
+	printf ("-----------------------------------\n");
+    }
+
+  printf ("===================================\n");
+}
+
+template<class header_version_t>
+void mr_antoine_reader<header_version_t>::
+dump_occ_chunk(int k,uint32_t start,uint32_t num)
+{
+  mr_mapped_data h;
+
+  void *data =
+    MAP_BLOCK_DATA(_offset_occ[k] +
+		   start * _header.A[k] * sizeof(uint32_t),
+		   num * _header.A[k] * sizeof(uint32_t), h);
+
+  uint32_t *pocc = (uint32_t *) data;
+
+  for (unsigned int i = 0; i < num; i++)
+    {
+      printf ("#%s%3d%s:%s",
+	      CT_OUT(GREEN),
+	      start+i+1,
+	      CT_OUT(NORM_DEF_COL),
+	      CT_OUT(MAGENTA));
+
+      for (unsigned int j = 0; j < _header.A[k]; j++)
+	{
+	  printf (" %3d", *(pocc++));
+	}
+
+      printf ("%s\n",CT_OUT(NORM_DEF_COL));
+    }
+
+  h.unmap();
 }
 
 #define INSTANTIATE_ANTOINE(header_t)					\
@@ -213,6 +269,8 @@ void mr_antoine_reader<header_version_t>::dump_info()
   template bool mr_antoine_reader<header_t>::level1_read();		\
   template bool mr_antoine_reader<header_t>::level2_read();		\
   template void mr_antoine_reader<header_t>::dump_info();		\
+  template void mr_antoine_reader<header_t>::				\
+  dump_occ_chunk(int k,uint32_t start,uint32_t num);			\
   ;
 
 INSTANTIATE_ANTOINE(mr_antoine_header_old_t);

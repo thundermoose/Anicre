@@ -82,6 +82,9 @@ public:
     _file_reader->get_fortran_block_data(offset,items,__allocsize);	\
   } while (0)
 
+#define MAP_BLOCK_DATA(offset,length,handle)		\
+  _file_reader->map_block_data(offset,length,handle)
+
 #define CHECK_REASONABLE_RANGE(value,min,max)				\
   do {									\
     if ((value) < (min) || (value) > (max)) {				\
