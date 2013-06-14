@@ -6,7 +6,7 @@
 #include "colourtext.hh"
 #include "mr_file_reader.hh"
 #include "mr_base_reader.hh"
-#include "magic_antoine_read.hh"
+#include "antoine_read.hh"
 
 #define countof(x) (sizeof(x)/sizeof(x[0]))
 
