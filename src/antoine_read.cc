@@ -2,6 +2,8 @@
 #include "antoine_read.hh"
 #include "colourtext.hh"
 
+#include "mr_config.hh"
+
 extern int _debug;
 
 #define __STDC_FORMAT_MACROS
@@ -232,16 +234,33 @@ void mr_antoine_reader<header_version_t>::dump_info()
 	  CT_OUT(BOLD_BLUE),
 	  CT_OUT(NORM_DEF_COL));
 
-  unsigned int chunk = 10;
-  if (chunk > _header.nsd - 1)
-    chunk = _header.nsd - 1;
+  if (_config._dump == DUMP_FULL)
+    {
+      for (unsigned int start = 0; start < _header.nsd; )
+	{
+	  unsigned int num = 1000000;
 
-  dump_istate_chunk(0, chunk);
+	  if (num > _header.nsd - start)
+	    num = _header.nsd - start;
 
-  if (_header.nsd > 11)
-    printf ("...\n");
+	  dump_istate_chunk(start, num);
 
-  dump_istate_chunk(_header.nsd - 1, 1);
+	  start += num;
+	}
+    }
+  else
+    {
+      unsigned int chunk = 10;
+      if (chunk > _header.nsd - 1)
+	chunk = _header.nsd - 1;
+
+      dump_istate_chunk(0, chunk);
+
+      if (_header.nsd > 11)
+	printf ("...\n");
+
+      dump_istate_chunk(_header.nsd - 1, 1);
+    }
 
   printf ("===================================\n");
 }

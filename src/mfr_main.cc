@@ -8,6 +8,8 @@
 #include "mr_base_reader.hh"
 #include "antoine_read.hh"
 
+#include "mr_config.hh"
+
 #define countof(x) (sizeof(x)/sizeof(x[0]))
 
 int _debug = 0;
@@ -71,9 +73,13 @@ void usage(char *cmdname)
   printf ("\n");
 }
 
+mr_config_t _config;
+
 int main(int argc,char *argv[])
 {
   colourtext_init();
+
+  memset(&_config, 0, sizeof(_config));
 
   const char *_filename = NULL;
 
@@ -94,11 +100,30 @@ int main(int argc,char *argv[])
       else if (MATCH_PREFIX("-d=",post)) {
 	_debug = atoi(post);
       }
+      else if (MATCH_PREFIX("--colour=",post)) {
+        int force = 0;
+
+        if (strcmp(post,"yes") == 0)
+          force = 1;
+        else if (strcmp(post,"no") == 0)
+          force = -1;
+        else if (strcmp(post,"auto") != 0)
+          ERROR("Bad option '%s' for --colour=",post);
+
+        colourtext_setforce(force);
+      }
+      else if (MATCH_PREFIX("--dump=",post)) {
+	if (strcmp(post,"full") == 0)
+	  _config._dump = DUMP_FULL;
+	else
+	  FATAL("Bad dump request '%s'.",post);
+      }
       else {
 	/* Input file, we hope. */
 	
 	if (_filename)
-	  ERROR("Input file already given.");
+	  FATAL("Bad argument '%s', or input file already given.",
+		argv[i]);
 	
 	_filename = argv[i];
       }
