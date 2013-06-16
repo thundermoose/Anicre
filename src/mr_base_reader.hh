@@ -94,6 +94,18 @@ public:
 	     (value),(min),(max));					\
       return false;							\
     }									\
-  } while (0) 
+  } while (0)
+
+/* Checking a range that starts at 0 for an unsigned gives warning above */
+#define CHECK_REASONABLE_RANGE_0(value,max)				\
+  do {									\
+    if ((value) > (max)) {						\
+      if (_debug > 1)							\
+        INFO(" Value '" #value "' (%d) outside "			\
+	     "reasonable range [%d,%d].",				\
+	     (value),(0),(max));					\
+      return false;							\
+    }									\
+  } while (0)
 
 #endif/*__MR_BASE_READER_HH__*/

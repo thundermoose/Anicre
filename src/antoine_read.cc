@@ -25,10 +25,10 @@ bool mr_antoine_reader<header_version_t>::level1_read()
   
   TRY_GET_FORTRAN_BLOCK(_header);
   
-  CHECK_REASONABLE_RANGE(_header.num_of_shell,1,100);
-  CHECK_REASONABLE_RANGE(_header.num_of_jm,1,1000);
-  CHECK_REASONABLE_RANGE(_header.A[0],1,40);
-  CHECK_REASONABLE_RANGE(_header.A[1],1,40);
+  CHECK_REASONABLE_RANGE(_header.num_of_shell,1,1000);
+  CHECK_REASONABLE_RANGE(_header.num_of_jm,1,10000);
+  CHECK_REASONABLE_RANGE_0(_header.A[0],40);
+  CHECK_REASONABLE_RANGE_0(_header.A[1],40);
   
   TRY_HAS_FORTRAN_BLOCK_ITEMS(mr_antoine_nr_ll_jj_item_t,
 			      _header.num_of_shell,
