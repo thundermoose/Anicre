@@ -36,6 +36,10 @@ public:
   BITSONE_CONTAINER_TYPE     *_occ_used[2];
   size_t                      _occ_used_items[2];
 
+  BITSONE_CONTAINER_TYPE     *_jm_used;
+  size_t                      _jm_used_items_per_slot;
+  size_t                      _jm_used_slots;
+
 public:
   virtual bool level1_read();
   virtual bool level2_read();

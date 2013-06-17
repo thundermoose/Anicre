@@ -20,6 +20,7 @@ mr_antoine_reader(mr_file_reader *file_reader)
   _num_mpr = NULL;
   for (int i = 0; i < 2; i++)
     _occ_used[i] = NULL;
+  _jm_used = NULL;
 }
 
 template<class header_version_t>
@@ -29,6 +30,7 @@ mr_antoine_reader<header_version_t>::~mr_antoine_reader()
   free(_num_mpr);
   for (int i = 0; i < 2; i++)
     free(_occ_used[i]);
+  free(_jm_used);
 }
 
 
@@ -433,12 +435,93 @@ void mr_antoine_reader<header_version_t>::find_used_states()
       printf ("OCC %d used: %ld (%zd)\n", i, occ_used, _occ_used_items[i]);
     }
 
+  /* And then find out which single-particle states are used
+   * by the occs.
+   */
 
+  _jm_used_slots = _header.A[0] + _header.A[1];
+  _jm_used_items_per_slot =
+    (_header.num_of_jm + BITSONE_CONTAINER_BITS-1) / BITSONE_CONTAINER_BITS;
 
+  _jm_used = (BITSONE_CONTAINER_TYPE *)
+    malloc (_jm_used_slots * _jm_used_items_per_slot *
+	    sizeof (BITSONE_CONTAINER_TYPE));
 
+  if (!_jm_used)
+    FATAL("Memory allocation failure (_jm_used).");
 
+  memset(_jm_used, 0,
+	 _jm_used_slots * _jm_used_items_per_slot *
+	 sizeof (BITSONE_CONTAINER_TYPE));
 
+  BITSONE_CONTAINER_TYPE *jm_u = _jm_used;
 
+  for (int i = 0; i < 2; i++)
+    {
+      for (unsigned int start = 0; start < _header.nslt[i]; )
+	{
+	  unsigned int num = 1000000;
+
+	  if (num > _header.nslt[i] - start)
+	    num = _header.nslt[i] - start;
+
+	  mr_mapped_data h;
+
+	  void *data =
+	    MAP_BLOCK_DATA(_offset_occ[i] +
+			   start * _header.A[i] * sizeof(uint32_t),
+			   num * _header.A[i] * sizeof(uint32_t), h);
+
+	  mr_antoine_occ_item_t *pocc = (mr_antoine_occ_item_t *) data;
+
+	  for (unsigned int k = 0; k < num; k++)
+	    {
+	      BITSONE_CONTAINER_TYPE *jm_u_k = jm_u;
+
+	      for (unsigned int j = 0; j < _header.A[i]; j++)
+		{
+		  uint32_t jm = (pocc++)->sp;
+
+		  BITSONE_CONTAINER_TYPE mask =
+		    ((BITSONE_CONTAINER_TYPE) 1) <<
+		    (jm % (BITSONE_CONTAINER_BITS));
+		  size_t offset = jm / (BITSONE_CONTAINER_BITS);
+		  /*
+		  printf ("%d %d %d : %zd %016lx : %zd %zd\n",
+			  i, k, j,
+			  offset, mask,
+			  _jm_used_items_per_slot, _jm_used_slots);
+		  fflush(stdout);
+		  */
+		  jm_u_k[offset] |= mask;
+
+		  jm_u_k += _jm_used_items_per_slot;
+		}
+	    }
+
+	  h.unmap();
+
+	  start += num;
+	}
+
+      jm_u += _header.A[i] * _jm_used_items_per_slot;
+    }
+
+  jm_u = _jm_used;
+
+  for (size_t i = 0; i < _jm_used_slots; i++)
+    {
+      BITSONE_CONTAINER_TYPE *jm_u_i = jm_u + i * _jm_used_items_per_slot;
+
+      int jm_used = 0;
+
+      for (size_t j = 0; j < _jm_used_items_per_slot; j++)
+	{
+	  jm_used += __builtin_popcountl(jm_u_i[j]);
+	}
+
+      printf ("JM %zd used: %d\n", i, jm_used);
+    }
 
 
 }
