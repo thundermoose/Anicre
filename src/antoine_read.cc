@@ -379,6 +379,61 @@ void mr_antoine_reader<header_version_t>::find_used_states()
 	     _occ_used_items[i] * sizeof (BITSONE_CONTAINER_TYPE));
     }
 
+  for (unsigned int start = 0; start < _header.nsd; )
+    {
+      unsigned int num = 1000000;
+
+      if (num > _header.nsd - start)
+	num = _header.nsd - start;
+
+      mr_mapped_data h;
+
+      void *data =
+	MAP_BLOCK_DATA(_offset_istate +
+		       start * sizeof(mr_antoine_istate_item_t),
+		       num * sizeof(mr_antoine_istate_item_t), h);
+
+      mr_antoine_istate_item_t *pistate = (mr_antoine_istate_item_t *) data;
+
+      for (unsigned int j = 0; j < num; j++)
+	{
+	  for (unsigned int i = 0; i < 2; i++)
+	    {
+	      uint32_t occ = pistate->istate[i];
+
+	      BITSONE_CONTAINER_TYPE mask =
+		((BITSONE_CONTAINER_TYPE) 1) <<
+		(occ % (BITSONE_CONTAINER_BITS));
+	      size_t offset = occ / (BITSONE_CONTAINER_BITS);
+
+	      _occ_used[i][offset] |= mask;
+	    }
+	  pistate++;
+	}
+
+      h.unmap();
+
+      start += num;
+    }
+
+  for (int i = 0; i < 2; i++)
+    {
+      long occ_used = 0;
+
+      for (size_t j = 0; j < _occ_used_items[i]; j++)
+	{
+	  /*
+	  printf ("%016lx %d\n",
+		  _occ_used[i][j],
+		  __builtin_popcountl(_occ_used[i][j]));
+	  */
+	  occ_used += __builtin_popcountl(_occ_used[i][j]);
+	}
+
+      printf ("OCC %d used: %ld (%zd)\n", i, occ_used, _occ_used_items[i]);
+    }
+
+
 
 
 
