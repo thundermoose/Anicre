@@ -16,6 +16,8 @@ mr_antoine_reader<header_version_t>::
 mr_antoine_reader(mr_file_reader *file_reader)
   : mr_base_reader(file_reader)
 {
+  _nr_ll_jj = NULL;
+  _num_mpr = NULL;
   for (int i = 0; i < 2; i++)
     _occ_used[i] = NULL;
 }
@@ -23,6 +25,8 @@ mr_antoine_reader(mr_file_reader *file_reader)
 template<class header_version_t>
 mr_antoine_reader<header_version_t>::~mr_antoine_reader()
 {
+  free(_nr_ll_jj);
+  free(_num_mpr);
   for (int i = 0; i < 2; i++)
     free(_occ_used[i]);
 }

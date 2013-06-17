@@ -162,6 +162,7 @@ int main(int argc,char *argv[])
   // antoine.
 
   delete reader;
+  delete file_reader;
 
   return 0;
 }
