@@ -157,7 +157,11 @@ int main(int argc,char *argv[])
 
   reader->dump_info();
 
+  reader->find_used_states();
+
   // antoine.
+
+  delete reader;
 
   return 0;
 }

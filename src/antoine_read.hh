@@ -5,20 +5,16 @@
 #include "mr_base_reader.hh"
 #include "antoine_struct.hh"
 
+#define BITSONE_CONTAINER_TYPE    unsigned long
+#define BITSONE_CONTAINER_BITS    (sizeof(BITSONE_CONTAINER_TYPE)*8)
+
 template<class header_version_t>
 class mr_antoine_reader
   : public mr_base_reader
 {
 public:
-  mr_antoine_reader(mr_file_reader *file_reader)
-    : mr_base_reader(file_reader)
-  {
-  }
-
-  virtual ~mr_antoine_reader()
-  {
-
-  }
+  mr_antoine_reader(mr_file_reader *file_reader);
+  virtual ~mr_antoine_reader();
 
 public:
   uint64_t _offset_nr_ll_jj;
@@ -37,6 +33,10 @@ public:
   mr_antoine_fon_ben_t       *_fon_ben;
 
 public:
+  BITSONE_CONTAINER_TYPE     *_occ_used[2];
+  size_t                      _occ_used_items[2];
+
+public:
   virtual bool level1_read();
   virtual bool level2_read();
 
@@ -45,6 +45,9 @@ public:
 
 public:
   virtual void dump_info();
+
+public:
+  virtual void find_used_states();
 
 protected:
   void dump_occ_chunk(int k,uint32_t start,uint32_t num);

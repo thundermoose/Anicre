@@ -4,10 +4,29 @@
 
 #include "mr_config.hh"
 
+#include <string.h>
+
 extern int _debug;
 
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
+
+template<class header_version_t>
+mr_antoine_reader<header_version_t>::
+mr_antoine_reader(mr_file_reader *file_reader)
+  : mr_base_reader(file_reader)
+{
+  for (int i = 0; i < 2; i++)
+    _occ_used[i] = NULL;
+}
+
+template<class header_version_t>
+mr_antoine_reader<header_version_t>::~mr_antoine_reader()
+{
+  for (int i = 0; i < 2; i++)
+    free(_occ_used[i]);
+}
+
 
 template<class header_version_t>
 const char *mr_antoine_reader<header_version_t>::get_format_name() 
@@ -330,7 +349,45 @@ dump_istate_chunk(uint32_t start,uint32_t num)
   h.unmap();
 }
 
+template<class header_version_t>
+void mr_antoine_reader<header_version_t>::find_used_states()
+{
+  /* First find out which occ states are used by the istates. */
+  /*
+  BITSONE_CONTAINER_TYPE      _occ_used[2];
+#define BITSONE_CONTAINER_BITS    (sizeof(BITSONE_CONTAINER_TYPE)*8)
+  */
+
+  for (int i = 0; i < 2; i++)
+    {
+      size_t n = _header.nslt[i];
+
+      _occ_used_items[i] =
+	(n + BITSONE_CONTAINER_BITS-1) / BITSONE_CONTAINER_BITS;
+
+      _occ_used[i] = (BITSONE_CONTAINER_TYPE *)
+	malloc(_occ_used_items[i] * sizeof (BITSONE_CONTAINER_TYPE));
+
+      if (!_occ_used[i])
+	FATAL("Memory allocation failure (_occ_used).");
+
+      memset(_occ_used[i], 0,
+	     _occ_used_items[i] * sizeof (BITSONE_CONTAINER_TYPE));
+    }
+
+
+
+
+
+
+
+
+}
+
 #define INSTANTIATE_ANTOINE(header_t)					\
+  template mr_antoine_reader<header_t>::				\
+  mr_antoine_reader(mr_file_reader *file_reader);			\
+  template mr_antoine_reader<header_t>::~mr_antoine_reader();		\
   template const char *mr_antoine_reader<header_t>::get_format_name();	\
   template bool mr_antoine_reader<header_t>::level1_read();		\
   template bool mr_antoine_reader<header_t>::level2_read();		\
@@ -339,6 +396,7 @@ dump_istate_chunk(uint32_t start,uint32_t num)
   dump_occ_chunk(int k,uint32_t start,uint32_t num);			\
   template void mr_antoine_reader<header_t>::				\
   dump_istate_chunk(uint32_t start,uint32_t num);			\
+  template void mr_antoine_reader<header_t>::find_used_states();	\
   ;
 
 INSTANTIATE_ANTOINE(mr_antoine_header_old_t);

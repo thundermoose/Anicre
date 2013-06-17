@@ -29,6 +29,10 @@ public:
   // Dump information from the headers and data blocks.
   virtual void dump_info() = 0;
 
+public:
+  // Figure out which sp and mp (partial) states are actually used
+  virtual void find_used_states() = 0;
+
 };
 
 ////////////////////////////////////////////////////////////////////////
