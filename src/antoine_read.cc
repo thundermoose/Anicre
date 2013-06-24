@@ -138,9 +138,18 @@ void mr_antoine_reader<header_version_t>::dump_info()
   printf ("== %snr, ll, jj%s ==\n",
 	  CT_OUT(BOLD_BLUE),
 	  CT_OUT(NORM_DEF_COL));
+
+  uint32_t end_shell = _header.num_of_shell;
+
+  if (_config._dump != DUMP_FULL)
+    {
+      end_shell--;
+      if (end_shell > 10)
+	end_shell = 10;
+    }
   
-  for (uint32_t i = 0; i < 10 && i < _header.num_of_shell-1; i++)
-    printf ("#%s%3d%s: %s%3d %3d %3d%s\n",
+  for (uint32_t i = 0; i < end_shell; i++)
+    printf ("#%s%3d%s: %s%3d %3d %3d%s %3d\n",
 	    CT_OUT(GREEN),
 	    i+1,
 	    CT_OUT(NORM_DEF_COL),
@@ -148,23 +157,26 @@ void mr_antoine_reader<header_version_t>::dump_info()
 	    _nr_ll_jj[i].nr,
 	    _nr_ll_jj[i].ll,
 	    _nr_ll_jj[i].jj,
-	    CT_OUT(NORM_DEF_COL));
-  
-  if (_header.num_of_shell > 11)
-    printf ("...\n");
-  
-  {
-    uint32_t i = _header.num_of_shell-1;
-    printf ("#%s%3d%s: %s%3d %3d %3d%s\n",
-	    CT_OUT(GREEN),
-	    i+1,
 	    CT_OUT(NORM_DEF_COL),
-	    CT_OUT(MAGENTA),
-	    _nr_ll_jj[i].nr,
-	    _nr_ll_jj[i].ll,
-	    _nr_ll_jj[i].jj,
-	    CT_OUT(NORM_DEF_COL));
-  }
+	    _nr_ll_jj[i].nr * 2 + _nr_ll_jj[i].ll);
+
+  if (_header.num_of_shell > end_shell)
+    {
+      if (_header.num_of_shell > end_shell + 1)
+	printf ("...\n");
+
+      uint32_t i = _header.num_of_shell-1;
+      printf ("#%s%3d%s: %s%3d %3d %3d%s %3d\n",
+	      CT_OUT(GREEN),
+	      i+1,
+	      CT_OUT(NORM_DEF_COL),
+	      CT_OUT(MAGENTA),
+	      _nr_ll_jj[i].nr,
+	      _nr_ll_jj[i].ll,
+	      _nr_ll_jj[i].jj,
+	      CT_OUT(NORM_DEF_COL),
+	      _nr_ll_jj[i].nr * 2 + _nr_ll_jj[i].ll);
+    }
   
   uint32_t max_nr = 0;
   uint32_t max_ll = 0;
@@ -190,7 +202,16 @@ void mr_antoine_reader<header_version_t>::dump_info()
 	  CT_OUT(BOLD_BLUE),
 	  CT_OUT(NORM_DEF_COL));
   
-  for (uint32_t i = 0; i < 10 && i < _header.num_of_jm-1; i++)
+  uint32_t end_jm = _header.num_of_jm;
+
+  if (_config._dump != DUMP_FULL)
+    {
+      end_jm--;
+      if (end_jm > 10)
+	end_jm = 10;
+    }
+
+  for (uint32_t i = 0; i < end_jm; i++)
     printf ("#%s%3d%s: %s%3d %3d%s\n",
 	    CT_OUT(GREEN),
 	    i+1,
@@ -199,22 +220,23 @@ void mr_antoine_reader<header_version_t>::dump_info()
 	    _num_mpr[i].num,
 	    _num_mpr[i].mpr,
 	    CT_OUT(NORM_DEF_COL));
+
+  if (_header.num_of_jm > end_jm)
+    {
+      if (_header.num_of_jm > end_jm + 1)
+	printf ("...\n");
   
-  if (_header.num_of_shell > 11)
-    printf ("...\n");
-  
-  {
-    uint32_t i = _header.num_of_jm-1;
-    
-    printf ("#%s%3d%s: %s%3d %3d%s\n",
-	    CT_OUT(GREEN),
-	    i+1,
-	    CT_OUT(NORM_DEF_COL),
-	    CT_OUT(MAGENTA),
-	    _num_mpr[i].num,
-	    _num_mpr[i].mpr,
-	    CT_OUT(NORM_DEF_COL));
-  }
+      uint32_t i = _header.num_of_jm-1;
+
+      printf ("#%s%3d%s: %s%3d %3d%s\n",
+	      CT_OUT(GREEN),
+	      i+1,
+	      CT_OUT(NORM_DEF_COL),
+	      CT_OUT(MAGENTA),
+	      _num_mpr[i].num,
+	      _num_mpr[i].mpr,
+	      CT_OUT(NORM_DEF_COL));
+    }
   
   uint32_t max_num = 0;
   uint32_t max_mpr = 0;
