@@ -540,10 +540,10 @@ void mr_antoine_reader<header_version_t>::find_used_states()
 
 	      for (unsigned int j = 0; j < cm_istate.num(); j++)
 		{
-		  if (pistate->istate[0] >= cm_occ0.start() &&
-		      pistate->istate[0] <  cm_occ0.start() + cm_occ0.num() &&
-		      pistate->istate[1] >= cm_occ1.start() &&
-		      pistate->istate[1] <  cm_occ1.start() + cm_occ1.num())
+		  if (pistate->istate[0]-1 >= cm_occ0.start() &&
+		      pistate->istate[0]-1 <  cm_occ0.start() + cm_occ0.num() &&
+		      pistate->istate[1]-1 >= cm_occ1.start() &&
+		      pistate->istate[1]-1 <  cm_occ1.start() + cm_occ1.num())
 		    {
 		      int sum_N = 0;
 
