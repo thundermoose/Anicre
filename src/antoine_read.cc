@@ -8,6 +8,8 @@
 
 #include <string.h>
 
+#include <algorithm>
+
 extern int _debug;
 
 #define __STDC_FORMAT_MACROS
@@ -285,30 +287,28 @@ void mr_antoine_reader<header_version_t>::dump_info()
 
   if (_config._dump == DUMP_FULL)
     {
-      for (unsigned int start = 0; start < _header.nsd; )
-	{
-	  unsigned int num = 1000000;
-
-	  if (num > _header.nsd - start)
-	    num = _header.nsd - start;
-
-	  dump_istate_chunk(start, num);
-
-	  start += num;
-	}
+      for (mr_file_chunk<mr_antoine_istate_item_t>
+	     cm_istate(_header.nsd, 1000000);
+	   cm_istate.map_next(_file_reader, _offset_istate); )
+	dump_istate_chunk(cm_istate);
     }
   else
     {
-      unsigned int chunk = 10;
-      if (chunk > _header.nsd - 1)
-	chunk = _header.nsd - 1;
+      mr_file_chunk<mr_antoine_istate_item_t>
+	cm_istate(_header.nsd, 1000000);
 
-      dump_istate_chunk(0, chunk);
+      cm_istate.map(_file_reader, _offset_istate,
+		    0, std::min<unsigned int>(10,_header.nsd));
+
+      dump_istate_chunk(cm_istate);
 
       if (_header.nsd > 11)
 	printf ("...\n");
 
-      dump_istate_chunk(_header.nsd - 1, 1);
+      cm_istate.map(_file_reader, _offset_istate,
+                    _header.nsd - 1, 1);
+
+      dump_istate_chunk(cm_istate);
     }
 
   printf ("===================================\n");
@@ -348,22 +348,15 @@ dump_occ_chunk(int k,uint32_t start,uint32_t num)
 
 template<class header_version_t>
 void mr_antoine_reader<header_version_t>::
-dump_istate_chunk(uint32_t start,uint32_t num)
+dump_istate_chunk(mr_file_chunk<mr_antoine_istate_item_t> &chunk)
 {
-  mr_mapped_data h;
+  mr_antoine_istate_item_t *pistate = chunk.ptr();
 
-  void *data =
-    MAP_BLOCK_DATA(_offset_istate +
-		   start * sizeof(mr_antoine_istate_item_t),
-		   num * sizeof(mr_antoine_istate_item_t), h);
-
-  mr_antoine_istate_item_t *pistate = (mr_antoine_istate_item_t *) data;
-
-  for (unsigned int i = 0; i < num; i++)
+  for (unsigned int i = 0; i < chunk.num(); i++)
     {
       printf ("#%s%3d%s:%s",
 	      CT_OUT(GREEN),
-	      start+i+1,
+	      chunk.start()+i+1,
 	      CT_OUT(NORM_DEF_COL),
 	      CT_OUT(MAGENTA));
 
@@ -375,8 +368,6 @@ dump_istate_chunk(uint32_t start,uint32_t num)
 
       printf ("%s\n",CT_OUT(NORM_DEF_COL));
     }
-
-  h.unmap();
 }
 
 
@@ -544,7 +535,7 @@ void mr_antoine_reader<header_version_t>::find_used_states()
   template void mr_antoine_reader<header_t>::				\
   dump_occ_chunk(int k,uint32_t start,uint32_t num);			\
   template void mr_antoine_reader<header_t>::				\
-  dump_istate_chunk(uint32_t start,uint32_t num);			\
+  dump_istate_chunk(mr_file_chunk<mr_antoine_istate_item_t> &chunk);	\
   template void mr_antoine_reader<header_t>::find_used_states();	\
   ;
 
