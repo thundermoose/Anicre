@@ -7,6 +7,7 @@
 #include "mr_file_chunk.hh"
 
 #include <string.h>
+#include <limits.h>
 
 #include <algorithm>
 
@@ -407,7 +408,7 @@ void mr_antoine_reader<header_version_t>::find_used_states()
 	{
 	  for (unsigned int i = 0; i < 2; i++)
 	    {
-	      uint32_t occ = pistate->istate[i];
+	      uint32_t occ = pistate->istate[i] - 1;
 
 	      BITSONE_CONTAINER_TYPE mask =
 		((BITSONE_CONTAINER_TYPE) 1) <<
@@ -473,7 +474,7 @@ void mr_antoine_reader<header_version_t>::find_used_states()
 
 	      for (unsigned int j = 0; j < _header.A[i]; j++)
 		{
-		  uint32_t jm = (pocc++)->sp;
+		  uint32_t jm = (pocc++)->sp - 1;
 
 		  BITSONE_CONTAINER_TYPE mask =
 		    ((BITSONE_CONTAINER_TYPE) 1) <<
@@ -517,8 +518,75 @@ void mr_antoine_reader<header_version_t>::find_used_states()
    * kinds in chunks too...
    */
 
+  int min_N = INT_MAX, max_N = 0;
 
+  for (mr_file_chunk<mr_antoine_istate_item_t>
+	 cm_istate(_header.nsd, 1000000);
+       cm_istate.map_next(_file_reader, _offset_istate); )
+    {
+      mr_antoine_istate_item_t *pistate = cm_istate.ptr();
 
+      for (mr_file_chunk<mr_antoine_occ_item_t>
+	     cm_occ0(_header.nslt[0], 1000000, _header.A[0]);
+	   cm_occ0.map_next(_file_reader, _offset_occ[0]); )
+	{
+	  mr_antoine_occ_item_t *pocc0 = cm_occ0.ptr();
+
+	  for (mr_file_chunk<mr_antoine_occ_item_t>
+		 cm_occ1(_header.nslt[1], 1000000, _header.A[1]);
+	       cm_occ1.map_next(_file_reader, _offset_occ[1]); )
+	    {
+	      mr_antoine_occ_item_t *pocc1 = cm_occ1.ptr();
+
+	      for (unsigned int j = 0; j < cm_istate.num(); j++)
+		{
+		  if (pistate->istate[0] >= cm_occ0.start() &&
+		      pistate->istate[0] <  cm_occ0.start() + cm_occ0.num() &&
+		      pistate->istate[1] >= cm_occ1.start() &&
+		      pistate->istate[1] <  cm_occ1.start() + cm_occ1.num())
+		    {
+		      int sum_N = 0;
+
+		      mr_antoine_occ_item_t *poccs[2] =
+			{
+			  pocc0 + (pistate->istate[0]-1 - cm_occ0.start()) * _header.A[0],
+			  pocc1 + (pistate->istate[1]-1 - cm_occ1.start()) * _header.A[1],
+			};
+
+		      for (unsigned int i = 0; i < 2; i++)
+			{
+			  // uint32_t occ = pistate->istate[i];
+
+			  mr_antoine_occ_item_t *pocc = poccs[i];
+
+			  for (unsigned int k = 0; k < _header.A[i]; k++)
+			    {
+			      uint32_t jm = (pocc++)->sp;
+
+			      uint32_t sh = _num_mpr[jm-1].num;
+
+			      mr_antoine_nr_ll_jj_item_t &shell =
+				_nr_ll_jj[sh-1];
+
+			      int N = 2 * shell.nr + shell.ll;
+
+			      sum_N += N;
+			    }
+			}
+
+		      if (sum_N > max_N)
+			max_N = sum_N;
+		      if (sum_N < min_N)
+			min_N = sum_N;
+		    }
+
+		  pistate++;
+		}
+	    }
+	}
+    }
+
+  printf ("N_min: %d  N_max: %d\n", min_N, max_N);
 
 
 
