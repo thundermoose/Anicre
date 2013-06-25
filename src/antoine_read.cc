@@ -381,10 +381,13 @@ template<typename item_t>
 class chunk_map_info
 {
 public:
-  chunk_map_info(unsigned int end, unsigned int chunk)
+  chunk_map_info(unsigned int end,
+		 unsigned int chunk,
+		 unsigned int stride = 1)
   {
     _end = end;
     _chunk = chunk;
+    _stride = stride;
 
     _cur = -chunk;
   }
@@ -399,6 +402,7 @@ protected:
 
   unsigned int _end;
   unsigned int _chunk;
+  unsigned int _stride;
 
   unsigned int _cur;
   unsigned int _num;
@@ -437,8 +441,8 @@ public:
 
     _ptr = (item_t *)
       MAP_BLOCK_DATA(offset_data +
-		     _cur * sizeof (item_t),
-		     _num * sizeof (item_t), _h);
+		     _cur * _stride * sizeof (item_t),
+		     _num * _stride * sizeof (item_t), _h);
 
     return true;
   }
@@ -474,8 +478,8 @@ void mr_antoine_reader<header_version_t>::find_used_states()
     }
 
   for (chunk_map_info<mr_antoine_istate_item_t>
-	 cm_istate(_header.nsd,1000000);
-       cm_istate.map_next(_file_reader,_offset_istate); )
+	 cm_istate(_header.nsd, 1000000);
+       cm_istate.map_next(_file_reader, _offset_istate); )
     {
       mr_antoine_istate_item_t *pistate = cm_istate.ptr();
 
@@ -536,23 +540,14 @@ void mr_antoine_reader<header_version_t>::find_used_states()
 
   for (int i = 0; i < 2; i++)
     {
-      for (unsigned int start = 0; start < _header.nslt[i]; )
+
+      for (chunk_map_info<mr_antoine_occ_item_t>
+	     cm_occ(_header.nslt[i], 1000000, _header.A[i]);
+	   cm_occ.map_next(_file_reader, _offset_occ[i]); )
 	{
-	  unsigned int num = 1000000;
+	  mr_antoine_occ_item_t *pocc = cm_occ.ptr();
 
-	  if (num > _header.nslt[i] - start)
-	    num = _header.nslt[i] - start;
-
-	  mr_mapped_data h;
-
-	  void *data =
-	    MAP_BLOCK_DATA(_offset_occ[i] +
-			   start * _header.A[i] * sizeof(uint32_t),
-			   num * _header.A[i] * sizeof(uint32_t), h);
-
-	  mr_antoine_occ_item_t *pocc = (mr_antoine_occ_item_t *) data;
-
-	  for (unsigned int k = 0; k < num; k++)
+	  for (unsigned int k = 0; k < cm_occ.num(); k++)
 	    {
 	      BITSONE_CONTAINER_TYPE *jm_u_k = jm_u;
 
@@ -576,10 +571,6 @@ void mr_antoine_reader<header_version_t>::find_used_states()
 		  jm_u_k += _jm_used_items_per_slot;
 		}
 	    }
-
-	  h.unmap();
-
-	  start += num;
 	}
 
       jm_u += _header.A[i] * _jm_used_items_per_slot;
