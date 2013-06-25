@@ -377,6 +377,76 @@ dump_istate_chunk(uint32_t start,uint32_t num)
   h.unmap();
 }
 
+template<typename item_t>
+class chunk_map_info
+{
+public:
+  chunk_map_info(unsigned int end, unsigned int chunk)
+  {
+    _end = end;
+    _chunk = chunk;
+
+    _cur = -chunk;
+  }
+
+  ~chunk_map_info()
+  {
+    _h.unmap();
+  }
+
+protected:
+  item_t *_ptr;
+
+  unsigned int _end;
+  unsigned int _chunk;
+
+  unsigned int _cur;
+  unsigned int _num;
+
+  mr_mapped_data _h;
+
+public:
+  item_t      *ptr() { return _ptr; } /* Ptr to current chunk data. */
+
+  unsigned int cur() { return _cur; } /* Current start. */
+  unsigned int num() { return _num; } /* Current chunk. */
+
+protected:
+  bool next()
+  {
+    _cur += _chunk;
+
+    if (_cur >= _end)
+      return false;
+
+    _num = _chunk;
+
+    if (_num > _end - _cur)
+      _num = _end - _cur;
+
+    return true;
+  }
+
+public:
+  bool map_next(mr_file_reader *_file_reader, uint64_t offset_data)
+  {
+    _h.unmap(); // in case we were used before
+
+    if (!next())
+      return false;
+
+    _ptr = (item_t *)
+      MAP_BLOCK_DATA(offset_data +
+		     _cur * sizeof (item_t),
+		     _num * sizeof (item_t), _h);
+
+    return true;
+  }
+
+};
+
+
+
 template<class header_version_t>
 void mr_antoine_reader<header_version_t>::find_used_states()
 {
@@ -403,23 +473,13 @@ void mr_antoine_reader<header_version_t>::find_used_states()
 	     _occ_used_items[i] * sizeof (BITSONE_CONTAINER_TYPE));
     }
 
-  for (unsigned int start = 0; start < _header.nsd; )
+  for (chunk_map_info<mr_antoine_istate_item_t>
+	 cm_istate(_header.nsd,1000000);
+       cm_istate.map_next(_file_reader,_offset_istate); )
     {
-      unsigned int num = 1000000;
+      mr_antoine_istate_item_t *pistate = cm_istate.ptr();
 
-      if (num > _header.nsd - start)
-	num = _header.nsd - start;
-
-      mr_mapped_data h;
-
-      void *data =
-	MAP_BLOCK_DATA(_offset_istate +
-		       start * sizeof(mr_antoine_istate_item_t),
-		       num * sizeof(mr_antoine_istate_item_t), h);
-
-      mr_antoine_istate_item_t *pistate = (mr_antoine_istate_item_t *) data;
-
-      for (unsigned int j = 0; j < num; j++)
+      for (unsigned int j = 0; j < cm_istate.num(); j++)
 	{
 	  for (unsigned int i = 0; i < 2; i++)
 	    {
@@ -434,10 +494,6 @@ void mr_antoine_reader<header_version_t>::find_used_states()
 	    }
 	  pistate++;
 	}
-
-      h.unmap();
-
-      start += num;
     }
 
   for (int i = 0; i < 2; i++)
@@ -544,6 +600,15 @@ void mr_antoine_reader<header_version_t>::find_used_states()
 
       printf ("JM %zd used: %d\n", i, jm_used);
     }
+
+  /* To calculate the maximum energy, we must map the istate in chunks,
+   * and for each chunk, we must map the occ states for both particle
+   * kinds in chunks too...
+   */
+
+
+
+
 
 
 }
