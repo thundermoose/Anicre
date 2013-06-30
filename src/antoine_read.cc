@@ -525,8 +525,6 @@ void mr_antoine_reader<header_version_t>::find_used_states()
 	 cm_istate(_header.nsd, 1000000);
        cm_istate.map_next(_file_reader, _offset_istate); )
     {
-      mr_antoine_istate_item_t *pistate = cm_istate.ptr();
-
       for (mr_file_chunk<mr_antoine_occ_item_t>
 	     cm_occ0(_header.nslt[0], 1000000, _header.A[0]);
 	   cm_occ0.map_next(_file_reader, _offset_occ[0]); )
@@ -538,6 +536,8 @@ void mr_antoine_reader<header_version_t>::find_used_states()
 	       cm_occ1.map_next(_file_reader, _offset_occ[1]); )
 	    {
 	      mr_antoine_occ_item_t *pocc1 = cm_occ1.ptr();
+
+	      mr_antoine_istate_item_t *pistate = cm_istate.ptr();
 
 	      for (unsigned int j = 0; j < cm_istate.num(); j++)
 		{
