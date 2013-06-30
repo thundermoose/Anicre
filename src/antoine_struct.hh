@@ -33,7 +33,7 @@ struct mr_antoine_nr_ll_jj_item_t // * num_of_shell
 struct mr_antoine_num_mpr_item_t // * num_of_jm
 {
   uint32_t num;
-  uint32_t mpr;
+  int32_t  mpr;
 };
 
 struct mr_antoine_istate_item_t // * nsd
