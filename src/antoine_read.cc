@@ -245,6 +245,7 @@ void mr_antoine_reader<header_version_t>::dump_info()
   
   uint32_t max_num = 0;
   int32_t  max_mpr = 0;
+  int32_t  min_mpr = 0;
   
   for (uint32_t i = 0; i < _header.num_of_jm; i++)
     {
@@ -252,6 +253,8 @@ void mr_antoine_reader<header_version_t>::dump_info()
 	max_num = _num_mpr[i].num;
       if (_num_mpr[i].mpr > max_mpr)
 	max_mpr = _num_mpr[i].mpr;
+      if (_num_mpr[i].mpr < min_mpr)
+	min_mpr = _num_mpr[i].mpr;
     }
   
   printf (" max: %s%3d %3d%s\n",
@@ -600,6 +603,132 @@ void mr_antoine_reader<header_version_t>::find_used_states()
   if (min_m != max_m)
     FATAL("m is not the same for all states, range: [%d,%d].",
 	  min_m, max_m);
+
+  int M = min_m;
+
+  ///////////////////////////////////////////////////////////////////////
+  //
+  // TODO: move following into some other function (logically separate)
+  //
+  ///////////////////////////////////////////////////////////////////////
+
+  uint32_t max_num = 0;
+  int32_t  max_mpr = 0;
+  int32_t  min_mpr = 0;
+
+  for (uint32_t i = 0; i < _header.num_of_jm; i++)
+    {
+      if (_num_mpr[i].num > max_num)
+	max_num = _num_mpr[i].num;
+      if (_num_mpr[i].mpr > max_mpr)
+	max_mpr = _num_mpr[i].mpr;
+      if (_num_mpr[i].mpr < min_mpr)
+	min_mpr = _num_mpr[i].mpr;
+    }
+
+  // Calculate tables of with sp states can be used when we are
+  // missing a certain m to reach the total sum_m.  Also keep track
+  // of how mush energy is needed at each location
+
+  int32_t miss_m_min = M - max_mpr;
+  int32_t miss_m_max = M - min_mpr;
+
+  for (int32_t miss_m = miss_m_min; miss_m <= miss_m_max; miss_m++)
+    {
+      // Simply go through all states.
+
+      printf ("--- missing m=%d ---\n",miss_m);
+
+      int last_N = 0;
+      int cnt = 0;
+
+      for (uint32_t i = 0; i < _header.num_of_jm; i++)
+	{
+	  if (_num_mpr[i].mpr == miss_m)
+	    {
+	      // Has the correct m to fix the situation.
+	      // How much energy does it require?
+
+	      uint32_t sh = _num_mpr[i].num;
+
+	      mr_antoine_nr_ll_jj_item_t &shell =
+		_nr_ll_jj[sh-1];
+
+	      int N = 2 * shell.nr + shell.ll;
+
+	      if (N != last_N)
+		{
+		  if (cnt)
+		    printf ("N %d: %d\n",last_N,cnt);
+		  last_N = N;
+		  cnt = 0;
+		}
+	      cnt++;
+	    }
+	}
+      if (cnt)
+	printf ("N %d: %d\n",last_N,cnt);
+    }
+
+
+
+
+#if 0
+  // When calculating what particle can go in as the second last, we
+  // must also take into consideration in what state we might leave
+  // the system.  We know that the next particle to be added will have
+  // a higher index, i.e. add at least as much energy.
+  //
+  // I.e. if we add a certain amount of energy, we might already
+  // know that further additions are futile.  So, we should consult
+  // the previous tables to see if there is any possible future.
+
+  int32_t miss_2m_min = M - max_mpr;
+  int32_t miss_2m_max = M - min_mpr;
+
+  for (int32_t miss_m = miss_m_min; miss_m <= miss_m_max; miss_m++)
+    {
+      // Simply go through all states.
+
+      printf ("--- missing m=%d ---\n",miss_m);
+
+      int last_N = 0;
+      int cnt = 0;
+
+      for (uint32_t i = 0; i < _header.num_of_jm; i++)
+	{
+	  if (_num_mpr[i].mpr == miss_m)
+	    {
+	      // Has the correct m to fix the situation.
+	      // How much energy does it require?
+
+	      uint32_t sh = _num_mpr[i].num;
+
+	      mr_antoine_nr_ll_jj_item_t &shell =
+		_nr_ll_jj[sh-1];
+
+	      int N = 2 * shell.nr + shell.ll;
+
+	      if (N > last_N)
+		{
+		  if (cnt)
+		    printf ("N %d: %d\n",last_N,cnt);
+		  last_N = N;
+		  cnt = 0;
+		}
+	      cnt++;
+	    }
+	}
+      if (cnt)
+	printf ("N %d: %d\n",last_N,cnt);
+    }
+#endif
+
+
+
+
+
+
 
 
 }
