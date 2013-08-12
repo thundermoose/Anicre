@@ -624,28 +624,44 @@ void mr_antoine_reader<header_version_t>::find_used_states()
   //
   ///////////////////////////////////////////////////////////////////////
 
-  uint32_t max_num = 0;
-  int32_t  max_mpr = 0;
-  int32_t  min_mpr = 0;
+  int32_t max_st_N = 0;
+
+  for (uint32_t i = 0; i < _header.num_of_shell; i++)
+    {
+      mr_antoine_nr_ll_jj_item_t &shell =
+	_nr_ll_jj[i];
+
+      int N = 2 * shell.nr + shell.ll;
+
+      if (N > max_st_N)
+	max_st_N = N;
+    }
+
+  uint32_t max_st_num = 0;
+  int32_t  max_st_mpr = 0;
+  int32_t  min_st_mpr = 0;
 
   for (uint32_t i = 0; i < _header.num_of_jm; i++)
     {
-      if (_num_mpr[i].num > max_num)
-	max_num = _num_mpr[i].num;
-      if (_num_mpr[i].mpr > max_mpr)
-	max_mpr = _num_mpr[i].mpr;
-      if (_num_mpr[i].mpr < min_mpr)
-	min_mpr = _num_mpr[i].mpr;
+      if (_num_mpr[i].num > max_st_num)
+	max_st_num = _num_mpr[i].num;
+      if (_num_mpr[i].mpr > max_st_mpr)
+	max_st_mpr = _num_mpr[i].mpr;
+      if (_num_mpr[i].mpr < min_st_mpr)
+	min_st_mpr = _num_mpr[i].mpr;
     }
+
+  printf ("max_N: %2d  max_num: %2d  min_mpr: %2d  max_mpr: %2d\n",
+	  max_st_N, max_st_num, min_st_mpr, max_st_mpr);
 
   // Calculate tables of with sp states that can be used when we are
   // missing a certain m to reach the total sum_m.  Also keep track
   // of how mush energy is needed at each location
 
-  int32_t miss_m_min = M - max_mpr;
-  int32_t miss_m_max = M - min_mpr;
+  int32_t miss_m_min = M - max_st_mpr;
+  int32_t miss_m_max = M - min_st_mpr;
 
-
+  // repl_states_by_m_N repl_st(miss_m_min, miss_m_max, );
 
   for (int32_t miss_m = miss_m_min; miss_m <= miss_m_max; miss_m++)
     {
