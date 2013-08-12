@@ -523,6 +523,7 @@ void mr_antoine_reader<header_version_t>::find_used_states()
 
   int min_N = INT_MAX, max_N = 0;
   int min_m = INT_MAX, max_m = 0;
+  int min_pos_m = INT_MAX, max_pos_m = 0;
 
   for (mr_file_chunk<mr_antoine_istate_item_t>
 	 cm_istate(_header.nsd, 1000000);
@@ -551,6 +552,7 @@ void mr_antoine_reader<header_version_t>::find_used_states()
 		    {
 		      int sum_N = 0;
 		      int sum_m = 0;
+		      int sum_pos_m = 0;
 
 		      mr_antoine_occ_item_t *poccs[2] =
 			{
@@ -578,6 +580,9 @@ void mr_antoine_reader<header_version_t>::find_used_states()
 
 			      sum_N += N;
 			      sum_m += mpr;
+
+			      if (mpr > 0)
+				sum_pos_m += mpr;
 			    }
 			}
 
@@ -585,10 +590,16 @@ void mr_antoine_reader<header_version_t>::find_used_states()
 			max_N = sum_N;
 		      if (sum_N < min_N)
 			min_N = sum_N;
+
 		      if (sum_m > max_m)
 			max_m = sum_m;
 		      if (sum_m < min_m)
 			min_m = sum_m;
+
+		      if (sum_pos_m > max_pos_m)
+			max_pos_m = sum_pos_m;
+		      if (sum_pos_m < min_pos_m)
+			min_pos_m = sum_pos_m;
 		    }
 
 		  pistate++;
@@ -597,8 +608,9 @@ void mr_antoine_reader<header_version_t>::find_used_states()
 	}
     }
 
-  printf ("N_min: %d  N_max: %d\n", min_N, max_N);
-  printf ("m_min: %d  m_max: %d\n", min_m, max_m);
+  printf ("N_min:     %2d  N_max:     %2d\n", min_N, max_N);
+  printf ("m_min:     %2d  m_max:     %2d\n", min_m, max_m);
+  printf ("pos_m_min: %2d  pos_m_max: %2d\n", min_pos_m, max_pos_m);
 
   if (min_m != max_m)
     FATAL("m is not the same for all states, range: [%d,%d].",
@@ -626,12 +638,14 @@ void mr_antoine_reader<header_version_t>::find_used_states()
 	min_mpr = _num_mpr[i].mpr;
     }
 
-  // Calculate tables of with sp states can be used when we are
+  // Calculate tables of with sp states that can be used when we are
   // missing a certain m to reach the total sum_m.  Also keep track
   // of how mush energy is needed at each location
 
   int32_t miss_m_min = M - max_mpr;
   int32_t miss_m_max = M - min_mpr;
+
+
 
   for (int32_t miss_m = miss_m_min; miss_m <= miss_m_max; miss_m++)
     {
