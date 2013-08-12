@@ -704,6 +704,7 @@ void mr_antoine_reader<header_version_t>::find_used_states()
 	printf ("N %d: %d\n",last_N,cnt);
     }
 
+  repl_st.dump();
 
 
 

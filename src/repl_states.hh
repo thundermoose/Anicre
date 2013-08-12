@@ -28,6 +28,9 @@ public:
     _entries[off]++;
   }
 
+public:
+  void dump();
+
 
 };
 
