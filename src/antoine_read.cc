@@ -708,7 +708,6 @@ void mr_antoine_reader<header_version_t>::find_used_states()
 
 
 
-#if 0
   // When calculating what particle can go in as the second last, we
   // must also take into consideration in what state we might leave
   // the system.  We know that the next particle to be added will have
@@ -718,10 +717,12 @@ void mr_antoine_reader<header_version_t>::find_used_states()
   // know that further additions are futile.  So, we should consult
   // the previous tables to see if there is any possible future.
 
-  int32_t miss_2m_min = M - max_mpr;
-  int32_t miss_2m_max = M - min_mpr;
+  int32_t miss_2m_min = M - 2 * max_sp_mpr;
+  int32_t miss_2m_max = M - 2 * min_sp_mpr;
 
-  for (int32_t miss_m = miss_m_min; miss_m <= miss_m_max; miss_m++)
+  repl_states_by_m_N repl_st2(miss_2m_min, miss_2m_max, max_sp_N * 2);
+
+  for (int32_t miss_m = miss_2m_min; miss_m <= miss_2m_max; miss_m++)
     {
       // Simply go through all states.
 
@@ -732,7 +733,15 @@ void mr_antoine_reader<header_version_t>::find_used_states()
 
       for (uint32_t i = 0; i < _header.num_of_jm; i++)
 	{
-	  if (_num_mpr[i].mpr == miss_m)
+	  // We are missing miss_m.  Can the state m handle that together
+	  // with the next fill-in?  Is there enough energy for such an
+	  // operation?
+
+	  int next_miss_m = miss_m - _num_mpr[i].mpr;
+
+	  int next_N_min = repl_st.min_N(next_miss_m);
+
+	  if (next_N_min != INT_MAX)
 	    {
 	      // Has the correct m to fix the situation.
 	      // How much energy does it require?
@@ -743,6 +752,8 @@ void mr_antoine_reader<header_version_t>::find_used_states()
 		_nr_ll_jj[sh-1];
 
 	      int N = 2 * shell.nr + shell.ll;
+
+	      repl_st2.add_entry(miss_m, N + next_N_min);
 
 	      if (N > last_N)
 		{
@@ -757,9 +768,8 @@ void mr_antoine_reader<header_version_t>::find_used_states()
       if (cnt)
 	printf ("N %d: %d\n",last_N,cnt);
     }
-#endif
 
-
+  repl_st2.dump();
 
 
 
