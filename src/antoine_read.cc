@@ -7,10 +7,12 @@
 #include "mr_file_chunk.hh"
 
 #include "repl_states.hh"
+#include "sp_states.hh"
 
 #include <string.h>
 #include <limits.h>
 
+#include <vector>
 #include <algorithm>
 
 extern int _debug;
@@ -447,7 +449,7 @@ void mr_antoine_reader<header_version_t>::find_used_states()
    * by the occs.
    */
 
-  _jm_used_slots = _header.A[0] + _header.A[1];
+  _jm_used_slots = _header.A[0] + _header.A[1] + 1;
   _jm_used_items_per_slot =
     (_header.num_of_jm + BITSONE_CONTAINER_BITS-1) / BITSONE_CONTAINER_BITS;
 
@@ -462,11 +464,11 @@ void mr_antoine_reader<header_version_t>::find_used_states()
 	 _jm_used_slots * _jm_used_items_per_slot *
 	 sizeof (BITSONE_CONTAINER_TYPE));
 
-  BITSONE_CONTAINER_TYPE *jm_u = _jm_used;
+  BITSONE_CONTAINER_TYPE *jm_u_all = _jm_used;
+  BITSONE_CONTAINER_TYPE *jm_u = _jm_used + _jm_used_items_per_slot;
 
   for (int i = 0; i < 2; i++)
     {
-
       for (mr_file_chunk<mr_antoine_occ_item_t>
 	     cm_occ(_header.nslt[i], 1000000, _header.A[i]);
 	   cm_occ.map_next(_file_reader, _offset_occ[i]); )
@@ -492,9 +494,12 @@ void mr_antoine_reader<header_version_t>::find_used_states()
 			  _jm_used_items_per_slot, _jm_used_slots);
 		  fflush(stdout);
 		  */
+		  jm_u_all[offset] |= mask;
+
 		  jm_u_k[offset] |= mask;
 
 		  jm_u_k += _jm_used_items_per_slot;
+
 		}
 	    }
 	}
@@ -503,6 +508,8 @@ void mr_antoine_reader<header_version_t>::find_used_states()
     }
 
   jm_u = _jm_used;
+
+  int sp_used = -1;
 
   for (size_t i = 0; i < _jm_used_slots; i++)
     {
@@ -516,6 +523,39 @@ void mr_antoine_reader<header_version_t>::find_used_states()
 	}
 
       printf ("JM %zd used: %d\n", i, jm_used);
+
+      if (i == 0)
+	sp_used = jm_used;
+    }
+
+  /* Fetch all the sp states that actually are in use.
+   * No need to included unused ones in tables.
+   */
+
+  std::vector<sp_state> sps;
+
+  for (size_t j = 0; j < _jm_used_items_per_slot; j++)
+    {
+      BITSONE_CONTAINER_TYPE used = jm_u[j];
+
+      int off = 0;
+
+      for ( ; used; )
+	{
+	  if (used & 1)
+	    {
+	      size_t i = j * sizeof (used) + off;
+
+	      mr_antoine_num_mpr_item_t &mpr = _num_mpr[i];
+	      uint32_t sh = mpr.num;
+	      mr_antoine_nr_ll_jj_item_t &shell = _nr_ll_jj[sh-1];
+
+	      sps.push_back(sp_state(shell.nr, shell.ll, shell.jj, mpr.mpr));
+	    }
+
+	  used >>= 1;
+	  off++;
+	}
     }
 
   /* To calculate the maximum energy, we must map the istate in chunks,
