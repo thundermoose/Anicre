@@ -6,6 +6,8 @@
 
 #include "mr_file_chunk.hh"
 
+#include "repl_states.hh"
+
 #include <string.h>
 #include <limits.h>
 
@@ -661,7 +663,7 @@ void mr_antoine_reader<header_version_t>::find_used_states()
   int32_t miss_m_min = M - max_sp_mpr;
   int32_t miss_m_max = M - min_sp_mpr;
 
-  // repl_states_by_m_N repl_st(miss_m_min, miss_m_max, );
+  repl_states_by_m_N repl_st(miss_m_min, miss_m_max, max_sp_N);
 
   for (int32_t miss_m = miss_m_min; miss_m <= miss_m_max; miss_m++)
     {
@@ -685,6 +687,8 @@ void mr_antoine_reader<header_version_t>::find_used_states()
 		_nr_ll_jj[sh-1];
 
 	      int N = 2 * shell.nr + shell.ll;
+
+	      repl_st.add_entry(miss_m, N);
 
 	      if (N != last_N)
 		{
