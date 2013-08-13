@@ -544,7 +544,7 @@ void mr_antoine_reader<header_version_t>::find_used_states()
 	{
 	  if (used & 1)
 	    {
-	      size_t i = j * sizeof (used) + off;
+	      size_t i = j * sizeof (used) * 8 + off;
 
 	      mr_antoine_num_mpr_item_t &mpr = _num_mpr[i];
 	      uint32_t sh = mpr.num;
@@ -666,6 +666,16 @@ void mr_antoine_reader<header_version_t>::find_used_states()
   //
   ///////////////////////////////////////////////////////////////////////
 
+  for (size_t i = 0; i < sps.size(); i++)
+    {
+      sp_state &sp = sps[i];
+
+      printf ("%4zd: %3d %3d %3d %3d : %3d\n", i,
+	      sp._n, sp._l, sp._j, sp._m, 2 * sp._n + sp._l);
+    }
+
+
+
   int32_t max_sp_N = 0;
 
   for (uint32_t i = 0; i < _header.num_of_shell; i++)
@@ -714,19 +724,16 @@ void mr_antoine_reader<header_version_t>::find_used_states()
       int last_N = 0;
       int cnt = 0;
 
-      for (uint32_t i = 0; i < _header.num_of_jm; i++)
+      for (size_t i = 0; i < sps.size(); i++)
 	{
-	  if (_num_mpr[i].mpr == miss_m)
+	  sp_state &sp = sps[i];
+
+	  if (sp._m == miss_m)
 	    {
 	      // Has the correct m to fix the situation.
 	      // How much energy does it require?
 
-	      uint32_t sh = _num_mpr[i].num;
-
-	      mr_antoine_nr_ll_jj_item_t &shell =
-		_nr_ll_jj[sh-1];
-
-	      int N = 2 * shell.nr + shell.ll;
+	      int N = 2 * sp._n + sp._l;
 
 	      repl_st.add_entry(miss_m, N);
 
@@ -771,13 +778,15 @@ void mr_antoine_reader<header_version_t>::find_used_states()
       int last_N = 0;
       int cnt = 0;
 
-      for (uint32_t i = 0; i < _header.num_of_jm; i++)
+      for (size_t i = 0; i < sps.size(); i++)
 	{
+	  sp_state &sp = sps[i];
+
 	  // We are missing miss_m.  Can the state m handle that together
 	  // with the next fill-in?  Is there enough energy for such an
 	  // operation?
 
-	  int next_miss_m = miss_m - _num_mpr[i].mpr;
+	  int next_miss_m = miss_m - sp._m;
 
 	  int next_N_min = repl_st.min_N(next_miss_m);
 
@@ -786,12 +795,7 @@ void mr_antoine_reader<header_version_t>::find_used_states()
 	      // Has the correct m to fix the situation.
 	      // How much energy does it require?
 
-	      uint32_t sh = _num_mpr[i].num;
-
-	      mr_antoine_nr_ll_jj_item_t &shell =
-		_nr_ll_jj[sh-1];
-
-	      int N = 2 * shell.nr + shell.ll;
+	      int N = 2 * sp._n + sp._l;
 
 	      repl_st2.add_entry(miss_m, N + next_N_min);
 
