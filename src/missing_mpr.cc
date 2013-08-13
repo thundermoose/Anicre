@@ -145,4 +145,48 @@ void missing_mpr_tables(int M, vect_sp_state &sps)
   printf ("===================================\n");
 
   repl_st2.dump();
+
+
+
+
+
+
+  int32_t miss_3m_min = M - 3 * max_sp_mpr;
+  int32_t miss_3m_max = M - 3 * min_sp_mpr;
+
+  odd_even_min_max(miss_3m_min, miss_3m_max, 1); // odd
+
+  repl_states_by_m_N repl_st3(miss_3m_min, miss_3m_max, max_sp_N * 3);
+
+  for (int32_t miss_m = miss_3m_min; miss_m <= miss_3m_max; miss_m += 2)
+    {
+      // Simply go through all states.
+
+      for (size_t i = 0; i < sps.size(); i++)
+	{
+	  sp_state &sp = sps[i];
+
+	  // We are missing miss_m.  Can the state m handle that together
+	  // with the next fill-in?  Is there enough energy for such an
+	  // operation?
+
+	  int next_miss_m = miss_m - sp._m;
+
+	  int next_N_min = repl_st2.min_N(next_miss_m, (int) i);
+
+	  if (next_N_min != INT_MAX)
+	    {
+	      // Has the correct m to fix the situation.
+	      // How much energy does it require?
+
+	      int N = 2 * sp._n + sp._l;
+
+	      repl_st3.add_entry(miss_m, N + next_N_min, (int) i);
+	    }
+	}
+    }
+
+  printf ("===================================\n");
+
+  repl_st3.dump();
 }
