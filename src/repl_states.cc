@@ -33,7 +33,7 @@ void repl_states_by_m_N::dump()
     printf ("%4d",N);
   printf ("%s\n",CT_OUT(NORM_DEF_COL));
 
-  for (int m = _min_m; m < _min_m + _rng_m; m++)
+  for (int m = _min_m; m < _min_m + _rng_m; m += 2)
     {
       printf ("%s%3d%s: %s",
 	      CT_OUT(GREEN),
@@ -46,7 +46,10 @@ void repl_states_by_m_N::dump()
 	  int off = (m - _min_m) * _rng_N + N;
 	  int num = _entries[off];
 
-	  printf ("%4d", num);
+	  if (num)
+	    printf ("%4d", num);
+	  else
+	    printf ("%4s", "-");
 	}
 
       printf ("%s\n", CT_OUT(NORM_DEF_COL));

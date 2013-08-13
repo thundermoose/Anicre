@@ -72,7 +72,7 @@ void missing_mpr_tables(int M, vect_sp_state &sps)
 
   repl_states_by_m_N repl_st(miss_m_min, miss_m_max, max_sp_N);
 
-  for (int32_t miss_m = miss_m_min; miss_m <= miss_m_max; miss_m++)
+  for (int32_t miss_m = miss_m_min; miss_m <= miss_m_max; miss_m += 2)
     {
       // Simply go through all states.
 
@@ -110,11 +110,11 @@ void missing_mpr_tables(int M, vect_sp_state &sps)
   int32_t miss_2m_min = M - 2 * max_sp_mpr;
   int32_t miss_2m_max = M - 2 * min_sp_mpr;
 
-  odd_even_min_max(miss_m_min, miss_m_max, 0); // even
+  odd_even_min_max(miss_2m_min, miss_2m_max, 0); // even
 
   repl_states_by_m_N repl_st2(miss_2m_min, miss_2m_max, max_sp_N * 2);
 
-  for (int32_t miss_m = miss_2m_min; miss_m <= miss_2m_max; miss_m++)
+  for (int32_t miss_m = miss_2m_min; miss_m <= miss_2m_max; miss_m += 2)
     {
       // Simply go through all states.
 
