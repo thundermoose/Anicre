@@ -15,12 +15,12 @@ repl_states_by_m_N::repl_states_by_m_N(int min_m, int max_m, int max_N)
 
   size_t sz = _rng_m * _rng_N;
 
-  _entries = (int*) malloc (sz * sizeof (int));
+  _entries = new vect_int[sz];
+}
 
-  if (!_entries)
-    FATAL("Memory allocation failure (_entries).");
-
-  memset (_entries, 0, sz * sizeof (int));
+repl_states_by_m_N::~repl_states_by_m_N()
+{
+  delete[] _entries;
 }
 
 void repl_states_by_m_N::dump()
@@ -44,10 +44,11 @@ void repl_states_by_m_N::dump()
       for (int N = 0; N < _rng_N; N++)
 	{
 	  int off = (m - _min_m) * _rng_N + N;
-	  int num = _entries[off];
+	  vect_int &vect = _entries[off];
+	  size_t num = vect.size();
 
 	  if (num)
-	    printf ("%4d", num);
+	    printf ("%4zd", num);
 	  else
 	    printf ("%4s", "-");
 	}

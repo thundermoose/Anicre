@@ -87,7 +87,7 @@ void missing_mpr_tables(int M, vect_sp_state &sps)
 
 	      int N = 2 * sp._n + sp._l;
 
-	      repl_st.add_entry(miss_m, N);
+	      repl_st.add_entry(miss_m, N, (int) i);
 	    }
 	}
     }
@@ -128,7 +128,7 @@ void missing_mpr_tables(int M, vect_sp_state &sps)
 
 	  int next_miss_m = miss_m - sp._m;
 
-	  int next_N_min = repl_st.min_N(next_miss_m);
+	  int next_N_min = repl_st.min_N(next_miss_m, (int) i);
 
 	  if (next_N_min != INT_MAX)
 	    {
@@ -137,7 +137,7 @@ void missing_mpr_tables(int M, vect_sp_state &sps)
 
 	      int N = 2 * sp._n + sp._l;
 
-	      repl_st2.add_entry(miss_m, N + next_N_min);
+	      repl_st2.add_entry(miss_m, N + next_N_min, (int) i);
 	    }
 	}
     }
