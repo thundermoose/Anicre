@@ -84,6 +84,8 @@ void missing_mpr_tables(int M, vect_sp_state &sps)
 	}
     }
 
+  printf ("===================================\n");
+  
   repl_st.dump();
 
 
@@ -129,6 +131,8 @@ void missing_mpr_tables(int M, vect_sp_state &sps)
 	    }
 	}
     }
+
+  printf ("===================================\n");
 
   repl_st2.dump();
 }
