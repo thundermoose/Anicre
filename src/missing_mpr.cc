@@ -12,6 +12,7 @@
 
 void missing_mpr_tables(int M, vect_sp_state &sps)
 {
+  /*
   for (size_t i = 0; i < sps.size(); i++)
     {
       sp_state &sp = sps[i];
@@ -19,8 +20,17 @@ void missing_mpr_tables(int M, vect_sp_state &sps)
       printf ("%4zd: %3d %3d %3d %3d : %3d\n", i,
 	      sp._n, sp._l, sp._j, sp._m, 2 * sp._n + sp._l);
     }
+  */
 
-
+  /* TODO: resort the sp states accoring the major N, next m.
+   * (Then n, l, j, which do not matter).
+   *
+   * Reason for m is such that when several sp states can be used form
+   * a certain m, N, then better have the list giving the same partial
+   * m contribution after each other.  Then the next state to fill
+   * will be using the same list a few times, instead of bouncing back
+   * and forth.
+   */
 
   int32_t max_sp_N = 0;
 
@@ -58,11 +68,6 @@ void missing_mpr_tables(int M, vect_sp_state &sps)
     {
       // Simply go through all states.
 
-      printf ("--- missing m=%d ---\n",miss_m);
-
-      int last_N = 0;
-      int cnt = 0;
-
       for (size_t i = 0; i < sps.size(); i++)
 	{
 	  sp_state &sp = sps[i];
@@ -75,19 +80,8 @@ void missing_mpr_tables(int M, vect_sp_state &sps)
 	      int N = 2 * sp._n + sp._l;
 
 	      repl_st.add_entry(miss_m, N);
-
-	      if (N != last_N)
-		{
-		  if (cnt)
-		    printf ("N %d: %d\n",last_N,cnt);
-		  last_N = N;
-		  cnt = 0;
-		}
-	      cnt++;
 	    }
 	}
-      if (cnt)
-	printf ("N %d: %d\n",last_N,cnt);
     }
 
   repl_st.dump();
@@ -112,11 +106,6 @@ void missing_mpr_tables(int M, vect_sp_state &sps)
     {
       // Simply go through all states.
 
-      printf ("--- missing m=%d ---\n",miss_m);
-
-      int last_N = 0;
-      int cnt = 0;
-
       for (size_t i = 0; i < sps.size(); i++)
 	{
 	  sp_state &sp = sps[i];
@@ -137,19 +126,8 @@ void missing_mpr_tables(int M, vect_sp_state &sps)
 	      int N = 2 * sp._n + sp._l;
 
 	      repl_st2.add_entry(miss_m, N + next_N_min);
-
-	      if (N > last_N)
-		{
-		  if (cnt)
-		    printf ("N %d: %d\n",last_N,cnt);
-		  last_N = N;
-		  cnt = 0;
-		}
-	      cnt++;
 	    }
 	}
-      if (cnt)
-	printf ("N %d: %d\n",last_N,cnt);
     }
 
   repl_st2.dump();
