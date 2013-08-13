@@ -42,10 +42,13 @@ public:
       {
 	vect_int &vect = _entries[off+N];
 
-	(void) i;
+	/* For us to accept this, we must have a state in the list
+	 * with index > i.
+	 */
 
-	if (vect.size() != 0)
-	  return N;
+	for (size_t j = 0; j < vect.size(); j++)
+	  if (vect[j] > i)
+	    return N;
       }
 
     return INT_MAX;
