@@ -1,6 +1,8 @@
 #ifndef __SP_STATES_HH__
 #define __SP_STATES_HH__
 
+#include <vector>
+
 struct sp_state
 {
 public:
@@ -18,5 +20,7 @@ public:
   int _j;
   int _m;
 };
+
+typedef std::vector<sp_state> vect_sp_state;
 
 #endif/*__SP_STATES_HH__*/

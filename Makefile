@@ -6,7 +6,7 @@ endif
 all: mfr
 
 OBJS = mfr_main.o mr_file_reader.o mr_base_reader.o \
-	antoine_read.o repl_states.o \
+	antoine_read.o missing_mpr.o repl_states.o \
 	colourtext.o markconvbold.o error.o
 
 ####################################################################

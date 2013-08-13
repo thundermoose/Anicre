@@ -3,6 +3,7 @@
 #define __REPL_STATES_HH__
 
 #include <limits.h>
+#include <assert.h>
 
 class repl_states_by_m_N
 {
