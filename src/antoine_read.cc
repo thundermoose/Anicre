@@ -689,22 +689,21 @@ void mr_antoine_reader<header_version_t>::find_used_states()
 	max_sp_N = N;
     }
 
-  uint32_t max_sp_num = 0;
   int32_t  max_sp_mpr = 0;
   int32_t  min_sp_mpr = 0;
 
-  for (uint32_t i = 0; i < _header.num_of_jm; i++)
+  for (size_t i = 0; i < sps.size(); i++)
     {
-      if (_num_mpr[i].num > max_sp_num)
-	max_sp_num = _num_mpr[i].num;
-      if (_num_mpr[i].mpr > max_sp_mpr)
-	max_sp_mpr = _num_mpr[i].mpr;
-      if (_num_mpr[i].mpr < min_sp_mpr)
-	min_sp_mpr = _num_mpr[i].mpr;
+      sp_state &sp = sps[i];
+
+      if (sp._m > max_sp_mpr)
+	max_sp_mpr = sp._m;
+      if (sp._m < min_sp_mpr)
+	min_sp_mpr = sp._m;
     }
 
-  printf ("max_N: %2d  max_num: %2d  min_mpr: %2d  max_mpr: %2d\n",
-	  max_sp_N, max_sp_num, min_sp_mpr, max_sp_mpr);
+  printf ("max_N: %2d  min_mpr: %2d  max_mpr: %2d\n",
+	  max_sp_N, min_sp_mpr, max_sp_mpr);
 
   // Calculate tables of with sp states that can be used when we are
   // missing a certain m to reach the total sum_m.  Also keep track
