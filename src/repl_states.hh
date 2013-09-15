@@ -30,7 +30,7 @@ public:
     return vect.size() != 0;
   }
 
-  int min_N(int m, int i)
+  int min_N(int m, int i) const
   {
     if (m < _min_m ||
 	m - _min_m >= _rng_m)
@@ -65,7 +65,7 @@ public:
   }
 
 public:
-  void dump();
+  void dump() const;
 
 
 };

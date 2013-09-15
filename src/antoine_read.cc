@@ -527,6 +527,8 @@ void mr_antoine_reader<header_version_t>::find_used_states()
 	sp_used = jm_used;
     }
 
+  (void) sp_used;
+
   /* Fetch all the sp states that actually are in use.
    * No need to included unused ones in tables.
    */

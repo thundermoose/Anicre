@@ -23,7 +23,7 @@ repl_states_by_m_N::~repl_states_by_m_N()
   delete[] _entries;
 }
 
-void repl_states_by_m_N::dump()
+void repl_states_by_m_N::dump() const
 {
   printf ("%sm%s\\%sN%s  %s",
 	  CT_OUT(BOLD_BLUE), CT_OUT(NORM_DEF_COL),

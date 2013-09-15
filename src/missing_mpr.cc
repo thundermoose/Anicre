@@ -12,11 +12,68 @@ void odd_even_min_max(int32_t &min, int32_t &max, int32_t oddeven)
   max -= ((max ^ oddeven) & 1);
 }
 
-/* Calculate tables of which sp states may be used when a known
+/* Calculate table of which sp states may be used when a known
  * m is missing, and known how much energy is left to be used.
  */
 
-void missing_mpr_tables(int M, vect_sp_state &sps)
+repl_states_by_m_N *
+missing_mpr_table(const vect_sp_state &sps,
+		  const repl_states_by_m_N *prev_repl_st,
+		  int32_t M,
+		  int32_t min_sp_mpr,
+		  int32_t max_sp_mpr,
+		  int32_t max_sp_N,
+		  int32_t oddeven)
+{
+  int32_t miss_m_min = M - max_sp_mpr;
+  int32_t miss_m_max = M - min_sp_mpr;
+
+  odd_even_min_max(miss_m_min, miss_m_max, oddeven);
+
+  repl_states_by_m_N *repl_st =
+    new repl_states_by_m_N(miss_m_min, miss_m_max, max_sp_N);
+
+  for (int32_t miss_m = miss_m_min; miss_m <= miss_m_max; miss_m += 2)
+    {
+      // Simply go through all states.
+
+      for (size_t i = 0; i < sps.size(); i++)
+	{
+	  const sp_state &sp = sps[i];
+
+	  // We are missing miss_m.  Can the state m handle that together
+	  // with the next fill-in?  Is there enough energy for such an
+	  // operation?
+
+	  int next_miss_m = miss_m - sp._m;
+
+	  int next_N_min = prev_repl_st->min_N(next_miss_m, (int) i);
+
+	  if (next_N_min != INT_MAX)
+	    {
+	      // Has the correct m to fix the situation.
+	      // How much energy does it require?
+
+	      int N = 2 * sp._n + sp._l;
+
+	      repl_st->add_entry(miss_m, N + next_N_min, (int) i);
+	    }
+	}
+    }
+
+  printf ("===================================\n");
+
+  repl_st->dump();
+
+  return repl_st;
+}
+
+/* Calculate tables of which sp states may be used, chained to fill up
+ * all missing states.  Begin at the end, i.e. which states can fill
+ * the last holes.
+ */
+
+void missing_mpr_tables(int M, const vect_sp_state &sps)
 {
   /*
   for (size_t i = 0; i < sps.size(); i++)
@@ -45,7 +102,7 @@ void missing_mpr_tables(int M, vect_sp_state &sps)
 
   for (size_t i = 0; i < sps.size(); i++)
     {
-      sp_state &sp = sps[i];
+      const sp_state &sp = sps[i];
 
       int N = 2 * sp._n + sp._l;
 
@@ -78,7 +135,7 @@ void missing_mpr_tables(int M, vect_sp_state &sps)
 
       for (size_t i = 0; i < sps.size(); i++)
 	{
-	  sp_state &sp = sps[i];
+	  const sp_state &sp = sps[i];
 
 	  if (sp._m == miss_m)
 	    {
@@ -120,7 +177,7 @@ void missing_mpr_tables(int M, vect_sp_state &sps)
 
       for (size_t i = 0; i < sps.size(); i++)
 	{
-	  sp_state &sp = sps[i];
+	  const sp_state &sp = sps[i];
 
 	  // We are missing miss_m.  Can the state m handle that together
 	  // with the next fill-in?  Is there enough energy for such an
@@ -151,42 +208,12 @@ void missing_mpr_tables(int M, vect_sp_state &sps)
 
 
 
-  int32_t miss_3m_min = M - 3 * max_sp_mpr;
-  int32_t miss_3m_max = M - 3 * min_sp_mpr;
 
-  odd_even_min_max(miss_3m_min, miss_3m_max, 1); // odd
+  repl_states_by_m_N *repl_st3;
 
-  repl_states_by_m_N repl_st3(miss_3m_min, miss_3m_max, max_sp_N * 3);
+  repl_st3 = missing_mpr_table(sps, &repl_st2,
+			       M, 3 * min_sp_mpr, 3 * max_sp_mpr, 
+			       max_sp_N * 3, 1);
 
-  for (int32_t miss_m = miss_3m_min; miss_m <= miss_3m_max; miss_m += 2)
-    {
-      // Simply go through all states.
-
-      for (size_t i = 0; i < sps.size(); i++)
-	{
-	  sp_state &sp = sps[i];
-
-	  // We are missing miss_m.  Can the state m handle that together
-	  // with the next fill-in?  Is there enough energy for such an
-	  // operation?
-
-	  int next_miss_m = miss_m - sp._m;
-
-	  int next_N_min = repl_st2.min_N(next_miss_m, (int) i);
-
-	  if (next_N_min != INT_MAX)
-	    {
-	      // Has the correct m to fix the situation.
-	      // How much energy does it require?
-
-	      int N = 2 * sp._n + sp._l;
-
-	      repl_st3.add_entry(miss_m, N + next_N_min, (int) i);
-	    }
-	}
-    }
-
-  printf ("===================================\n");
-
-  repl_st3.dump();
+  (void) repl_st3;
 }
