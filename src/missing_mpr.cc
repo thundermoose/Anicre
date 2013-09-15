@@ -47,17 +47,29 @@ missing_mpr_table(const vect_sp_state &sps,
 
 	  int next_miss_m = miss_m - sp._m;
 
-	  int next_N_min = prev_repl_st->min_N(next_miss_m, (int) i);
+	  int next_N_min;
 
-	  if (next_N_min != INT_MAX)
+	  if (prev_repl_st)
 	    {
-	      // Has the correct m to fix the situation.
-	      // How much energy does it require?
+	      next_N_min = prev_repl_st->min_N(next_miss_m, (int) i);
 
-	      int N = 2 * sp._n + sp._l;
-
-	      repl_st->add_entry(miss_m, N + next_N_min, (int) i);
+	      if (next_N_min == INT_MAX)
+		continue;
 	    }
+	  else
+	    {
+	      if (next_miss_m != 0)
+		continue;
+
+	      next_N_min = 0;
+	    }
+
+	  // Has the correct m to fix the situation.
+	  // How much energy does it require?
+
+	  int N = 2 * sp._n + sp._l;
+
+	  repl_st->add_entry(miss_m, N + next_N_min, (int) i);
 	}
     }
 
@@ -122,38 +134,11 @@ void missing_mpr_tables(int M, const vect_sp_state &sps)
   // missing a certain m to reach the total sum_m.  Also keep track
   // of how mush energy is needed at each location
 
-  int32_t miss_m_min = M - max_sp_mpr;
-  int32_t miss_m_max = M - min_sp_mpr;
+  repl_states_by_m_N *repl_st1;
 
-  odd_even_min_max(miss_m_min, miss_m_max, 1); // odd
-
-  repl_states_by_m_N repl_st1(miss_m_min, miss_m_max, max_sp_N);
-
-  for (int32_t miss_m = miss_m_min; miss_m <= miss_m_max; miss_m += 2)
-    {
-      // Simply go through all states.
-
-      for (size_t i = 0; i < sps.size(); i++)
-	{
-	  const sp_state &sp = sps[i];
-
-	  if (sp._m == miss_m)
-	    {
-	      // Has the correct m to fix the situation.
-	      // How much energy does it require?
-
-	      int N = 2 * sp._n + sp._l;
-
-	      repl_st1.add_entry(miss_m, N, (int) i);
-	    }
-	}
-    }
-
-  printf ("===================================\n");
-  
-  repl_st1.dump();
-
-
+  repl_st1 = missing_mpr_table(sps, NULL,
+                               M, 1 * min_sp_mpr, 1 * max_sp_mpr,
+                               max_sp_N * 1, 1); // odd
 
   // When calculating what particle can go in as the second last, we
   // must also take into consideration in what state we might leave
@@ -166,7 +151,7 @@ void missing_mpr_tables(int M, const vect_sp_state &sps)
 
   repl_states_by_m_N *repl_st2;
 
-  repl_st2 = missing_mpr_table(sps, &repl_st1,
+  repl_st2 = missing_mpr_table(sps, repl_st1,
                                M, 2 * min_sp_mpr, 2 * max_sp_mpr,
                                max_sp_N * 2, 0); // even
 
