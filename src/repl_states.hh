@@ -67,6 +67,8 @@ public:
 public:
   void dump() const;
 
+  void write_table() const;
+
 
 };
 

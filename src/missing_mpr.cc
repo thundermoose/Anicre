@@ -162,4 +162,8 @@ void missing_mpr_tables(int M, const vect_sp_state &sps)
 			       max_sp_N * 3, 1); // odd
 
   (void) repl_st3;
+
+  repl_st1->write_table();
+  repl_st2->write_table();
+  repl_st3->write_table();
 }
