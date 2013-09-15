@@ -127,7 +127,7 @@ void missing_mpr_tables(int M, const vect_sp_state &sps)
 
   odd_even_min_max(miss_m_min, miss_m_max, 1); // odd
 
-  repl_states_by_m_N repl_st(miss_m_min, miss_m_max, max_sp_N);
+  repl_states_by_m_N repl_st1(miss_m_min, miss_m_max, max_sp_N);
 
   for (int32_t miss_m = miss_m_min; miss_m <= miss_m_max; miss_m += 2)
     {
@@ -144,14 +144,14 @@ void missing_mpr_tables(int M, const vect_sp_state &sps)
 
 	      int N = 2 * sp._n + sp._l;
 
-	      repl_st.add_entry(miss_m, N, (int) i);
+	      repl_st1.add_entry(miss_m, N, (int) i);
 	    }
 	}
     }
 
   printf ("===================================\n");
   
-  repl_st.dump();
+  repl_st1.dump();
 
 
 
@@ -164,56 +164,17 @@ void missing_mpr_tables(int M, const vect_sp_state &sps)
   // know that further additions are futile.  So, we should consult
   // the previous tables to see if there is any possible future.
 
-  int32_t miss_2m_min = M - 2 * max_sp_mpr;
-  int32_t miss_2m_max = M - 2 * min_sp_mpr;
+  repl_states_by_m_N *repl_st2;
 
-  odd_even_min_max(miss_2m_min, miss_2m_max, 0); // even
-
-  repl_states_by_m_N repl_st2(miss_2m_min, miss_2m_max, max_sp_N * 2);
-
-  for (int32_t miss_m = miss_2m_min; miss_m <= miss_2m_max; miss_m += 2)
-    {
-      // Simply go through all states.
-
-      for (size_t i = 0; i < sps.size(); i++)
-	{
-	  const sp_state &sp = sps[i];
-
-	  // We are missing miss_m.  Can the state m handle that together
-	  // with the next fill-in?  Is there enough energy for such an
-	  // operation?
-
-	  int next_miss_m = miss_m - sp._m;
-
-	  int next_N_min = repl_st.min_N(next_miss_m, (int) i);
-
-	  if (next_N_min != INT_MAX)
-	    {
-	      // Has the correct m to fix the situation.
-	      // How much energy does it require?
-
-	      int N = 2 * sp._n + sp._l;
-
-	      repl_st2.add_entry(miss_m, N + next_N_min, (int) i);
-	    }
-	}
-    }
-
-  printf ("===================================\n");
-
-  repl_st2.dump();
-
-
-
-
-
-
+  repl_st2 = missing_mpr_table(sps, &repl_st1,
+                               M, 2 * min_sp_mpr, 2 * max_sp_mpr,
+                               max_sp_N * 2, 0); // even
 
   repl_states_by_m_N *repl_st3;
 
-  repl_st3 = missing_mpr_table(sps, &repl_st2,
+  repl_st3 = missing_mpr_table(sps, repl_st2,
 			       M, 3 * min_sp_mpr, 3 * max_sp_mpr, 
-			       max_sp_N * 3, 1);
+			       max_sp_N * 3, 1); // odd
 
   (void) repl_st3;
 }
