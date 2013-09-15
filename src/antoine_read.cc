@@ -566,7 +566,8 @@ void mr_antoine_reader<header_version_t>::find_used_states()
 
   int min_N = INT_MAX, max_N = 0;
   int min_m = INT_MAX, max_m = 0;
-  int min_pos_m = INT_MAX, max_pos_m = 0;
+  int min_pos_m = INT_MAX, max_pos_m = INT_MIN;
+  int min_neg_m = INT_MAX, max_neg_m = INT_MIN; // redundant
 
   for (mr_file_chunk<mr_antoine_istate_item_t>
 	 cm_istate(_header.nsd, 1000000);
@@ -596,6 +597,7 @@ void mr_antoine_reader<header_version_t>::find_used_states()
 		      int sum_N = 0;
 		      int sum_m = 0;
 		      int sum_pos_m = 0;
+		      int sum_neg_m = 0;
 
 		      mr_antoine_occ_item_t *poccs[2] =
 			{
@@ -626,6 +628,8 @@ void mr_antoine_reader<header_version_t>::find_used_states()
 
 			      if (mpr > 0)
 				sum_pos_m += mpr;
+			      else
+				sum_neg_m += mpr;
 			    }
 			}
 
@@ -643,6 +647,11 @@ void mr_antoine_reader<header_version_t>::find_used_states()
 			max_pos_m = sum_pos_m;
 		      if (sum_pos_m < min_pos_m)
 			min_pos_m = sum_pos_m;
+
+		      if (sum_neg_m > max_neg_m)
+			max_neg_m = sum_neg_m;
+		      if (sum_neg_m < min_neg_m)
+			min_neg_m = sum_neg_m;
 		    }
 
 		  pistate++;
@@ -654,6 +663,7 @@ void mr_antoine_reader<header_version_t>::find_used_states()
   printf ("N_min:     %2d  N_max:     %2d\n", min_N, max_N);
   printf ("m_min:     %2d  m_max:     %2d\n", min_m, max_m);
   printf ("pos_m_min: %2d  pos_m_max: %2d\n", min_pos_m, max_pos_m);
+  printf ("neg_m_min: %2d  neg_m_max: %2d\n", min_neg_m, max_neg_m);
 
   if (min_m != max_m)
     FATAL("m is not the same for all states, range: [%d,%d].",
