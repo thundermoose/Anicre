@@ -568,6 +568,7 @@ void mr_antoine_reader<header_version_t>::find_used_states()
   int min_m = INT_MAX, max_m = 0;
   int min_pos_m = INT_MAX, max_pos_m = INT_MIN;
   int min_neg_m = INT_MAX, max_neg_m = INT_MIN; // redundant
+  int has_parity[2] = { 0, 0 };
 
   for (mr_file_chunk<mr_antoine_istate_item_t>
 	 cm_istate(_header.nsd, 1000000);
@@ -598,6 +599,7 @@ void mr_antoine_reader<header_version_t>::find_used_states()
 		      int sum_m = 0;
 		      int sum_pos_m = 0;
 		      int sum_neg_m = 0;
+		      int sum_l = 0;
 
 		      mr_antoine_occ_item_t *poccs[2] =
 			{
@@ -625,6 +627,7 @@ void mr_antoine_reader<header_version_t>::find_used_states()
 
 			      sum_N += N;
 			      sum_m += mpr;
+			      sum_l += shell.ll;
 
 			      if (mpr > 0)
 				sum_pos_m += mpr;
@@ -652,6 +655,8 @@ void mr_antoine_reader<header_version_t>::find_used_states()
 			max_neg_m = sum_neg_m;
 		      if (sum_neg_m < min_neg_m)
 			min_neg_m = sum_neg_m;
+
+		      has_parity[sum_l & 1] = 1;
 		    }
 
 		  pistate++;
@@ -664,10 +669,14 @@ void mr_antoine_reader<header_version_t>::find_used_states()
   printf ("m_min:     %2d  m_max:     %2d\n", min_m, max_m);
   printf ("pos_m_min: %2d  pos_m_max: %2d\n", min_pos_m, max_pos_m);
   printf ("neg_m_min: %2d  neg_m_max: %2d\n", min_neg_m, max_neg_m);
+  printf ("parity:    even %d odd %d\n", has_parity[0], has_parity[1]);
 
   if (min_m != max_m)
     FATAL("m is not the same for all states, range: [%d,%d].",
 	  min_m, max_m);
+
+  if (has_parity[0] && has_parity[1])
+    FATAL("parity is not the same for all states (both even and odd).");
 
   int M = min_m;
 
