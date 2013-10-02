@@ -19,24 +19,26 @@ public:
   int _min_m, _rng_m;
   int _rng_N;
 
+  size_t _sz_parity; // Table is twice this size!
+
   vect_int *_entries;
 
 public:
-  bool has_entry(int m, int N)
+  bool has_entry(int parity, int m, int N)
   {
     assert(m >= _min_m && (m - _min_m) < _rng_m && N < _rng_N);
     int off = (m - _min_m) * _rng_N + N;
-    vect_int &vect = _entries[off];
+    vect_int &vect = _entries[parity * _sz_parity + off];
     return vect.size() != 0;
   }
 
-  int min_N(int m, int i) const
+  int min_N(int parity, int m, int i) const
   {
     if (m < _min_m ||
 	m - _min_m >= _rng_m)
       return INT_MAX;
 
-    int off = (m - _min_m) * _rng_N;
+    size_t off = parity * _sz_parity + (m - _min_m) * _rng_N;
 
     for (int N = 0; N < _rng_N; N++)
       {
@@ -54,12 +56,12 @@ public:
     return INT_MAX;
   }
 
-  void add_entry(int m, int N, int i)
+  void add_entry(int parity, int m, int N, int i)
   {
     assert(m >= _min_m && (m - _min_m) < _rng_m && N < _rng_N);
     int off = (m - _min_m) * _rng_N + N;
 
-    vect_int &vect = _entries[off];
+    vect_int &vect = _entries[parity * _sz_parity + off];
 
     vect.push_back(i);
   }

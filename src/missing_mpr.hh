@@ -4,6 +4,6 @@
 
 #include "sp_states.hh"
 
-void missing_mpr_tables(int M, const vect_sp_state &sps);
+void missing_mpr_tables(int M, int parity, const vect_sp_state &sps);
 
 #endif/*__MISSING_MPR_HH__*/

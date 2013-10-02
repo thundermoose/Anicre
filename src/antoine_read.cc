@@ -679,6 +679,7 @@ void mr_antoine_reader<header_version_t>::find_used_states()
     FATAL("parity is not the same for all states (both even and odd).");
 
   int M = min_m;
+  int parity = has_parity[1];
 
   ///////////////////////////////////////////////////////////////////////
   //
@@ -686,7 +687,7 @@ void mr_antoine_reader<header_version_t>::find_used_states()
   //
   ///////////////////////////////////////////////////////////////////////
 
-  missing_mpr_tables(M,sps);
+  missing_mpr_tables(M, parity, sps);
 }
 
 #define INSTANTIATE_ANTOINE(header_t)					\

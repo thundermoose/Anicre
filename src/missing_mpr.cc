@@ -49,27 +49,32 @@ missing_mpr_table(const vect_sp_state &sps,
 
 	  int next_N_min;
 
-	  if (prev_repl_st)
+	  for (int parity = 0; parity < (prev_repl_st ? 2 : 1); parity++)
 	    {
-	      next_N_min = prev_repl_st->min_N(next_miss_m, (int) i);
+	      if (prev_repl_st)
+		{
+		  next_N_min = prev_repl_st->min_N(parity,
+						   next_miss_m, (int) i);
 
-	      if (next_N_min == INT_MAX)
-		continue;
+		  if (next_N_min == INT_MAX)
+		    continue;
+		}
+	      else
+		{
+		  if (next_miss_m != 0)
+		    continue;
+
+		  next_N_min = 0;
+		}
+
+	      // Has the correct m to fix the situation.
+	      // How much energy does it require?
+
+	      int N = 2 * sp._n + sp._l;
+
+	      repl_st->add_entry((parity + sp._l) & 1,
+				 miss_m, N + next_N_min, (int) i);
 	    }
-	  else
-	    {
-	      if (next_miss_m != 0)
-		continue;
-
-	      next_N_min = 0;
-	    }
-
-	  // Has the correct m to fix the situation.
-	  // How much energy does it require?
-
-	  int N = 2 * sp._n + sp._l;
-
-	  repl_st->add_entry(miss_m, N + next_N_min, (int) i);
 	}
     }
 
@@ -85,8 +90,10 @@ missing_mpr_table(const vect_sp_state &sps,
  * the last holes.
  */
 
-void missing_mpr_tables(int M, const vect_sp_state &sps)
+void missing_mpr_tables(int M, int parity, const vect_sp_state &sps)
 {
+  (void) parity;
+
   /*
   for (size_t i = 0; i < sps.size(); i++)
     {

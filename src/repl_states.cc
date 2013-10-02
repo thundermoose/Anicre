@@ -13,7 +13,9 @@ repl_states_by_m_N::repl_states_by_m_N(int min_m, int max_m, int max_N)
   _rng_m = max_m - min_m + 1;
   _rng_N = max_N + 1;
 
-  size_t sz = _rng_m * _rng_N;
+  _sz_parity = _rng_m * _rng_N;
+
+  size_t sz = 2 * _sz_parity;
 
   _entries = new vect_int[sz];
 }
@@ -25,35 +27,41 @@ repl_states_by_m_N::~repl_states_by_m_N()
 
 void repl_states_by_m_N::dump() const
 {
-  printf ("%sm%s\\%sN%s  %s",
-	  CT_OUT(BOLD_BLUE), CT_OUT(NORM_DEF_COL),
-	  CT_OUT(BOLD_BLUE), CT_OUT(NORM_DEF_COL),
-	  CT_OUT(GREEN));
-  for (int N = 0; N < _rng_N; N++)
-    printf ("%4d",N);
-  printf ("%s\n",CT_OUT(NORM_DEF_COL));
-
-  for (int m = _min_m; m < _min_m + _rng_m; m += 2)
+  for (int parity = 0; parity < 2; parity++)
     {
-      printf ("%s%3d%s: %s",
-	      CT_OUT(GREEN),
-	      m,
-	      CT_OUT(NORM_DEF_COL),
-	      CT_OUT(MAGENTA));
-
+      printf ("%sp%s=%s%d%s\n",
+	      CT_OUT(BOLD_BLUE), CT_OUT(NORM_DEF_COL),
+	      CT_OUT(GREEN), parity, CT_OUT(NORM_DEF_COL));
+      printf ("%sm%s\\%sN%s  %s",
+	      CT_OUT(BOLD_BLUE), CT_OUT(NORM_DEF_COL),
+	      CT_OUT(BOLD_BLUE), CT_OUT(NORM_DEF_COL),
+	      CT_OUT(GREEN));
       for (int N = 0; N < _rng_N; N++)
+	printf ("%4d",N);
+      printf ("%s\n",CT_OUT(NORM_DEF_COL));
+
+      for (int m = _min_m; m < _min_m + _rng_m; m += 2)
 	{
-	  int off = (m - _min_m) * _rng_N + N;
-	  vect_int &vect = _entries[off];
-	  size_t num = vect.size();
+	  printf ("%s%3d%s: %s",
+		  CT_OUT(GREEN),
+		  m,
+		  CT_OUT(NORM_DEF_COL),
+		  CT_OUT(MAGENTA));
 
-	  if (num)
-	    printf ("%4zd", num);
-	  else
-	    printf ("%4s", "-");
+	  for (int N = 0; N < _rng_N; N++)
+	    {
+	      int off = (m - _min_m) * _rng_N + N;
+	      vect_int &vect = _entries[parity * _sz_parity + off];
+	      size_t num = vect.size();
+
+	      if (num)
+		printf ("%4zd", num);
+	      else
+		printf ("%4s", "-");
+	    }
+
+	  printf ("%s\n", CT_OUT(NORM_DEF_COL));
 	}
-
-      printf ("%s\n", CT_OUT(NORM_DEF_COL));
     }
 
 }
