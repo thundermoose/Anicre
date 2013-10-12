@@ -10,9 +10,61 @@
 
 #include "mr_config.hh"
 
+#include <errno.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+
 #define countof(x) (sizeof(x)/sizeof(x[0]))
 
 int _debug = 0;
+
+void check_create_dir(const char *dir)
+{
+  struct stat buf;
+
+  int ret = stat (dir, &buf);
+
+  if (ret == -1)
+    {
+      if (errno == ENOENT)
+	{
+	  // Split of the last item, and try to create it, after
+	  // checking the parent.
+
+	  const char *lastslash = strrchr(dir,'/');
+	  if (lastslash != NULL)
+	    {
+	      char *parent = strndup(dir, lastslash - dir);
+
+	      check_create_dir(parent);
+	    }
+
+	  ret = mkdir (dir, S_IRWXU | S_IRWXG | S_IRWXO);
+
+	  if (ret != 0)
+	    {
+	      perror("mkdir");
+	      ERROR("Failed to create directory '%s'.", dir);
+	    }
+
+	  INFO("Created directory '%s'.", dir);
+	}
+      else
+	{
+	  perror("stat");
+	  ERROR("Not a directory: %s.", dir);
+	}
+    }
+  else
+    {
+      if (!S_ISDIR(buf.st_mode))
+	{
+	  ERROR("Not a directory: %s.", dir);
+	}
+    }
+}
+2
 
 mr_base_reader *identify_file(mr_file_reader *file_reader)
 {
@@ -69,7 +121,11 @@ void usage(char *cmdname)
   printf ("\n");
   printf ("Reading of m-scheme data files.\n\n");
   printf ("%s [options] infile\n\n",cmdname);
-  printf ("  -d[=N]             Debug level\n");
+  printf ("  -d[=N]             Debug level.\n");
+  printf ("  --colour=yes|no    Force colour and markup on or off.\n");
+  printf ("  --dump=full        Level of text output.\n");
+  printf ("  --td-dir=PATH      (Temporary) directory for generated tables and code.\n");
+  printf ("  --help            Print this usage information and quit.\n");
   printf ("\n");
 }
 
@@ -118,6 +174,15 @@ int main(int argc,char *argv[])
 	else
 	  FATAL("Bad dump request '%s'.",post);
       }
+      else if (MATCH_PREFIX("--td-dir=",post)) {
+	char *dir = strdup(post);
+	/* Kill any trailing slash. */
+	char *lastslash = strrchr(dir,'/');
+	if (lastslash != NULL &&
+	    *(lastslash+1) == 0)
+	  *(lastslash) = 0;
+	_config._td_dir = dir;
+      }
       else {
 	/* Input file, we hope. */
 	
@@ -154,6 +219,9 @@ int main(int argc,char *argv[])
 	    reader->_file_reader->_filename,
 	    reader->get_format_name());
     }
+
+  if (_config._td_dir)
+    check_create_dir(_config._td_dir);
 
   reader->dump_info();
 
