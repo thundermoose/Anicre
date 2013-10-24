@@ -64,7 +64,6 @@ void check_create_dir(const char *dir)
 	}
     }
 }
-2
 
 mr_base_reader *identify_file(mr_file_reader *file_reader)
 {
