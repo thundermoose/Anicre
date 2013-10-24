@@ -155,7 +155,8 @@ int main(int argc,char *argv[])
       else if (MATCH_PREFIX("-d=",post)) {
 	_debug = atoi(post);
       }
-      else if (MATCH_PREFIX("--colour=",post)) {
+      else if (MATCH_PREFIX("--colour=",post) ||
+	       MATCH_PREFIX("--color=",post)) {
         int force = 0;
 
         if (strcmp(post,"yes") == 0)
