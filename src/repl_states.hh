@@ -12,8 +12,12 @@ typedef std::vector<int> vect_int;
 class repl_states_by_m_N
 {
 public:
-  repl_states_by_m_N(int min_m, int max_m, int max_N);
+  repl_states_by_m_N(int min_m, int max_m, int max_N,
+		     int miss1, int miss2);
   virtual ~repl_states_by_m_N();
+
+public:
+  int _miss1, _miss2;
 
 public:
   int _min_m, _rng_m;

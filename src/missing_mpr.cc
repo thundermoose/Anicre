@@ -23,7 +23,8 @@ missing_mpr_table(const vect_sp_state &sps,
 		  int32_t min_sp_mpr,
 		  int32_t max_sp_mpr,
 		  int32_t max_sp_N,
-		  int32_t oddeven)
+		  int32_t oddeven,
+		  int miss1, int miss2)
 {
   int32_t miss_m_min = M - max_sp_mpr;
   int32_t miss_m_max = M - min_sp_mpr;
@@ -31,7 +32,7 @@ missing_mpr_table(const vect_sp_state &sps,
   odd_even_min_max(miss_m_min, miss_m_max, oddeven);
 
   repl_states_by_m_N *repl_st =
-    new repl_states_by_m_N(miss_m_min, miss_m_max, max_sp_N);
+    new repl_states_by_m_N(miss_m_min, miss_m_max, max_sp_N, miss1, miss2);
 
   for (int32_t miss_m = miss_m_min; miss_m <= miss_m_max; miss_m += 2)
     {
@@ -145,7 +146,7 @@ void missing_mpr_tables(int M, int parity, const vect_sp_state &sps)
 
   repl_st1 = missing_mpr_table(sps, NULL,
                                M, 1 * min_sp_mpr, 1 * max_sp_mpr,
-                               max_sp_N * 1, 1); // odd
+                               max_sp_N * 1, 1, 1, 0); // odd
 
   // When calculating what particle can go in as the second last, we
   // must also take into consideration in what state we might leave
@@ -160,13 +161,13 @@ void missing_mpr_tables(int M, int parity, const vect_sp_state &sps)
 
   repl_st2 = missing_mpr_table(sps, repl_st1,
                                M, 2 * min_sp_mpr, 2 * max_sp_mpr,
-                               max_sp_N * 2, 0); // even
+                               max_sp_N * 2, 0, 2, 0); // even
 
   repl_states_by_m_N *repl_st3;
 
   repl_st3 = missing_mpr_table(sps, repl_st2,
 			       M, 3 * min_sp_mpr, 3 * max_sp_mpr, 
-			       max_sp_N * 3, 1); // odd
+			       max_sp_N * 3, 1, 3, 0); // odd
 
   (void) repl_st3;
 
