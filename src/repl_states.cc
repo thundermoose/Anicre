@@ -70,26 +70,26 @@ void repl_states_by_m_N::dump() const
 
 }
 
-void repl_states_by_m_N::write_table() const
+void repl_states_by_m_N::write_table(FILE *fid) const
 {
   size_t sz = _rng_m * _rng_N;
 
   size_t *offset = new size_t[sz+1];
 
-  printf ("/********************************************/\n");
-  printf ("/* Table.  min_m: %3d max_m: %3d max_N: %3d */\n",
-	  _min_m, _min_m + _rng_m - 1, _rng_N - 1);
-  printf ("\n");
-  printf ("struct state_for_miss_m_N _table_%d_%d_miss[] =\n",
-	  _miss1, _miss2);
-  printf ("{\n");
-  printf ("  /*   m  N [num] */\n");
+  fprintf (fid,"/********************************************/\n");
+  fprintf (fid,"/* Table.  min_m: %3d max_m: %3d max_N: %3d */\n",
+	   _min_m, _min_m + _rng_m - 1, _rng_N - 1);
+  fprintf (fid,"\n");
+  fprintf (fid,"struct state_for_miss_m_N _table_%d_%d_miss[] =\n",
+	   _miss1, _miss2);
+  fprintf (fid,"{\n");
+  fprintf (fid,"  /*   m  N [num] */\n");
 
   size_t totoffset = 0;
 
   for (int m = _min_m; m < _min_m + _rng_m; m += 2)
     {
-      printf ("  /* %3d          */\n", m);
+      fprintf (fid,"  /* %3d          */\n", m);
 
       for (int N = 0; N < _rng_N; N++)
 	{
@@ -102,7 +102,7 @@ void repl_states_by_m_N::write_table() const
 	  if (!num)
 	    continue;
 
-	  printf ("  /*     %2d [%3zd] */", N, num);
+	  fprintf (fid,"  /*     %2d [%3zd] */", N, num);
 	  size_t linesz = 20;
 
 	  for (size_t i = 0; i < num; i++)
@@ -115,14 +115,14 @@ void repl_states_by_m_N::write_table() const
 	      if (strlen(str) + linesz > 79)
 		{
 		  //       12345678901234567890
-		  printf ("\n                    ");
+		  fprintf (fid,"\n                    ");
 		  linesz = 20;
 		}
 	      linesz += itemsz;
-	      printf ("%s", str);
+	      fprintf (fid,"%s", str);
 	    }
 
-	  printf ("\n");
+	  fprintf (fid,"\n");
 
 	  totoffset += num;
 	}
@@ -134,40 +134,40 @@ void repl_states_by_m_N::write_table() const
 
   // offset[sz] = totoffset;
 
-  printf ("};\n");
-  printf ("\n");
+  fprintf (fid,"};\n");
+  fprintf (fid,"\n");
 
 
-  printf ("\n");
-  printf ("struct index_into_state_for_miss _table_%d_%d_offset[] =\n",
-	  _miss1, _miss2);
-  printf ("{\n");
-  printf ("  /*   m */\n");
+  fprintf (fid,"\n");
+  fprintf (fid,"struct index_into_state_for_miss _table_%d_%d_offset[] =\n",
+	   _miss1, _miss2);
+  fprintf (fid,"{\n");
+  fprintf (fid,"  /*   m */\n");
 
   for (int m = _min_m; m < _min_m + _rng_m; m += 2)
     {
-      printf ("  /* %3d */", m);
+      fprintf (fid,"  /* %3d */", m);
 
       for (int N = 0; N < _rng_N+1; N++)
 	{
 	  int off = (m - _min_m) * _rng_N + N;
 
-	  printf (" %4zd,", offset[off]);
+	  fprintf (fid," %4zd,", offset[off]);
 	}
-      printf ("\n");
+      fprintf (fid,"\n");
     }
-  printf ("};\n");
-  printf ("\n");
+  fprintf (fid,"};\n");
+  fprintf (fid,"\n");
 
-  printf ("struct info_state_for_miss _table_%d_%d_info =\n",
-	  _miss1, _miss2);
-  printf ("{\n");
-  printf ("  %d, %d, %d,\n", _min_m, _rng_m, _rng_N);
-  printf ("  &_table_%d_%d_miss,\n", _miss1, _miss2);
-  printf ("  &_table_%d_%d_offset,\n", _miss1, _miss2);
-  printf ("};\n");
+  fprintf (fid,"struct info_state_for_miss _table_%d_%d_info =\n",
+	   _miss1, _miss2);
+  fprintf (fid,"{\n");
+  fprintf (fid,"  %d, %d, %d,\n", _min_m, _rng_m, _rng_N);
+  fprintf (fid,"  &_table_%d_%d_miss,\n", _miss1, _miss2);
+  fprintf (fid,"  &_table_%d_%d_offset,\n", _miss1, _miss2);
+  fprintf (fid,"};\n");
 
-  printf ("\n");
-  printf ("/********************************************/\n");
-  printf ("\n");
+  fprintf (fid,"\n");
+  fprintf (fid,"/********************************************/\n");
+  fprintf (fid,"\n");
 }

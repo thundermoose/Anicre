@@ -91,7 +91,8 @@ missing_mpr_table(const vect_sp_state &sps,
  * the last holes.
  */
 
-void missing_mpr_tables(int M, int parity, const vect_sp_state &sps)
+void missing_mpr_tables(FILE *fid,
+			int M, int parity, const vect_sp_state &sps)
 {
   (void) parity;
 
@@ -171,7 +172,7 @@ void missing_mpr_tables(int M, int parity, const vect_sp_state &sps)
 
   (void) repl_st3;
 
-  repl_st1->write_table();
-  repl_st2->write_table();
-  repl_st3->write_table();
+  repl_st1->write_table(fid);
+  repl_st2->write_table(fid);
+  repl_st3->write_table(fid);
 }

@@ -4,6 +4,7 @@
 
 #include <limits.h>
 #include <assert.h>
+#include <stdio.h>
 
 #include <vector>
 
@@ -73,7 +74,7 @@ public:
 public:
   void dump() const;
 
-  void write_table() const;
+  void write_table(FILE *fid) const;
 
 
 };
