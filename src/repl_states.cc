@@ -80,7 +80,7 @@ void repl_states_by_m_N::write_table(FILE *fid) const
   fprintf (fid,"/* Table.  min_m: %3d max_m: %3d max_N: %3d */\n",
 	   _min_m, _min_m + _rng_m - 1, _rng_N - 1);
   fprintf (fid,"\n");
-  fprintf (fid,"struct state_for_miss_m_N _table_%d_%d_miss[] =\n",
+  fprintf (fid,"state_for_miss_m_N _table_%d_%d_miss[] =\n",
 	   _miss1, _miss2);
   fprintf (fid,"{\n");
   fprintf (fid,"  /*   m  N [num] */\n");
@@ -139,7 +139,7 @@ void repl_states_by_m_N::write_table(FILE *fid) const
 
 
   fprintf (fid,"\n");
-  fprintf (fid,"struct index_into_state_for_miss _table_%d_%d_offset[] =\n",
+  fprintf (fid,"index_into_state_for_miss _table_%d_%d_offset[] =\n",
 	   _miss1, _miss2);
   fprintf (fid,"{\n");
   fprintf (fid,"  /*   m */\n");
@@ -159,12 +159,12 @@ void repl_states_by_m_N::write_table(FILE *fid) const
   fprintf (fid,"};\n");
   fprintf (fid,"\n");
 
-  fprintf (fid,"struct info_state_for_miss _table_%d_%d_info =\n",
+  fprintf (fid,"info_state_for_miss _table_%d_%d_info =\n",
 	   _miss1, _miss2);
   fprintf (fid,"{\n");
   fprintf (fid,"  %d, %d, %d,\n", _min_m, _rng_m, _rng_N);
-  fprintf (fid,"  &_table_%d_%d_miss,\n", _miss1, _miss2);
-  fprintf (fid,"  &_table_%d_%d_offset,\n", _miss1, _miss2);
+  fprintf (fid,"  _table_%d_%d_miss,\n", _miss1, _miss2);
+  fprintf (fid,"  _table_%d_%d_offset,\n", _miss1, _miss2);
   fprintf (fid,"};\n");
 
   fprintf (fid,"\n");

@@ -1,17 +1,21 @@
 
+#include "anicr_tables.h"
+
 /* Annihilate states. */
 
 #define NSP 7
 
 void annihilate_states(int *in_sp)
 {
+  int i;
+
   /* Delete 1 state. */
 
-  int out_sp[];
+  int out_sp[NSP];
 
   int E = 0;
 
-  for (int i = 1; i < NSP; i++)
+  for (i = 1; i < NSP; i++)
     {
       out_sp[i] = in_sp[i];
       E += sp_info[in_sp[i]]._E;
@@ -25,7 +29,7 @@ void annihilate_states(int *in_sp)
 
   /* And now try with all other missing ones. */
 
-  for (int i = 0; i < NSP - 1; i++)
+  for (i = 0; i < NSP - 1; i++)
     {
       out_sp[i] = in_sp[i];
 
@@ -41,6 +45,8 @@ void annihilate_states(int *in_sp)
 
 void create_states(int *in_sp, int miss_m, int E)
 {
+  int i;
+
   /* We are missing a certain m, and also have a known
    * energy.
    */
@@ -58,7 +64,7 @@ void create_states(int *in_sp, int miss_m, int E)
 
   /* Assume we will begin by inserting a lowest state. */
 
-  for (int i = 0; i < NSP-1; i++)
+  for (i = 0; i < NSP-1; i++)
     {
       out_sp[i+1] = in_sp[i];
     }
