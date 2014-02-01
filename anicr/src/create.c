@@ -35,8 +35,8 @@ void annihilate_states(int *in_sp)
     }
 }
 
-/* Create states, given that we have a list of states that
- * survived from the annihilation.
+/* Create states, given that we have the list of states that survived
+ * the annihilation.
  */
 
 void create_states(int *in_sp, int miss_m, int E)

@@ -692,7 +692,7 @@ void mr_antoine_reader<header_version_t>::find_used_states()
       FILE *fid_table;
       char *filename;
 
-#define FILENAME_TABLE "/tables.hh"
+#define FILENAME_TABLE "/tables.h"
 
       filename =
 	(char *) malloc(strlen(_config._td_dir) + strlen(FILENAME_TABLE) + 1);

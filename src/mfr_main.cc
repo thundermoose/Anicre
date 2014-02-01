@@ -124,7 +124,7 @@ void usage(char *cmdname)
   printf ("  --colour=yes|no    Force colour and markup on or off.\n");
   printf ("  --dump=full        Level of text output.\n");
   printf ("  --td-dir=PATH      (Temporary) directory for generated tables and code.\n");
-  printf ("  --help            Print this usage information and quit.\n");
+  printf ("  --help             Print this usage information and quit.\n");
   printf ("\n");
 }
 
