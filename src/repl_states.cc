@@ -84,6 +84,7 @@ void repl_states_by_m_N::write_table(FILE *fid) const
 	   _miss1, _miss2);
   fprintf (fid,"{\n");
   fprintf (fid,"  /*   m  N [num] */\n");
+  fprintf (fid,"\n");
 
   size_t totoffset = 0;
 
@@ -143,6 +144,7 @@ void repl_states_by_m_N::write_table(FILE *fid) const
 	   _miss1, _miss2);
   fprintf (fid,"{\n");
   fprintf (fid,"  /*   m */\n");
+  fprintf (fid,"\n");
 
   for (int m = _min_m; m < _min_m + _rng_m; m += 2)
     {

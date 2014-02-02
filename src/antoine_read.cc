@@ -713,6 +713,8 @@ void mr_antoine_reader<header_version_t>::find_used_states()
       fprintf (fid_table, "/* Editing is useless.                   */\n");
       fprintf (fid_table, "\n");
 
+      sp_states_table(fid_table, sps);
+
       missing_mpr_tables(fid_table, M, parity, sps);
 
       if (ferror(fid_table))

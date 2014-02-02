@@ -1,6 +1,8 @@
 #ifndef __SP_STATES_HH__
 #define __SP_STATES_HH__
 
+#include <stdio.h>
+
 #include <vector>
 
 struct sp_state
@@ -22,5 +24,7 @@ public:
 };
 
 typedef std::vector<sp_state> vect_sp_state;
+
+void sp_states_table(FILE *fid, vect_sp_state &sps);
 
 #endif/*__SP_STATES_HH__*/
