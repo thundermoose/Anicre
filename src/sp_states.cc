@@ -7,7 +7,7 @@ void sp_states_table(FILE *fid, vect_sp_state &sps)
   fprintf (fid,"/* Table.  sp_states: %7zd               */\n",
 	   sps.size());
   fprintf (fid,"\n");
-  fprintf (fid,"sp_state _table_sp_states[] =\n");
+  fprintf (fid,"sp_state_info _table_sp_states[] =\n");
   fprintf (fid,"{\n");
   fprintf (fid,"  /*       i   N        n    l    j    m */\n");
   fprintf (fid,"\n");

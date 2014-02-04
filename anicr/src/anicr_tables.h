@@ -2,6 +2,14 @@
 #ifndef __ANICR_TABLES_H__
 #define __ANICR_TABLES_H__
 
+typedef struct sp_state_info_t
+{
+  int _n;
+  int _l;
+  int _j;
+  int _m;
+} sp_state_info;
+
 typedef int state_for_miss_m_N;
 typedef int index_into_state_for_miss;
 
