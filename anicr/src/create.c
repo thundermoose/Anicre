@@ -1,9 +1,20 @@
 
+#include <assert.h>
+#include <limits.h>
+
 #include "anicr_tables.h"
 
 /* Annihilate states. */
 
 #define NSP 7
+
+#define SP_STATE_E(sp) (2*(sp)._n+(sp)._l)
+
+#define sp_info _table_sp_states
+
+void create_states(int *in_sp, int sp_anni, int miss_m, int E);
+
+void created_state(int *in_sp, int sp_anni, int sp_crea);
 
 void annihilate_states(int *in_sp)
 {
@@ -14,28 +25,33 @@ void annihilate_states(int *in_sp)
   int out_sp[NSP];
 
   int E = 0;
+  int M = 0;
 
   for (i = 1; i < NSP; i++)
     {
       out_sp[i] = in_sp[i];
-      E += sp_info[in_sp[i]]._E;
+      M += sp_info[in_sp[0]]._m;
+      E += SP_STATE_E(sp_info[in_sp[i]]);
     }
 
   /* The out_sp list is missing sp state 0. */
 
-  create_states(out_sp, M - sp_info[in_sp[0]]._m, E);
+  create_states(out_sp, in_sp[0], M - sp_info[in_sp[0]]._m, E);
 
-  int E += sp_info[in_sp[0]]._E;
+  M += sp_info[in_sp[0]]._m;
+  E += SP_STATE_E(sp_info[in_sp[0]]);
 
   /* And now try with all other missing ones. */
 
   for (i = 0; i < NSP - 1; i++)
     {
-      out_sp[i] = in_sp[i];
+      /* We always have the space at [0] empty. */
 
-      create_states(out_sp,
+      out_sp[i+1] = in_sp[i];
+
+      create_states(out_sp, in_sp[i+1],
 		    M - sp_info[in_sp[i+1]]._m,
-		    E - sp_info[in_sp[i+1]]._E);
+		    E - SP_STATE_E(sp_info[in_sp[i+1]]));
     }
 }
 
@@ -43,18 +59,34 @@ void annihilate_states(int *in_sp)
  * the annihilation.
  */
 
-void create_states(int *in_sp, int miss_m, int E)
+void create_states(int *in_sp, int sp_anni, int miss_m, int E)
 {
   int i;
+
+  int out_sp[NSP + 1];
 
   /* We are missing a certain m, and also have a known
    * energy.
    */
 
+  info_state_for_miss *miss_info = &_table_1_0_info;
+
   /* Find the list of potential sp states to use. */
 
-  struct *poss_sp = _poss_sp[miss_m][E];
-  int num_poss_sp = ;
+  assert (miss_m < miss_info->_m_min + miss_info->_m_steps);
+
+  int offset_poss_sp =
+    miss_info->_offset[(miss_m - miss_info->_m_min) / 2 + E];
+  int offset_poss_sp_end =
+    miss_info->_offset[(miss_m - miss_info->_m_min) / 2 +
+		       miss_info->_num_E];
+
+  state_for_miss_m_N *poss_sp/*, *poss_sp_end*/;
+
+  poss_sp = &miss_info->_miss[offset_poss_sp];
+  /* poss_sp_end = &miss_info->_miss[offset_poss_sp_end]; */
+
+  int num_poss_sp = offset_poss_sp_end - offset_poss_sp;
 
   /* Now work through the list. 
    *
@@ -69,16 +101,30 @@ void create_states(int *in_sp, int miss_m, int E)
       out_sp[i+1] = in_sp[i];
     }
 
+  /* Make sure that we do move fill beyond the end. */
+  out_sp[NSP] = INT_MAX;
+
+  int fill = 0;
+
   for ( ; num_poss_sp; --num_poss_sp)
     {  
-      while (poss_sp._sp > in_sp[fill])
+      while (*poss_sp > in_sp[fill+1])
 	{
-	  out_sp[fill] = in_sp[fill];
+	  out_sp[fill] = in_sp[fill+1];
+	  fill++;
 	}
+      out_sp[fill] = *poss_sp;
 
-      created_state(out_sp, );
+      created_state(out_sp, sp_anni, *poss_sp);
     }
 
 
 }
 
+void created_state(int *in_sp, int sp_anni, int sp_crea)
+{
+
+  (void) in_sp;
+  (void) sp_anni;
+  (void) sp_crea;
+}
