@@ -123,6 +123,9 @@ void create_states(int *in_sp, int sp_anni, int miss_m, int E)
 
 void created_state(int *in_sp, int sp_anni, int sp_crea)
 {
+  /* We need to find the created state in the destination hash table.
+   * To get its coefficient.
+   */
 
   (void) in_sp;
   (void) sp_anni;

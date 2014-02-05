@@ -535,6 +535,16 @@ void mr_antoine_reader<header_version_t>::find_used_states()
 
   vect_sp_state sps;
 
+  /* Mapping. */
+
+  int *sps_map = (int *) malloc (sizeof (int) * _header.num_of_jm);
+
+  if (!sps_map)
+    FATAL("Memory allocation failure (sps_map).");
+
+  for (uint32_t i = 0; i < _header.num_of_jm; i++)
+    sps_map[i] = -1;
+
   for (size_t j = 0; j < _jm_used_items_per_slot; j++)
     {
       BITSONE_CONTAINER_TYPE used = jm_u[j];
@@ -550,6 +560,8 @@ void mr_antoine_reader<header_version_t>::find_used_states()
 	      mr_antoine_num_mpr_item_t &mpr = _num_mpr[i];
 	      uint32_t sh = mpr.num;
 	      mr_antoine_nr_ll_jj_item_t &shell = _nr_ll_jj[sh-1];
+
+	      sps_map[i] = (int) sps.size();
 
 	      sps.push_back(sp_state(shell.nr, shell.ll, shell.jj, mpr.mpr));
 	    }
@@ -570,30 +582,84 @@ void mr_antoine_reader<header_version_t>::find_used_states()
   int min_neg_m = INT_MAX, max_neg_m = INT_MIN; // redundant
   int has_parity[2] = { 0, 0 };
 
+  /* Also dump all the states.  We need each multi-particle state
+   * explicitly.
+   */
+
+#define CHUNK_SZ 1000000
+
+  size_t istate_chunk_sz = _header.nsd;
+  if (istate_chunk_sz > CHUNK_SZ)
+    istate_chunk_sz = CHUNK_SZ;
+
+  size_t mp_states_stride = _header.A[0] + _header.A[1];
+
+  size_t mp_states_sz =
+    sizeof (int) * istate_chunk_sz * mp_states_stride;
+
+  int *mp_states = (int *) malloc (mp_states_sz);
+
+  if (!mp_states)
+    FATAL("Memory allocation error (mp_states, %zd bytes).", mp_states_sz);
+
+  printf ("%zd %zd\n", mp_states_sz, mp_states_stride);
+
+  FILE *fid_states = NULL;
+  char *filename_states = NULL;
+
+  if (_config._td_dir)
+    {
+
+#define FILENAME_STATES "/states_all_orig.bin"
+
+      filename_states =
+        (char *) malloc(strlen(_config._td_dir) + strlen(FILENAME_STATES) + 1);
+
+      if (!filename_states)
+        ERROR("Memory allocation error.");
+
+      strcpy(filename_states, _config._td_dir);
+      strcat(filename_states, FILENAME_STATES);
+
+      if ((fid_states = fopen(filename_states, "w")) == NULL)
+        {
+          perror("fopen");
+          ERROR("Failed to open '%s' for writing.", filename_states);
+        }
+    }
+
   for (mr_file_chunk<mr_antoine_istate_item_t>
-	 cm_istate(_header.nsd, 1000000);
+	 cm_istate(_header.nsd, CHUNK_SZ);
        cm_istate.map_next(_file_reader, _offset_istate); )
     {
+      /* For debugging, fill with ones (= -1). */
+
+      memset (mp_states, -1, mp_states_sz);
+
       for (mr_file_chunk<mr_antoine_occ_item_t>
-	     cm_occ0(_header.nslt[0], 1000000, _header.A[0]);
+	     cm_occ0(_header.nslt[0], CHUNK_SZ, _header.A[0]);
 	   cm_occ0.map_next(_file_reader, _offset_occ[0]); )
 	{
 	  mr_antoine_occ_item_t *pocc0 = cm_occ0.ptr();
 
 	  for (mr_file_chunk<mr_antoine_occ_item_t>
-		 cm_occ1(_header.nslt[1], 1000000, _header.A[1]);
+		 cm_occ1(_header.nslt[1], CHUNK_SZ, _header.A[1]);
 	       cm_occ1.map_next(_file_reader, _offset_occ[1]); )
 	    {
 	      mr_antoine_occ_item_t *pocc1 = cm_occ1.ptr();
 
 	      mr_antoine_istate_item_t *pistate = cm_istate.ptr();
 
+	      int *mp_ptr = mp_states;
+
 	      for (unsigned int j = 0; j < cm_istate.num(); j++)
 		{
 		  if (pistate->istate[0]-1 >= cm_occ0.start() &&
-		      pistate->istate[0]-1 <  cm_occ0.start() + cm_occ0.num() &&
+		      pistate->istate[0]-1 < (cm_occ0.start() +
+					      cm_occ0.num()) &&
 		      pistate->istate[1]-1 >= cm_occ1.start() &&
-		      pistate->istate[1]-1 <  cm_occ1.start() + cm_occ1.num())
+		      pistate->istate[1]-1 < (cm_occ1.start() +
+					      cm_occ1.num()))
 		    {
 		      int sum_N = 0;
 		      int sum_m = 0;
@@ -603,9 +669,13 @@ void mr_antoine_reader<header_version_t>::find_used_states()
 
 		      mr_antoine_occ_item_t *poccs[2] =
 			{
-			  pocc0 + (pistate->istate[0]-1 - cm_occ0.start()) * _header.A[0],
-			  pocc1 + (pistate->istate[1]-1 - cm_occ1.start()) * _header.A[1],
+			  pocc0 + ((pistate->istate[0]-1 - cm_occ0.start()) *
+				   _header.A[0]),
+			  pocc1 + ((pistate->istate[1]-1 - cm_occ1.start()) *
+				   _header.A[1]),
 			};
+
+		      int *mp_ptr_this = mp_ptr;
 
 		      for (unsigned int i = 0; i < 2; i++)
 			{
@@ -615,10 +685,10 @@ void mr_antoine_reader<header_version_t>::find_used_states()
 
 			  for (unsigned int k = 0; k < _header.A[i]; k++)
 			    {
-			      uint32_t jm = (pocc++)->sp;
+			      uint32_t jm = (pocc++)->sp - 1;
 
-			      uint32_t sh = _num_mpr[jm-1].num;
-			      int32_t  mpr = _num_mpr[jm-1].mpr;
+			      uint32_t sh = _num_mpr[jm].num;
+			      int32_t  mpr = _num_mpr[jm].mpr;
 
 			      mr_antoine_nr_ll_jj_item_t &shell =
 				_nr_ll_jj[sh-1];
@@ -633,6 +703,8 @@ void mr_antoine_reader<header_version_t>::find_used_states()
 				sum_pos_m += mpr;
 			      else
 				sum_neg_m += mpr;
+
+			      *(mp_ptr_this++) = sps_map[jm];
 			    }
 			}
 
@@ -660,8 +732,33 @@ void mr_antoine_reader<header_version_t>::find_used_states()
 		    }
 
 		  pistate++;
+		  mp_ptr += mp_states_stride;
 		}
 	    }
+	}
+
+      if (fid_states)
+	{
+	  size_t mp_used_sz =
+	    sizeof (int) * cm_istate.num() * mp_states_stride;
+
+	  if (fwrite (mp_states, mp_used_sz, 1, fid_states) != 1)
+	    ERROR("Failure writing mp_states to file.\n");
+	}
+    }
+
+  if (fid_states)
+    {
+      if (ferror(fid_states))
+	{
+	  ERROR("There has been an error during writing to '%s'.",
+		filename_states);
+	}
+
+      if (fclose(fid_states) != 0)
+	{
+	  perror("fclose");
+	  ERROR("Failed to close '%s' after writing.", filename_states);
 	}
     }
 
