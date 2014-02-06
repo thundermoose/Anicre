@@ -158,6 +158,7 @@ void repl_states_by_m_N::write_table(file_output &out) const
 	}
       out.fprintf("\n");
     }
+  out.fprintf("  /*     */ %4zd\n", offset[sz]);
   out.fprintf("};\n");
   out.fprintf("\n");
 
