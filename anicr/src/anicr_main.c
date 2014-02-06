@@ -1,6 +1,5 @@
 
-
-
+#include "anicr_config.h"
 
 
 int main()

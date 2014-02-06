@@ -4,19 +4,24 @@
 
 #include "anicr_tables.h"
 
+#include "anicr_config.h"
+
 /* Annihilate states. */
 
-#define NSP 7
+#define NSP  CFG_NUM_SP_STATES0
 
 #define SP_STATE_E(sp) (2*(sp)._n+(sp)._l)
 
 #define sp_info _table_sp_states
 
-void create_states(int *in_sp, int sp_anni, int miss_m, int E);
+void create_states(int *in_sp_other,
+		   int *in_sp, int sp_anni, int miss_m, int E);
 
-void created_state(int *in_sp, int sp_anni, int sp_crea);
+void created_state(int *in_sp_other,
+		   int *in_sp, int sp_anni, int sp_crea);
 
-void annihilate_states(int *in_sp)
+void annihilate_states(int *in_sp_other,
+		       int *in_sp)
 {
   int i;
 
@@ -36,7 +41,8 @@ void annihilate_states(int *in_sp)
 
   /* The out_sp list is missing sp state 0. */
 
-  create_states(out_sp, in_sp[0], M - sp_info[in_sp[0]]._m, E);
+  create_states(in_sp_other,
+		out_sp, in_sp[0], M - sp_info[in_sp[0]]._m, E);
 
   M += sp_info[in_sp[0]]._m;
   E += SP_STATE_E(sp_info[in_sp[0]]);
@@ -49,7 +55,8 @@ void annihilate_states(int *in_sp)
 
       out_sp[i+1] = in_sp[i];
 
-      create_states(out_sp, in_sp[i+1],
+      create_states(in_sp_other,
+		    out_sp, in_sp[i+1],
 		    M - sp_info[in_sp[i+1]]._m,
 		    E - SP_STATE_E(sp_info[in_sp[i+1]]));
     }
@@ -59,7 +66,8 @@ void annihilate_states(int *in_sp)
  * the annihilation.
  */
 
-void create_states(int *in_sp, int sp_anni, int miss_m, int E)
+void create_states(int *in_sp_other,
+		   int *in_sp, int sp_anni, int miss_m, int E)
 {
   int i;
 
@@ -115,18 +123,21 @@ void create_states(int *in_sp, int sp_anni, int miss_m, int E)
 	}
       out_sp[fill] = *poss_sp;
 
-      created_state(out_sp, sp_anni, *poss_sp);
+      created_state(in_sp_other,
+		    out_sp, sp_anni, *poss_sp);
     }
 
 
 }
 
-void created_state(int *in_sp, int sp_anni, int sp_crea)
+void created_state(int *in_sp_other,
+		   int *in_sp, int sp_anni, int sp_crea)
 {
   /* We need to find the created state in the destination hash table.
    * To get its coefficient.
    */
 
+  (void) in_sp_other;
   (void) in_sp;
   (void) sp_anni;
   (void) sp_crea;
