@@ -9,6 +9,8 @@
 #include "sp_states.hh"
 #include "missing_mpr.hh"
 
+#include "file_output.hh"
+
 #include <string.h>
 #include <limits.h>
 
@@ -604,28 +606,13 @@ void mr_antoine_reader<header_version_t>::find_used_states()
 
   printf ("%zd %zd\n", mp_states_sz, mp_states_stride);
 
-  FILE *fid_states = NULL;
-  char *filename_states = NULL;
+#define FILENAME_STATES "/states_all_orig.bin"
+
+  file_output *out_states = NULL;
 
   if (_config._td_dir)
     {
-
-#define FILENAME_STATES "/states_all_orig.bin"
-
-      filename_states =
-        (char *) malloc(strlen(_config._td_dir) + strlen(FILENAME_STATES) + 1);
-
-      if (!filename_states)
-        ERROR("Memory allocation error.");
-
-      strcpy(filename_states, _config._td_dir);
-      strcat(filename_states, FILENAME_STATES);
-
-      if ((fid_states = fopen(filename_states, "w")) == NULL)
-        {
-          perror("fopen");
-          ERROR("Failed to open '%s' for writing.", filename_states);
-        }
+      out_states = new file_output(_config._td_dir, FILENAME_STATES);
     }
 
   for (mr_file_chunk<mr_antoine_istate_item_t>
@@ -737,30 +724,17 @@ void mr_antoine_reader<header_version_t>::find_used_states()
 	    }
 	}
 
-      if (fid_states)
+      if (out_states)
 	{
 	  size_t mp_used_sz =
 	    sizeof (int) * cm_istate.num() * mp_states_stride;
 
-	  if (fwrite (mp_states, mp_used_sz, 1, fid_states) != 1)
-	    ERROR("Failure writing mp_states to file.\n");
+	  out_states->fwrite (mp_states, mp_used_sz, 1);
 	}
     }
 
-  if (fid_states)
-    {
-      if (ferror(fid_states))
-	{
-	  ERROR("There has been an error during writing to '%s'.",
-		filename_states);
-	}
-
-      if (fclose(fid_states) != 0)
-	{
-	  perror("fclose");
-	  ERROR("Failed to close '%s' after writing.", filename_states);
-	}
-    }
+  if (out_states)
+    delete out_states;
 
   printf ("N_min:     %2d  N_max:     %2d\n", min_N, max_N);
   printf ("m_min:     %2d  m_max:     %2d\n", min_m, max_m);
