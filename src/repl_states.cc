@@ -70,27 +70,27 @@ void repl_states_by_m_N::dump() const
 
 }
 
-void repl_states_by_m_N::write_table(FILE *fid) const
+void repl_states_by_m_N::write_table(file_output &out) const
 {
   size_t sz = _rng_m * _rng_N;
 
   size_t *offset = new size_t[sz+1];
 
-  fprintf (fid,"/********************************************/\n");
-  fprintf (fid,"/* Table.  min_m: %3d max_m: %3d max_N: %3d */\n",
-	   _min_m, _min_m + _rng_m - 1, _rng_N - 1);
-  fprintf (fid,"\n");
-  fprintf (fid,"state_for_miss_m_N _table_%d_%d_miss[] =\n",
-	   _miss1, _miss2);
-  fprintf (fid,"{\n");
-  fprintf (fid,"  /*   m  N [num] */\n");
-  fprintf (fid,"\n");
+  out.fprintf("/********************************************/\n");
+  out.fprintf("/* Table.  min_m: %3d max_m: %3d max_N: %3d */\n",
+	      _min_m, _min_m + _rng_m - 1, _rng_N - 1);
+  out.fprintf("\n");
+  out.fprintf("state_for_miss_m_N _table_%d_%d_miss[] =\n",
+	      _miss1, _miss2);
+  out.fprintf("{\n");
+  out.fprintf("  /*   m  N [num] */\n");
+  out.fprintf("\n");
 
   size_t totoffset = 0;
 
   for (int m = _min_m; m < _min_m + _rng_m; m += 2)
     {
-      fprintf (fid,"  /* %3d          */\n", m);
+      out.fprintf("  /* %3d          */\n", m);
 
       for (int N = 0; N < _rng_N; N++)
 	{
@@ -103,7 +103,7 @@ void repl_states_by_m_N::write_table(FILE *fid) const
 	  if (!num)
 	    continue;
 
-	  fprintf (fid,"  /*     %2d [%3zd] */", N, num);
+	  out.fprintf("  /*     %2d [%3zd] */", N, num);
 	  size_t linesz = 20;
 
 	  for (size_t i = 0; i < num; i++)
@@ -116,14 +116,14 @@ void repl_states_by_m_N::write_table(FILE *fid) const
 	      if (strlen(str) + linesz > 79)
 		{
 		  //       12345678901234567890
-		  fprintf (fid,"\n                    ");
+		  out.fprintf("\n                    ");
 		  linesz = 20;
 		}
 	      linesz += itemsz;
-	      fprintf (fid,"%s", str);
+	      out.fprintf("%s", str);
 	    }
 
-	  fprintf (fid,"\n");
+	  out.fprintf("\n");
 
 	  totoffset += num;
 	}
@@ -135,41 +135,41 @@ void repl_states_by_m_N::write_table(FILE *fid) const
 
   // offset[sz] = totoffset;
 
-  fprintf (fid,"};\n");
-  fprintf (fid,"\n");
+  out.fprintf("};\n");
+  out.fprintf("\n");
 
 
-  fprintf (fid,"\n");
-  fprintf (fid,"index_into_state_for_miss _table_%d_%d_offset[] =\n",
-	   _miss1, _miss2);
-  fprintf (fid,"{\n");
-  fprintf (fid,"  /*   m */\n");
-  fprintf (fid,"\n");
+  out.fprintf("\n");
+  out.fprintf("index_into_state_for_miss _table_%d_%d_offset[] =\n",
+	      _miss1, _miss2);
+  out.fprintf("{\n");
+  out.fprintf("  /*   m */\n");
+  out.fprintf("\n");
 
   for (int m = _min_m; m < _min_m + _rng_m; m += 2)
     {
-      fprintf (fid,"  /* %3d */", m);
+      out.fprintf("  /* %3d */", m);
 
       for (int N = 0; N < _rng_N+1; N++)
 	{
 	  int off = (m - _min_m) * _rng_N + N;
 
-	  fprintf (fid," %4zd,", offset[off]);
+	  out.fprintf(" %4zd,", offset[off]);
 	}
-      fprintf (fid,"\n");
+      out.fprintf("\n");
     }
-  fprintf (fid,"};\n");
-  fprintf (fid,"\n");
+  out.fprintf("};\n");
+  out.fprintf("\n");
 
-  fprintf (fid,"info_state_for_miss _table_%d_%d_info =\n",
-	   _miss1, _miss2);
-  fprintf (fid,"{\n");
-  fprintf (fid,"  %d, %d, %d,\n", _min_m, _rng_m, _rng_N);
-  fprintf (fid,"  _table_%d_%d_miss,\n", _miss1, _miss2);
-  fprintf (fid,"  _table_%d_%d_offset,\n", _miss1, _miss2);
-  fprintf (fid,"};\n");
+  out.fprintf("info_state_for_miss _table_%d_%d_info =\n",
+	      _miss1, _miss2);
+  out.fprintf("{\n");
+  out.fprintf("  %d, %d, %d,\n", _min_m, _rng_m, _rng_N);
+  out.fprintf("  _table_%d_%d_miss,\n", _miss1, _miss2);
+  out.fprintf("  _table_%d_%d_offset,\n", _miss1, _miss2);
+  out.fprintf("};\n");
 
-  fprintf (fid,"\n");
-  fprintf (fid,"/********************************************/\n");
-  fprintf (fid,"\n");
+  out.fprintf("\n");
+  out.fprintf("/********************************************/\n");
+  out.fprintf("\n");
 }

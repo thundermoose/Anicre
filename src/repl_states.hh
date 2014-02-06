@@ -2,6 +2,8 @@
 #ifndef __REPL_STATES_HH__
 #define __REPL_STATES_HH__
 
+#include "file_output.hh"
+
 #include <limits.h>
 #include <assert.h>
 #include <stdio.h>
@@ -74,7 +76,7 @@ public:
 public:
   void dump() const;
 
-  void write_table(FILE *fid) const;
+  void write_table(file_output &out) const;
 
 
 };

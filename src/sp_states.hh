@@ -1,6 +1,8 @@
 #ifndef __SP_STATES_HH__
 #define __SP_STATES_HH__
 
+#include "file_output.hh"
+
 #include <stdio.h>
 
 #include <vector>
@@ -25,6 +27,6 @@ public:
 
 typedef std::vector<sp_state> vect_sp_state;
 
-void sp_states_table(FILE *fid, vect_sp_state &sps);
+void sp_states_table(file_output &out, vect_sp_state &sps);
 
 #endif/*__SP_STATES_HH__*/
