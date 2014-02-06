@@ -685,6 +685,12 @@ void mr_antoine_reader<header_version_t>::find_used_states()
 			      sum_N += N;
 			      sum_m += mpr;
 			      sum_l += shell.ll;
+			      /*
+			      printf ("%3d  (%2d %2d) %3d %3d  %3d %3d\n",
+				      jm, shell.nr, shell.ll,
+				      sum_m, sum_N,
+				      mpr, N);
+			      */
 
 			      if (mpr > 0)
 				sum_pos_m += mpr;
@@ -694,6 +700,9 @@ void mr_antoine_reader<header_version_t>::find_used_states()
 			      *(mp_ptr_this++) = sps_map[jm];
 			    }
 			}
+		      /*
+		      printf ("N=%2d m=%3d\n", sum_N, sum_m);
+		      */
 
 		      if (sum_N > max_N)
 			max_N = sum_N;
