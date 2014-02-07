@@ -89,5 +89,7 @@ int main()
 	}
     }
 
+  printf ("Annihilated-created for %zd mp states.\n", num_mp);
+
   return 0;
 }

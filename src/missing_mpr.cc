@@ -29,7 +29,16 @@ missing_mpr_table(const vect_sp_state &sps,
   int32_t miss_m_min = M - max_sp_mpr;
   int32_t miss_m_max = M - min_sp_mpr;
 
+  miss_m_min = min_sp_mpr;
+  miss_m_max = max_sp_mpr;
+
+  printf ("miss_m_min: %2d  miss_m_max: %2d  oddeven: %2d\n",
+	  miss_m_min, miss_m_max, oddeven);
+
   odd_even_min_max(miss_m_min, miss_m_max, oddeven);
+
+  printf ("miss_m_min: %2d  miss_m_max: %2d  oddeven: %2d\n",
+	  miss_m_min, miss_m_max, oddeven);
 
   repl_states_by_m_N *repl_st =
     new repl_states_by_m_N(miss_m_min, miss_m_max, max_sp_N, miss1, miss2);
@@ -141,7 +150,7 @@ void missing_mpr_tables(file_output &out,
 
   // Calculate tables of with sp states that can be used when we are
   // missing a certain m to reach the total sum_m.  Also keep track
-  // of how mush energy is needed at each location
+  // of how much energy is needed at each location
 
   repl_states_by_m_N *repl_st1;
 
