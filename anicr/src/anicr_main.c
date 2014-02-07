@@ -1,5 +1,6 @@
 
 #include "anicr_config.h"
+#include "create.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -21,10 +22,15 @@ int compare_mp_state(const void *p1, const void *p2)
 	return -1;
       if (*s1 > *s2)
 	return 1;
+
+      s1++;
+      s2++;
     }
 
   return 0;
 }
+
+int *_mp = NULL;
 
 int main()
 {
@@ -33,9 +39,9 @@ int main()
 
   size_t mp_sz = sizeof (int) * num_sp * num_mp;
 
-  int *mp = (int *) malloc (mp_sz);
+  _mp = (int *) malloc (mp_sz);
 
-  if (!mp)
+  if (!_mp)
     {
       fprintf (stderr, "Memory allocation error.\n");
       exit(1);
@@ -49,7 +55,7 @@ int main()
       exit(1);
     }
 
-  ssize_t n = read (fd, mp, mp_sz);
+  ssize_t n = read (fd, _mp, mp_sz);
 
   if (n != (ssize_t) mp_sz)
     {
@@ -62,9 +68,26 @@ int main()
 
   printf ("Read %zd mp states.\n", num_mp);
 
-  qsort (mp, num_mp, sizeof (int) * num_sp, compare_mp_state);
+  qsort (_mp, num_mp, sizeof (int) * num_sp, compare_mp_state);
 
   printf ("Sorted %zd mp states.\n", num_mp);
+
+  size_t i;
+
+  int *mp = _mp;
+
+  for (i = 0; i < num_mp; i++)
+    {
+      annihilate_states(mp + CFG_NUM_SP_STATES0, mp);
+
+      mp += CFG_NUM_SP_STATES0 + CFG_NUM_SP_STATES1;
+      
+      if (i % 1000 == 0)
+	{
+	  printf ("anicr %zd / %zd\r", i, num_mp);
+	  fflush (stdout);
+	}
+    }
 
   return 0;
 }

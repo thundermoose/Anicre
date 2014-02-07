@@ -1,10 +1,12 @@
 
 #include <assert.h>
 #include <limits.h>
+#include <stdio.h>
 
 #include "anicr_tables.h"
-
 #include "anicr_config.h"
+
+#include "create.h"
 
 /* Annihilate states. */
 
@@ -25,26 +27,49 @@ void annihilate_states(int *in_sp_other,
 {
   int i;
 
+  /* Print the state. */
+
+  printf ("==============================================================================\n");
+  for (i = 0; i < CFG_NUM_SP_STATES0; i++)
+    printf (" %4d", in_sp[i]);
+  printf (" :");
+  for (i = 0; i < CFG_NUM_SP_STATES1; i++)
+    printf (" %4d", in_sp_other[i]);
+  printf ("\n");
+
   /* Delete 1 state. */
 
   int out_sp[NSP];
 
   int E = 0;
-  int M = 0;
+  /* int M = 0; */
+
+  for (i = 0; i < CFG_NUM_SP_STATES1; i++)
+    {
+      /* M += sp_info[in_sp_other[i]]._m; */
+      E += SP_STATE_E(sp_info[in_sp_other[i]]);
+      printf ("%3d  %3d %3d\n",
+	      E,
+	      sp_info[in_sp_other[i]]._m, SP_STATE_E(sp_info[in_sp_other[i]]));
+    }
 
   for (i = 1; i < NSP; i++)
     {
       out_sp[i] = in_sp[i];
-      M += sp_info[in_sp[0]]._m;
+      /* M += sp_info[in_sp[i]]._m; */
       E += SP_STATE_E(sp_info[in_sp[i]]);
+      printf ("%3d  %3d %3d\n",
+	      E,
+	      sp_info[in_sp[i]]._m, SP_STATE_E(sp_info[in_sp[i]]));
     }
+
+  printf ("E=%3d\n", E);
 
   /* The out_sp list is missing sp state 0. */
 
   create_states(in_sp_other,
-		out_sp, in_sp[0], M - sp_info[in_sp[0]]._m, E);
+		out_sp, in_sp[0], - sp_info[in_sp[0]]._m, E);
 
-  M += sp_info[in_sp[0]]._m;
   E += SP_STATE_E(sp_info[in_sp[0]]);
 
   /* And now try with all other missing ones. */
@@ -57,7 +82,7 @@ void annihilate_states(int *in_sp_other,
 
       create_states(in_sp_other,
 		    out_sp, in_sp[i+1],
-		    M - sp_info[in_sp[i+1]]._m,
+		    - sp_info[in_sp[i+1]]._m,
 		    E - SP_STATE_E(sp_info[in_sp[i+1]]));
     }
 }
@@ -79,15 +104,33 @@ void create_states(int *in_sp_other,
 
   info_state_for_miss *miss_info = &_table_1_0_info;
 
+  /* Print the state. */
+
+  printf ("------------------------------------------------------------------------------\n");
+
+  for (i = 1; i < CFG_NUM_SP_STATES0; i++)
+    printf (" %4d", in_sp[i]); 
+  printf (" : E=%3d  ~m=%3d\n", E, miss_m);
+
   /* Find the list of potential sp states to use. */
 
-  assert (miss_m < miss_info->_m_min + miss_info->_m_steps);
+  assert (miss_m >= miss_info->_m_min &&
+	  miss_m <  miss_info->_m_min + miss_info->_m_steps);
+
+  int max_add_E = CFG_MAX_SUM_E - E;
+
+  if (max_add_E >= miss_info->_num_E)
+    max_add_E = miss_info->_num_E - 1;
 
   int offset_poss_sp =
-    miss_info->_offset[(miss_m - miss_info->_m_min) / 2 + E];
+    miss_info->_offset[miss_info->_num_E * (miss_m - miss_info->_m_min) / 2];
   int offset_poss_sp_end =
-    miss_info->_offset[(miss_m - miss_info->_m_min) / 2 +
-		       miss_info->_num_E];
+    miss_info->_offset[miss_info->_num_E * (miss_m - miss_info->_m_min) / 2 +
+		       max_add_E + 1];
+
+  printf ("max_add_E=%3d -> %d states (%d)\n",
+	  max_add_E, offset_poss_sp_end - offset_poss_sp,
+	  offset_poss_sp);
 
   state_for_miss_m_N *poss_sp/*, *poss_sp_end*/;
 
@@ -102,6 +145,9 @@ void create_states(int *in_sp_other,
    * so is the in_sp list.  I.e. we are performing a merge sort.
    */
 
+  if (!num_poss_sp)
+    return;
+
   /* Assume we will begin by inserting a lowest state. */
 
   for (i = 0; i < NSP-1; i++)
@@ -114,14 +160,23 @@ void create_states(int *in_sp_other,
 
   int fill = 0;
 
-  for ( ; num_poss_sp; --num_poss_sp)
-    {  
+  for ( ; num_poss_sp; --num_poss_sp, poss_sp++)
+    {
       while (*poss_sp > in_sp[fill+1])
 	{
 	  out_sp[fill] = in_sp[fill+1];
 	  fill++;
 	}
+
+      if (*poss_sp == in_sp[fill+1])
+	{
+	  printf ("%4d x %3d\n", *poss_sp, fill+1);
+	  continue;
+	}
+
       out_sp[fill] = *poss_sp;
+
+      printf ("%4d @ %3d\n", *poss_sp, fill);
 
       created_state(in_sp_other,
 		    out_sp, sp_anni, *poss_sp);
