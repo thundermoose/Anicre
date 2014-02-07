@@ -19,7 +19,8 @@
 #define sp_info _table_sp_states
 
 void create_states(int *in_sp_other,
-		   int *in_sp, int sp_anni, int miss_m, int E);
+		   int *in_sp, int sp_anni,
+		   int miss_parity, int miss_m, int E);
 
 void created_state(int *in_sp_other,
 		   int *in_sp, int sp_anni, int sp_crea);
@@ -78,7 +79,9 @@ void annihilate_states(int *in_sp_other,
   /* The out_sp list is missing sp state 0. */
 
   create_states(in_sp_other,
-		out_sp, in_sp[0], sp_info[in_sp[0]]._m, E);
+		out_sp, in_sp[0], 
+		sp_info[in_sp[0]]._l & 1,
+		sp_info[in_sp[0]]._m, E);
 
   E += SP_STATE_E(sp_info[in_sp[0]]);
 
@@ -92,6 +95,7 @@ void annihilate_states(int *in_sp_other,
 
       create_states(in_sp_other,
 		    out_sp, in_sp[i+1],
+		    sp_info[in_sp[i+1]]._l & 1,
 		    sp_info[in_sp[i+1]]._m,
 		    E - SP_STATE_E(sp_info[in_sp[i+1]]));
     }
@@ -102,7 +106,8 @@ void annihilate_states(int *in_sp_other,
  */
 
 void create_states(int *in_sp_other,
-		   int *in_sp, int sp_anni, int miss_m, int E)
+		   int *in_sp, int sp_anni,
+		   int miss_parity, int miss_m, int E)
 {
   int i;
 
@@ -123,7 +128,7 @@ void create_states(int *in_sp_other,
 #if DEBUG_ANICR
   for (i = 1; i < CFG_NUM_SP_STATES0; i++)
     printf (" %4d", in_sp[i]); 
-  printf (" : E=%3d  ~m=%3d\n", E, miss_m);
+  printf (" : E=%3d  ~m=%3d  ~p=%d\n", E, miss_m, miss_parity);
 #endif
 
   /* Find the list of potential sp states to use. */
@@ -137,9 +142,11 @@ void create_states(int *in_sp_other,
     max_add_E = miss_info->_num_E - 1;
 
   int offset_poss_sp =
-    miss_info->_offset[miss_info->_num_E * (miss_m - miss_info->_m_min) / 2];
+    miss_info->_offset[miss_info->_parity_mult * miss_parity +
+		       miss_info->_num_E * (miss_m - miss_info->_m_min) / 2];
   int offset_poss_sp_end =
-    miss_info->_offset[miss_info->_num_E * (miss_m - miss_info->_m_min) / 2 +
+    miss_info->_offset[miss_info->_parity_mult * miss_parity +
+		       miss_info->_num_E * (miss_m - miss_info->_m_min) / 2 +
 		       max_add_E + 1];
 
 #if DEBUG_ANICR
@@ -187,7 +194,7 @@ void create_states(int *in_sp_other,
       if (*poss_sp == in_sp[fill+1])
 	{
 #if DEBUG_ANICR
-	  printf ("%4d x %3d *\n", *poss_sp, fill+1);
+	  printf ("%4d x %3d *\n", *poss_sp, fill);
 #endif
 	  continue;
 	}

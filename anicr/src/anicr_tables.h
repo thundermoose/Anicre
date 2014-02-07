@@ -20,6 +20,7 @@ typedef struct info_state_for_miss_t
   int _m_min;
   int _m_steps;
   int _num_E;
+  int _parity_mult;
 
   state_for_miss_m_N        *_miss;
   index_into_state_for_miss *_offset;

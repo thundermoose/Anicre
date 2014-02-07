@@ -180,7 +180,7 @@ void repl_states_by_m_N::write_table(file_output &out) const
 	      _miss1, _miss2);
   out.fprintf("{\n");
   out.fprintf("  %d, %d, %d, %d,\n",
-	      _min_m, _rng_m, _rng_N, _rng_m * _rng_N);
+	      _min_m, _rng_m, _rng_N, ((_rng_m+1) / 2) * _rng_N);
   out.fprintf("  _table_%d_%d_miss,\n", _miss1, _miss2);
   out.fprintf("  _table_%d_%d_offset,\n", _miss1, _miss2);
   out.fprintf("};\n");
