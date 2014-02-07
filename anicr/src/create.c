@@ -173,9 +173,9 @@ void create_states(int *in_sp_other,
 
   /* Assume we will begin by inserting a lowest state. */
 
-  for (i = 0; i < NSP-1; i++)
+  for (i = 1; i < NSP; i++)
     {
-      out_sp[i+1] = in_sp[i];
+      out_sp[i] = in_sp[i];
     }
 
   /* Make sure that we do move fill beyond the end. */
@@ -231,9 +231,18 @@ void created_state(int *in_sp_other,
   for (i = 0; i < CFG_NUM_SP_STATES0; i++)
     lookfor[i] = in_sp[i];
   for (i = 0; i < CFG_NUM_SP_STATES1; i++)
-    lookfor[CFG_NUM_SP_STATES0 + i] = in_sp[i];
+    lookfor[CFG_NUM_SP_STATES0 + i] = in_sp_other[i];
 
-  find_mp_state(lookfor);
+#if DEBUG_ANICR
+  for (i = 0; i < CFG_NUM_SP_STATES0 + CFG_NUM_SP_STATES1; i++)
+    printf (" %4d", lookfor[i]);
+  printf ("\n");
+#endif
 
+  if (!find_mp_state(lookfor))
+    {
+      printf ("NOT FOUND!\n");
+
+    }
   /* printf ("%4d %4d\n", sp_anni, sp_crea); */
 }

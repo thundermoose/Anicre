@@ -101,7 +101,7 @@ int main()
   return 0;
 }
 
-void find_mp_state(int *lookfor)
+int find_mp_state(int *lookfor)
 {
   size_t num_mp = CFG_NUM_MP_STATES;
   size_t num_sp = CFG_NUM_SP_STATES0 + CFG_NUM_SP_STATES1;
@@ -113,4 +113,6 @@ void find_mp_state(int *lookfor)
   if (found)
     _found++;
   _lookups++;
+
+  return found != NULL;
 }
