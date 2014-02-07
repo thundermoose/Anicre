@@ -150,13 +150,15 @@ void repl_states_by_m_N::write_table(file_output &out) const
     {
       out.fprintf("  /* %3d */", m);
 
-      for (int N = 0; N < _rng_N+1; N++)
+      for (int N = 0; N < _rng_N; N++)
 	{
 	  int off = (m - _min_m) * _rng_N + N;
 
 	  out.fprintf(" %4zd,", offset[off]);
 	}
-      out.fprintf("\n");
+      int off = (m - _min_m + 1) * _rng_N;
+
+      out.fprintf(" /* %4zd */\n", offset[off]);
     }
   out.fprintf("  /*     */ %4zd\n", offset[sz]);
   out.fprintf("};\n");
