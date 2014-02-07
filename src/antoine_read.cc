@@ -798,6 +798,10 @@ void mr_antoine_reader<header_version_t>::find_used_states()
 			 _header.A[0]);
       out_config.fprintf("#define CFG_NUM_SP_STATES1  %d\n",
 			 _header.A[1]);
+      out_config.fprintf("#define CFG_MAX_SUM_E       %d\n",
+			 max_N);
+      out_config.fprintf("#define CFG_SUM_M           %d\n",
+			 max_m); /* = min_m */
 
 
 
