@@ -8,6 +8,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <stdint.h>
+#include <inttypes.h>
 
 int compare_mp_state(const void *p1, const void *p2)
 {
@@ -31,6 +33,9 @@ int compare_mp_state(const void *p1, const void *p2)
 }
 
 int *_mp = NULL;
+
+uint64_t _lookups = 0;
+uint64_t _found = 0;
 
 int main()
 {
@@ -91,5 +96,21 @@ int main()
 
   printf ("Annihilated-created for %zd mp states.\n", num_mp);
 
+  printf ("Found %"PRIu64"/%"PRIu64".\n", _found, _lookups);
+
   return 0;
+}
+
+void find_mp_state(int *lookfor)
+{
+  size_t num_mp = CFG_NUM_MP_STATES;
+  size_t num_sp = CFG_NUM_SP_STATES0 + CFG_NUM_SP_STATES1;
+
+  void *found =
+    bsearch (lookfor,
+	     _mp, num_mp, sizeof (int) * num_sp, compare_mp_state);
+
+  if (found)
+    _found++;
+  _lookups++;
 }

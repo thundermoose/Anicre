@@ -208,6 +208,8 @@ void create_states(int *in_sp_other,
 void created_state(int *in_sp_other,
 		   int *in_sp, int sp_anni, int sp_crea)
 {
+  int i;
+
   /* We need to find the created state in the destination hash table.
    * To get its coefficient.
    */
@@ -216,4 +218,15 @@ void created_state(int *in_sp_other,
   (void) in_sp;
   (void) sp_anni;
   (void) sp_crea;
+
+  int lookfor[CFG_NUM_SP_STATES0 + CFG_NUM_SP_STATES1];
+
+  for (i = 0; i < CFG_NUM_SP_STATES0; i++)
+    lookfor[i] = in_sp[i];
+  for (i = 0; i < CFG_NUM_SP_STATES1; i++)
+    lookfor[CFG_NUM_SP_STATES0 + i] = in_sp[i];
+
+  find_mp_state(lookfor);
+
+  /* printf ("%4d %4d\n", sp_anni, sp_crea); */
 }
