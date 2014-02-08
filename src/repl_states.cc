@@ -96,6 +96,9 @@ void repl_states_by_m_N::write_table(file_output &out) const
 	{
 	  out.fprintf("  /* %3d          */\n", m);
 	  
+	  int last_entry = -1;
+	  int prev_last_entry = -1;
+
 	  for (int N = 0; N < _rng_N; N++)
 	    {
 	      int off = (m - _min_m) * _rng_N + N;
@@ -106,6 +109,19 @@ void repl_states_by_m_N::write_table(file_output &out) const
 	      
 	      if (!num)
 		continue;
+
+	      if (vect[0] <= last_entry)
+		printf ("Out-of-order:   p:%d m:%3d N:%3d  %4d < %4d  "
+			"%d %d %d %d\n",
+			parity, m, N, vect[0], last_entry,
+			(N + ((m & 2)>>1)) / 2,
+			(N + ((m & 2)>>1) + 1) / 2,
+			(N + 2 * ((m & 2)>>1)) / 2,
+			(N + 2 * ((m & 2)>>1) + 1) / 2);
+	      if (vect[0] <= prev_last_entry)
+		printf ("Out-of-order-2: p:%d m:%3d N:%3d  %4d < %4d  "
+			"\n",
+			parity, m, N, vect[0], prev_last_entry);
 	      
 	      out.fprintf("  /*     %2d [%3zd] */", N, num);
 	      size_t linesz = 20;
@@ -130,6 +146,9 @@ void repl_states_by_m_N::write_table(file_output &out) const
 	      out.fprintf("\n");
 	      
 	      totoffset += num;
+
+	      prev_last_entry = last_entry;
+	      last_entry = vect[num-1];
 	    }
 	  
 	  int off = (m - _min_m) * _rng_N + _rng_N;
