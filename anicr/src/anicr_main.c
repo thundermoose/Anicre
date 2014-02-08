@@ -77,6 +77,8 @@ int main()
 
   printf ("Sorted %zd mp states.\n", num_mp);
 
+  ammend_tables();
+
   size_t i;
 
   int *mp = _mp;

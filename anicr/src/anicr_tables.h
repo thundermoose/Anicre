@@ -2,6 +2,8 @@
 #ifndef __ANICR_TABLES_H__
 #define __ANICR_TABLES_H__
 
+#include <stdint.h>
+
 /**********************************************************************/
 
 typedef struct sp_state_info_t
@@ -12,7 +14,7 @@ typedef struct sp_state_info_t
   int _m;
 } sp_state_info;
 
-typedef int state_for_miss_m_N;
+typedef uint32_t state_for_miss_m_N;
 typedef int index_into_state_for_miss;
 
 typedef struct info_state_for_miss_t
@@ -33,6 +35,7 @@ extern sp_state_info _table_sp_states[];
 
 extern info_state_for_miss _table_1_0_info;
 extern info_state_for_miss _table_2_0_info;
+extern info_state_for_miss _table_3_0_info;
 
 /**********************************************************************/
 

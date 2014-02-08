@@ -20,6 +20,53 @@
 
 #define sp_info _table_sp_states
 
+#define SHIFT_J  27
+#define SHIFT_M  22
+#define SHIFT_E  17
+#define SHIFT_P  16
+
+#define EXTRACT_SP(x)      ((x) & 0xffff)
+#define GET_P(x)           ((x) >> SHIFT_P)
+#define EXTRACT_E(x)       (((x) >> SHIFT_E) & 0x1f)
+#define EXTRACT_CMPR_M(x)  (((x) >> SHIFT_M) & 0x1f)
+#define EXTRACT_JM(x)      (((x) >> SHIFT_M) & 0x3ff)
+
+void ammend_table(uint32_t *table, int nmemb)
+{
+  int i;
+
+  for (i = 0; i < nmemb; i++)
+    {
+      uint32_t sp = table[i];
+      
+      int n = sp_info[sp]._n;
+      int l = sp_info[sp]._l;
+      int j = sp_info[sp]._j;
+      int m = sp_info[sp]._m;
+
+      int cmpr_m = (m - j) / 2;
+      int E = 2 * n + l;
+
+      table[i] = sp |
+	(uint32_t) ((j      << SHIFT_J) |
+		    (cmpr_m << SHIFT_M) |
+		    (E      << SHIFT_J) |
+		    ((l & 1) << SHIFT_P));
+    }
+}
+
+void ammend_tables()
+{
+  ammend_table(_table_1_0_info._miss,
+	       _table_1_0_info._offset[2 * _table_1_0_info._parity_mult]);
+  ammend_table(_table_2_0_info._miss,
+	       _table_2_0_info._offset[2 * _table_2_0_info._parity_mult]);
+  ammend_table(_table_3_0_info._miss,
+	       _table_3_0_info._offset[2 * _table_3_0_info._parity_mult]);
+
+}
+
+
 void create_states(int *in_sp_other,
 		   int *in_sp,
 #if ANICR2
@@ -265,9 +312,9 @@ void create_states(int *in_sp_other,
 	  offset_poss_sp);
 #endif
 
-  state_for_miss_m_N *poss_sp/*, *poss_sp_end*/;
+  state_for_miss_m_N *poss_sp_ptr/*, *poss_sp_end*/;
 
-  poss_sp = &miss_info->_miss[offset_poss_sp];
+  poss_sp_ptr = &miss_info->_miss[offset_poss_sp];
   /* poss_sp_end = &miss_info->_miss[offset_poss_sp_end]; */
 
   int num_poss_sp = offset_poss_sp_end - offset_poss_sp;
@@ -305,35 +352,38 @@ void create_states(int *in_sp_other,
 #if ANICR2
   /* Skip past states which are smaller than the one already added. */
   
-  for ( ; num_poss_sp; --num_poss_sp, poss_sp++)
+  for ( ; num_poss_sp; --num_poss_sp, poss_sp_ptr++)
     {
-      if (*poss_sp > sp_crea1)
+      if (*poss_sp_ptr > sp_crea1)
 	break;
     }
 #else
   int fill = 0;
 #endif
 
-  for ( ; num_poss_sp; --num_poss_sp, poss_sp++)
+  for ( ; num_poss_sp; --num_poss_sp, poss_sp_ptr++)
     {
-      while (*poss_sp > out_sp[fill+1])
+      uint32_t poss_sp = *poss_sp_ptr;
+      uint32_t crea_sp = EXTRACT_SP(poss_sp);
+
+      while (crea_sp > (uint32_t) out_sp[fill+1])
 	{
 	  out_sp[fill] = out_sp[fill+1];
 	  fill++;
 	}
 
-      if (*poss_sp == out_sp[fill+1])
+      if (crea_sp == (uint32_t) out_sp[fill+1])
 	{
 #if DEBUG_ANICR
-	  printf ("%4d x %3d *\n", *poss_sp, fill);
+	  printf ("%4d x %3d *\n", crea_sp, fill);
 #endif
 	  continue;
 	}
 
-      out_sp[fill] = *poss_sp;
+      out_sp[fill] = (int) crea_sp;
 
 #if DEBUG_ANICR
-      printf ("%4d @ %3d\n", *poss_sp, fill);
+      printf ("%4d @ %3d\n", crea_sp, fill);
 #endif
 
       created_state(in_sp_other,
@@ -343,7 +393,7 @@ void create_states(int *in_sp_other,
 #else
 		    sp_anni,
 #endif
-		    *poss_sp);
+		    (int) crea_sp);
     }
 
 
@@ -403,9 +453,9 @@ void create_states_1st(int *in_sp_other,
 	  offset_poss_sp);
 #endif
 
-  state_for_miss_m_N *poss_sp/*, *poss_sp_end*/;
+  state_for_miss_m_N *poss_sp_ptr/*, *poss_sp_end*/;
 
-  poss_sp = &miss_info->_miss[offset_poss_sp];
+  poss_sp_ptr = &miss_info->_miss[offset_poss_sp];
   /* poss_sp_end = &miss_info->_miss[offset_poss_sp_end]; */
 
   int num_poss_sp = offset_poss_sp_end - offset_poss_sp;
@@ -431,11 +481,12 @@ void create_states_1st(int *in_sp_other,
 
   int fill = 0;
 
-  for ( ; num_poss_sp; --num_poss_sp, poss_sp++)
+  for ( ; num_poss_sp; --num_poss_sp, poss_sp_ptr++)
     {
-      int crea_sp;
+      uint32_t poss_sp = *poss_sp_ptr;
+      uint32_t crea_sp = EXTRACT_SP(poss_sp);
 
-      while (*poss_sp > out_sp[fill+2])
+      while (crea_sp > (uint32_t) out_sp[fill+2])
 	{
 	  out_sp[fill] = out_sp[fill+2];
 	  fill++;
@@ -443,17 +494,15 @@ void create_states_1st(int *in_sp_other,
 
       printf ("===---===\n");
 
-      if (*poss_sp == out_sp[fill+2])
+      if (crea_sp == (uint32_t) out_sp[fill+2])
 	{
 #if DEBUG_ANICR
-	  printf ("%4d x %3d *\n", *poss_sp, fill);
+	  printf ("%4d x %3d *\n", crea_sp, fill);
 #endif
 	  continue;
 	}
 
-      crea_sp = *poss_sp;
-
-      out_sp[fill] = *poss_sp;
+      out_sp[fill] = (int) crea_sp;
 
 #if DEBUG_ANICR
       printf ("%4d @ %3d\n", crea_sp, fill);
