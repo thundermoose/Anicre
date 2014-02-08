@@ -36,7 +36,7 @@ public:
   void open(const char *filename);
 
 public:
-  bool has_fortran_block(uint64_t offset,size_t size);
+  ssize_t has_fortran_block(uint64_t offset,ssize_t size);
   bool get_fortran_block(uint64_t offset,void *block,size_t size);
 
   void get_fortran_block_data(uint64_t offset_data,void *block,size_t size);

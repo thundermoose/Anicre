@@ -38,10 +38,10 @@ void mr_file_reader::open(const char *filename)
     }
 }
 
-bool mr_file_reader::has_fortran_block(uint64_t offset,
-				       size_t size)
+ssize_t mr_file_reader::has_fortran_block(uint64_t offset,
+					  ssize_t size)
 {
-  uint32_t check;
+  uint32_t check, check2;
   ssize_t n;
 
   if (lseek(_fd,offset,SEEK_SET) == -1)
@@ -57,62 +57,72 @@ bool mr_file_reader::has_fortran_block(uint64_t offset,
       perror("read");
       FATAL("Read error.");
     }
-  if (n < (ssize_t) sizeof(uint32_t))
-    return false;
-  if (check != size)
+  if (n == 0)
     {
-      uint32_t check2;
-
-      // If there is a block of size 'check' here (i.e. we find the end
-      // marker), then print that info... (for debugging)
-
-      if (lseek(_fd,offset+sizeof(uint32_t)+check,SEEK_SET) == -1)
-	{
-	  perror("lseek");
-	  FATAL("Seek error.");
-	}
-      
-      n = read(_fd,&check2,sizeof(uint32_t));
-      //printf ("%d\n",(int)n);
-      if (n == -1)
-	{
-	  perror("read");
-	  FATAL("Read error.");
-	}
-      if (n < (ssize_t) sizeof(uint32_t))
-	INFO(" At offset %" PRIuPTR", "
-	     "no fortran block (head -> tail outside file).",
-	     offset);
-      else if (check2 != check)
-	INFO(" At offset %" PRIuPTR", "
-	     "no fortran block (head != tail).",
-	     offset);
-      else
-	INFO(" At offset %" PRIuPTR", "
-	     "possible fortran block (head == tail), size %" PRIuPTR", "
-	     "(expected %" PRIuPTR").",
-	     offset,(size_t) check,(size_t) size);
-
-      return false;
+      INFO(" At offset %" PRIuPTR", "
+	   "no fortran block (end-of-file).",
+	   offset);
+      return -1;
+    }
+  if (n < (ssize_t) sizeof(uint32_t))
+    {
+      INFO(" At offset %" PRIuPTR", "
+	   "no fortran block (head outside file).",
+	   offset);
+      return -1;
     }
 
-  if (lseek(_fd,offset+sizeof(uint32_t)+size,SEEK_SET) == -1)
+  if (lseek(_fd,offset+sizeof(uint32_t)+check,SEEK_SET) == -1)
     {
       perror("lseek");
       FATAL("Seek error.");
     }
-
-  n = read(_fd,&check,sizeof(uint32_t));
+      
+  n = read(_fd,&check2,sizeof(uint32_t));
   //printf ("%d\n",(int)n);
   if (n == -1)
     {
       perror("read");
       FATAL("Read error.");
     }
-  if (n < (ssize_t) sizeof(uint32_t) || check != size)
-    return false;
+  if (n < (ssize_t) sizeof(uint32_t))
+    {
+      INFO(" At offset %" PRIuPTR", "
+	   "no fortran block (head -> tail outside file).",
+	   offset);
+      return -1;
+    }
+  else if (check2 != check)
+    {
+      INFO(" At offset %" PRIuPTR", "
+	   "no fortran block (head != tail).",
+	   offset);
+      return -1;
+    }
 
-  return true;
+  if (size == -1)
+    {
+      INFO(" At offset %" PRIuPTR", "
+	   "possible fortran block (head == tail), size %" PRIuPTR".",
+	   offset, (size_t) check);
+
+      return check;
+    }
+
+  if (check != size)
+    {
+      // If there is a block of size 'check' here (i.e. we find the end
+      // marker), then print that info... (for debugging)
+
+      INFO(" At offset %" PRIuPTR", "
+	   "possible fortran block (head == tail), size %" PRIuPTR", "
+	   "(expected %" PRIuPTR").",
+	   offset,(size_t) check,(size_t) size);
+      
+      return -1;
+    }
+
+  return size;
 }
 
 void mr_file_reader::get_fortran_block_data(uint64_t offset_data,
@@ -141,7 +151,7 @@ void mr_file_reader::get_fortran_block_data(uint64_t offset_data,
 bool mr_file_reader::get_fortran_block(uint64_t offset,
 				       void *block,size_t size)
 {
-  if (!has_fortran_block (offset,size))
+  if (has_fortran_block (offset,size) == -1)
     return false;
 
   // Since we got the block header and footer, the data should never

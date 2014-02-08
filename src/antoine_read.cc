@@ -82,6 +82,11 @@ bool mr_antoine_reader<header_version_t>::level1_read()
     TRY_HAS_FORTRAN_BLOCK(mr_antoine_fon_ben_t,
     _offset_fon_ben);
   */
+
+  for ( ; ; ) {
+    if (SKIP_POSSIBLE_FORTRAN_BLOCK == -1)
+      break;
+  }
   
   return true;
 }
