@@ -1,0 +1,18 @@
+
+Build mfr:
+
+make
+
+Preprocess an .egv file:
+
+./mfr path-to-file.egv --td-dir=<anicr-build-dir>
+
+Build the specialised anicr executable:
+
+make anicr-<anicr-build-dir>
+
+Execute anicr:
+
+cd <anicr-build-dir>
+./anicr
+
