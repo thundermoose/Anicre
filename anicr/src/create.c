@@ -457,6 +457,11 @@ void create_states_1st(int *in_sp_other,
     miss_info->_offset[miss_info->_parity_stride * miss_parity +
 		       miss_info->_m_stride *
 		       (miss_m - miss_info->_m_min) / 2];
+  int cont_info =
+    miss_info->_offset[miss_info->_parity_stride * miss_parity +
+		       miss_info->_m_stride *
+		       (miss_m - miss_info->_m_min) / 2 +
+		       table_end_E - 1];
   int offset_poss_sp_end =
     miss_info->_offset[miss_info->_parity_stride * miss_parity +
 		       miss_info->_m_stride *
@@ -497,48 +502,57 @@ void create_states_1st(int *in_sp_other,
 
   int fill = 0;
 
-  for ( ; num_poss_sp; --num_poss_sp, poss_sp_ptr++)
+  for ( ; ; )
     {
-      uint32_t poss_sp = *poss_sp_ptr;
-      uint32_t crea_sp = EXTRACT_SP(poss_sp);
-
-      while (crea_sp > (uint32_t) out_sp[fill+2])
+      for ( ; num_poss_sp; --num_poss_sp, poss_sp_ptr++)
 	{
-	  out_sp[fill] = out_sp[fill+2];
-	  fill++;
-	}
+	  uint32_t poss_sp = *poss_sp_ptr;
+	  uint32_t crea_sp = EXTRACT_SP(poss_sp);
+
+	  while (crea_sp > (uint32_t) out_sp[fill+2])
+	    {
+	      out_sp[fill] = out_sp[fill+2];
+	      fill++;
+	    }
 
 #if DEBUG_ANICR
-      printf ("===---===\n");
+	  printf ("===---===\n");
 #endif
 
-      if (crea_sp == (uint32_t) out_sp[fill+2])
-	{
+	  if (crea_sp == (uint32_t) out_sp[fill+2])
+	    {
 #if DEBUG_ANICR
-	  printf ("%4d x %3d *\n", crea_sp, fill);
+	      printf ("%4d x %3d *\n", crea_sp, fill);
 #endif
-	  continue;
-	}
+	      continue;
+	    }
 
-      out_sp[fill] = (int) crea_sp;
+	  out_sp[fill] = (int) crea_sp;
 
 #if DEBUG_ANICR
-      printf ("%4d @ %3d\n", crea_sp, fill);
+	  printf ("%4d @ %3d\n", crea_sp, fill);
 #endif
 
 #if ANICR2
-      create_states(in_sp_other,
-		    out_sp, sp_anni1, sp_anni2,
-		    (int) crea_sp, fill+1,
-		    (sp_info[crea_sp]._l ^ miss_parity) & 1,
-		    miss_m - sp_info[crea_sp]._m,
-		    E + SP_STATE_E(sp_info[crea_sp]));
+	  create_states(in_sp_other,
+			out_sp, sp_anni1, sp_anni2,
+			(int) crea_sp, fill+1,
+			(sp_info[crea_sp]._l ^ miss_parity) & 1,
+			miss_m - sp_info[crea_sp]._m,
+			E + SP_STATE_E(sp_info[crea_sp]));
 #else
-      (void) in_sp_other;
-      (void) sp_anni1;
-      (void) sp_anni2;
-      (void) crea_sp;
+	  (void) in_sp_other;
+	  (void) sp_anni1;
+	  (void) sp_anni2;
+	  (void) crea_sp;
 #endif
+	}
+      if (!cont_info)
+	break;
+
+      num_poss_sp = cont_info >> 18;
+      poss_sp_ptr += cont_info & ((1 << 18) - 1);
+      cont_info = 0;
     }
 
 
