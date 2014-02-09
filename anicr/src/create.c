@@ -581,6 +581,8 @@ void created_state(int *in_sp_other,
   (void) sp_anni2;
   (void) sp_crea1;
   (void) sp_crea2;
+
+  /* printf ("%d %d %d %d\n", sp_anni1, sp_anni2, sp_crea1, sp_crea2); */
 #else
   (void) sp_anni;
   (void) sp_crea;

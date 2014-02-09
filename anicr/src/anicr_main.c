@@ -60,13 +60,26 @@ int main()
       exit(1);
     }
 
-  ssize_t n = read (fd, _mp, mp_sz);
+  size_t toread = mp_sz;
+  void *dest = _mp;
 
-  if (n != (ssize_t) mp_sz)
+  while (toread)
     {
-      fprintf (stderr, "Failure reading %zd, got %zd.\n",
-	       mp_sz, n);
-      exit(1);
+      ssize_t n = read (fd, dest, toread);
+
+      if (n == -1)
+	{
+	  perror("read");
+	  exit(1);
+	}
+      if (n == 0)
+	{
+	  fprintf (stderr, "End-of-file reading %zd, missing %zd.\n",
+		   mp_sz, toread);
+	  exit(1);
+	}
+      toread -= (size_t) n;
+      dest += n;
     }
 
   close (fd);
