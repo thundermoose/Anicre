@@ -10,7 +10,7 @@
 
 #define DEBUG_ANICR 0
 
-#define ANICR2      1
+#define ANICR2      0
 
 /* Annihilate states. */
 

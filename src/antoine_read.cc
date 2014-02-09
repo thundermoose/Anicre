@@ -578,6 +578,50 @@ void mr_antoine_reader<header_version_t>::find_used_states()
 	}
     }
 
+  /* Now that we know who are used, we can for each sp location in the
+   * mp state find which is the maximum index used.
+   */
+
+  int *_jm_max_spi =
+    (int *) malloc (sizeof (int) * _jm_used_slots);
+
+  for (size_t i = 0; i < _jm_used_slots; i++)
+    {
+      _jm_max_spi[i] = -1;
+
+      BITSONE_CONTAINER_TYPE *jm_u_i = jm_u + i * _jm_used_items_per_slot;
+
+      for (size_t j = 0; j < _jm_used_items_per_slot; j++)
+        {
+	  BITSONE_CONTAINER_TYPE used = *(jm_u_i++);
+	  int off = 0;
+
+	  for ( ; used; )
+	    {
+	      if (used & 1)
+		{
+		  int orig_sp = (int) (j * sizeof (used) * 8 + off);
+		  int map_sp = sps_map[orig_sp];
+
+		  if (map_sp > _jm_max_spi[i])
+		    _jm_max_spi[i] = map_sp;
+		}
+	      used >>= 1;
+	      off++;
+	    }
+	}
+    }
+
+  for (size_t i = 0; i < _jm_used_slots; i++)
+    {
+      int bits =
+	(int) (sizeof (unsigned long) * 8 - __builtin_clzl(_jm_max_spi[i]));
+
+      printf ("JM %zd max sp %d, %d bits\n",
+	      i, _jm_max_spi[i], bits);
+
+    }
+
   /* To calculate the maximum energy, we must map the istate in chunks,
    * and for each chunk, we must map the occ states for both particle
    * kinds in chunks too...
