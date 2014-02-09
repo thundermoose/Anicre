@@ -10,7 +10,7 @@
 
 #define DEBUG_ANICR 0
 
-#define ANICR2      0
+#define ANICR2      1
 
 /* Annihilate states. */
 
@@ -210,7 +210,9 @@ void annihilate_states_2nd(int *in_sp_other,
   printf ("\n");
 #endif
 
+#if DEBUG_ANICR
   printf (" : E=%3d  ~m=%3d  ~p=%d\n", E, miss_m, miss_parity);
+#endif
 
   /* Delete 1 state. */
 
@@ -359,7 +361,10 @@ void create_states(int *in_sp_other,
   
   for ( ; num_poss_sp; --num_poss_sp, poss_sp_ptr++)
     {
-      if (*poss_sp_ptr > sp_crea1)
+      uint32_t poss_sp = *poss_sp_ptr;
+      uint32_t crea_sp = EXTRACT_SP(poss_sp);
+
+      if (crea_sp > (uint32_t) sp_crea1)
 	break;
     }
 #else
@@ -440,9 +445,13 @@ void create_states_1st(int *in_sp_other,
   if (max_add_E >= miss_info->_num_E)
     max_add_E = miss_info->_num_E - 1;
 
+  int table_end_E = (max_add_E + miss_parity) & ~1;
+
+#if DEBUG_ANICR
   printf ("%d %d %d %d %d\n",
 	  miss_info->_parity_stride, miss_parity,
 	  miss_info->_num_E, miss_m, miss_info->_m_min);
+#endif
 
   int offset_poss_sp =
     miss_info->_offset[miss_info->_parity_stride * miss_parity +
@@ -452,7 +461,7 @@ void create_states_1st(int *in_sp_other,
     miss_info->_offset[miss_info->_parity_stride * miss_parity +
 		       miss_info->_m_stride *
 		       (miss_m - miss_info->_m_min) / 2 +
-		       max_add_E + 1];
+		       table_end_E];
 
 #if DEBUG_ANICR
   printf ("max_add_E=%3d -> %d states (%d)\n",
@@ -499,7 +508,9 @@ void create_states_1st(int *in_sp_other,
 	  fill++;
 	}
 
+#if DEBUG_ANICR
       printf ("===---===\n");
+#endif
 
       if (crea_sp == (uint32_t) out_sp[fill+2])
 	{
@@ -518,7 +529,7 @@ void create_states_1st(int *in_sp_other,
 #if ANICR2
       create_states(in_sp_other,
 		    out_sp, sp_anni1, sp_anni2,
-		    crea_sp, fill+1,
+		    (int) crea_sp, fill+1,
 		    (sp_info[crea_sp]._l ^ miss_parity) & 1,
 		    miss_m - sp_info[crea_sp]._m,
 		    E + SP_STATE_E(sp_info[crea_sp]));
