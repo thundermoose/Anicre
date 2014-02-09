@@ -9,6 +9,8 @@
 #include "sp_states.hh"
 #include "missing_mpr.hh"
 
+#include "pack_mp_state.hh"
+
 #include "file_output.hh"
 
 #include <string.h>
@@ -528,7 +530,7 @@ void mr_antoine_reader<header_version_t>::find_used_states()
 	  jm_used += __builtin_popcountl(jm_u_i[j]);
 	}
 
-      printf ("JM %zd used: %d\n", i, jm_used);
+      printf ("JM %2zd used: %4d\n", i, jm_used);
 
       if (i == 0)
 	sp_used = jm_used;
@@ -612,14 +614,18 @@ void mr_antoine_reader<header_version_t>::find_used_states()
 	}
     }
 
-  for (size_t i = 0; i < _jm_used_slots; i++)
+  pack_mp_state<uint64_t> bit_packing;
+
+  bit_packing.setup_pack(_header.A[0], _header.A[1],
+			 &_jm_max_spi[1], &_jm_max_spi[1 + _header.A[0]]);
+
+  for (size_t i = 1; i < _jm_used_slots; i++)
     {
-      int bits =
-	(int) (sizeof (unsigned long) * 8 - __builtin_clzl(_jm_max_spi[i]));
-
-      printf ("JM %zd max sp %d, %d bits\n",
-	      i, _jm_max_spi[i], bits);
-
+      printf ("JM %2zd max sp %4d, %2d bits @ %2d in word %d\n",
+	      i, _jm_max_spi[i],
+	      bit_packing._items[i-1]._bits,
+	      bit_packing._items[i-1]._shift,
+	      bit_packing._items[i-1]._word);
     }
 
   /* To calculate the maximum energy, we must map the istate in chunks,
