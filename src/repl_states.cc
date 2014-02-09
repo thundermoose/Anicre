@@ -71,11 +71,18 @@ void repl_states_by_m_N::dump() const
 
 }
 
-void repl_states_by_m_N::write_table(file_output &out) const
+void repl_states_by_m_N::write_table(file_output &out,
+				     bool continuationlist) const
 {
-  size_t sz = _rng_m * _rng_N;
+  size_t sz = _rng_m * (_rng_N + 1);
 
   size_t *offset = new size_t[2 * sz + 1];
+  size_t *contstart = new size_t[2 * sz]; /* a few too many, does not matter */
+  size_t *contend = new size_t[2 * sz];
+
+#define OFFSET(parity,m,N)    offset[(parity)*sz+((m)-_min_m)*(_rng_N+1)+(N)]
+#define CONTSTART(parity,m,N) contstart[(parity)*sz+((m)-_min_m)*(_rng_N)+(N)]
+#define CONTEND(parity,m,N)   contend  [(parity)*sz+((m)-_min_m)*(_rng_N)+(N)]
 
   size_t totoffset = 0;
 
@@ -121,7 +128,9 @@ void repl_states_by_m_N::write_table(file_output &out) const
 	      vect_int &vect = _entries[parity * _sz_parity + off];
 	      size_t num = vect.size();
 	      
-	      offset[parity * sz + off] = totoffset;
+	      OFFSET(parity,m,N) = totoffset;
+	      CONTSTART(parity,m,N) = 0;
+	      CONTEND(parity,m,N) = 0;
 	      
 	      vect_int &remain_this = remain_states[  N & 1 ];
 	      vect_int &remain_prev = remain_states[!(N & 1)];
@@ -207,6 +216,8 @@ void repl_states_by_m_N::write_table(file_output &out) const
 	      totoffset += prev_used;
 	    }
 
+	  OFFSET(parity,m,_rng_N) = totoffset;
+
 	  for (int N = 0; N < _rng_N; N++)
 	    {
 	      vect_int &vect = _continuation[N];
@@ -215,8 +226,13 @@ void repl_states_by_m_N::write_table(file_output &out) const
 	      if (!num)
 		continue;
 
+	      if (!continuationlist)
+		FATAL("Internal error, unexpected continuation items.");
+
 	      out.fprintf("  /* cnt %2d [%3zd] */", N, num);
 	      size_t linesz = 20;
+
+	      CONTSTART(parity,m,N) = totoffset;
 
 	      for (size_t i = 0; i < num; i++)
 		{
@@ -239,14 +255,17 @@ void repl_states_by_m_N::write_table(file_output &out) const
 
 	      out.fprintf("\n");
 
+	      totoffset += num;
+
+	      CONTEND(parity,m,N) = totoffset;
+
 	      _continuation[N].resize(0);
 	    }
-	  
-	  int off = (m - _min_m) * _rng_N + _rng_N;
-	  
-	  offset[parity * sz + off] = totoffset;
+	 
 	}
     }
+
+  offset[2 * sz] = totoffset;
 
   delete[] _continuation;
       
@@ -272,7 +291,7 @@ void repl_states_by_m_N::write_table(file_output &out) const
 	{
 	  if (N && ((N ^ parity) & 1))
 	    continue;
-	  out.fprintf("%4d  ", N);
+	  out.fprintf("%4d  %s", N, continuationlist ? "            " : "");
 	}
       out.fprintf("*/\n");
       out.fprintf("\n");
@@ -283,30 +302,52 @@ void repl_states_by_m_N::write_table(file_output &out) const
 
 	  for (int N = 0; N < _rng_N; N++)
 	    {
-	      int off = (m - _min_m) * _rng_N + N;
-
 	      if (N && ((N ^ parity) & 1))
 		{
-		  if (offset[parity * sz + off] !=
-		      offset[parity * sz + off + 1])
+		  if (OFFSET(parity,m,N) !=
+		      OFFSET(parity,m,N+1))
 		    FATAL("Internal error excluding useless "
 			  "energy steps in tables.");
 		  continue;
 		}
 	      
-	      out.fprintf(" %4zd,", offset[parity * sz + off]);
+	      out.fprintf(" %4zd,", OFFSET(parity,m,N));
+
+	      if (continuationlist)
+		{
+		  size_t contoffset =
+		    CONTSTART(parity,m,N) - OFFSET(parity,m,N+1);
+		  size_t contlength =
+		    CONTEND(parity,m,N) - CONTSTART(parity,m,N);
+		  if (!contlength)
+		    contoffset = 0;
+
+		  if (contoffset > ((1 << 18) - 1))
+		    FATAL("Error, contoffset will overflow CL item.");
+		  if (contlength > ((1 << 14) - 1))
+		    FATAL("Error, contlength will overflow CL item.");
+
+		  out.fprintf("CL(%3zd,%3zd),", contoffset, contlength);
+
+		}
 	    }
-	  int off = (m - _min_m + 1) * _rng_N;
-	  
-	  out.fprintf(" /* %4zd */\n", offset[parity * sz + off]);
+	  out.fprintf(" %s%4zd%s\n",
+		      continuationlist ? "" : "/* ",
+		      OFFSET(parity,m,_rng_N),
+		      continuationlist ? "" : " */");
 	}
     }
   out.fprintf("\n");
-  out.fprintf("  /*     */ %4zd\n", offset[2 * sz]);
+  if (!continuationlist)
+    out.fprintf("  /*     */ %4zd\n", offset[2 * sz]);
   out.fprintf("};\n");
   out.fprintf("\n");
 
-  int m_stride = _rng_N / 2 + 1;
+  delete[] offset;
+  delete[] contstart;
+  delete[] contend;
+
+  int m_stride = continuationlist ? _rng_N + 2 : _rng_N / 2 + 1;
   int parity_stride = ((_rng_m+1) / 2) * m_stride;
 
   out.fprintf("info_state_for_miss _table_%d_%d_info =\n",

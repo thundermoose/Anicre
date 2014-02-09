@@ -76,7 +76,7 @@ public:
 public:
   void dump() const;
 
-  void write_table(file_output &out) const;
+  void write_table(file_output &out, bool continuationlist) const;
 
 
 };
