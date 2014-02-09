@@ -1,6 +1,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <algorithm>
 
 #include "error.hh"
 #include "colourtext.hh"
@@ -78,6 +79,21 @@ void repl_states_by_m_N::write_table(file_output &out) const
 
   size_t totoffset = 0;
 
+  /* For two and more particles, it often occurs that possible
+   * particles for a higher energy has smaller indices than particles
+   * for a slightly lower energy.  Even though the sp states are
+   * ordered by energy.  This seems to come about due to the ability
+   * to make more or less excursions in m.  The effect also seems not
+   * to be curable by an more advanced sorting.  There are cases when
+   * sp state 0 and 1 are in one order, and then the other.
+   *
+   * We deal with this by letting the main list only eject entries as
+   * far as is safe while keeping ordering.  Each energy then also
+   * have a small continuation list.
+   */
+
+  vect_int *_continuation = new vect_int[_rng_N];
+
   out.fprintf("/********************************************/\n");
   out.fprintf("/* Table.  min_m: %3d max_m: %3d max_N: %3d */\n",
 	      _min_m, _min_m + _rng_m - 1, _rng_N - 1);
@@ -96,8 +112,8 @@ void repl_states_by_m_N::write_table(file_output &out) const
 	{
 	  out.fprintf("  /* %3d          */\n", m);
 	  
-	  int last_entry = -1;
-	  int prev_last_entry = -1;
+	  vect_int remain_states[2];
+	  size_t prev_used = 0;
 
 	  for (int N = 0; N < _rng_N; N++)
 	    {
@@ -107,30 +123,73 @@ void repl_states_by_m_N::write_table(file_output &out) const
 	      
 	      offset[parity * sz + off] = totoffset;
 	      
+	      vect_int &remain_this = remain_states[  N & 1 ];
+	      vect_int &remain_prev = remain_states[!(N & 1)];
+
+	      num += remain_prev.size() - prev_used;
+
+	      remain_this.resize(num);
+
+	      std::merge (remain_prev.begin() + prev_used, remain_prev.end(),
+			  vect.begin(), vect.end(),
+			  remain_this.begin());
+
+	      prev_used = 0;
+
+	      if (N && ((N ^ parity) & 1))
+		{
+		  if (vect.size())
+		    FATAL("Internal error excluding useless "
+			  "energy steps in tables.");
+		  continue;
+		}
+
 	      if (!num)
 		continue;
 
-	      if (vect[0] <= last_entry)
-		printf ("Out-of-order:   p:%d m:%3d N:%3d  %4d < %4d  "
-			"%d %d %d %d\n",
-			parity, m, N, vect[0], last_entry,
-			(N + ((m & 2)>>1)) / 2,
-			(N + ((m & 2)>>1) + 1) / 2,
-			(N + 2 * ((m & 2)>>1)) / 2,
-			(N + 2 * ((m & 2)>>1) + 1) / 2);
-	      if (vect[0] <= prev_last_entry)
-		printf ("Out-of-order-2: p:%d m:%3d N:%3d  %4d < %4d  "
-			"\n",
-			parity, m, N, vect[0], prev_last_entry);
-	      
+	      /* What is the lowest index of any following state.
+	       * (any would be next in 2-particle case, two next in
+	       * 3-particle case and so on, but lets be lazy...)
+	       */
+
+	      int ordered_to = INT_MAX;
+
+	      for (int N_next = N + 1; N_next < _rng_N; N_next++)
+		{
+		  int off_next = (m - _min_m) * _rng_N + N_next;
+		  vect_int &vect_next =
+		    _entries[parity * _sz_parity + off_next];
+		  size_t num_next = vect_next.size();
+
+		  if (!num_next)
+		    continue;
+
+		  if (vect_next[0] < ordered_to)
+		    ordered_to = vect_next[0];
+		}
+
 	      out.fprintf("  /*     %2d [%3zd] */", N, num);
 	      size_t linesz = 20;
-	      
+
+	      prev_used = num; /* unless aborted below */
+
 	      for (size_t i = 0; i < num; i++)
 		{
+		  int sp = remain_this[i];
+
+		  if (sp >= ordered_to)
+		    {
+		      _continuation[N].resize(num - i);
+		      std::copy(remain_this.begin() + i,
+				remain_this.end(),
+				_continuation[N].begin());
+		      prev_used = i;
+		      break;
+		    }
+
 		  char str[32];
 		  
-		  sprintf (str, " %3d,", vect[i]);
+		  sprintf (str, " %3d,", sp);
 		  size_t itemsz = strlen(str);
 		  
 		  if (strlen(str) + linesz > 79)
@@ -145,10 +204,42 @@ void repl_states_by_m_N::write_table(file_output &out) const
 	      
 	      out.fprintf("\n");
 	      
-	      totoffset += num;
+	      totoffset += prev_used;
+	    }
 
-	      prev_last_entry = last_entry;
-	      last_entry = vect[num-1];
+	  for (int N = 0; N < _rng_N; N++)
+	    {
+	      vect_int &vect = _continuation[N];
+	      size_t num = vect.size();
+
+	      if (!num)
+		continue;
+
+	      out.fprintf("  /* cnt %2d [%3zd] */", N, num);
+	      size_t linesz = 20;
+
+	      for (size_t i = 0; i < num; i++)
+		{
+		  int sp = vect[i];
+
+		  char str[32];
+
+		  sprintf (str, " %3d,", sp);
+		  size_t itemsz = strlen(str);
+
+		  if (strlen(str) + linesz > 79)
+		    {
+		      //       12345678901234567890
+		      out.fprintf("\n                    ");
+		      linesz = 20;
+		    }
+		  linesz += itemsz;
+		  out.fprintf("%s", str);
+		}
+
+	      out.fprintf("\n");
+
+	      _continuation[N].resize(0);
 	    }
 	  
 	  int off = (m - _min_m) * _rng_N + _rng_N;
@@ -156,6 +247,8 @@ void repl_states_by_m_N::write_table(file_output &out) const
 	  offset[parity * sz + off] = totoffset;
 	}
     }
+
+  delete[] _continuation;
       
   // offset[sz] = totoffset;
 
