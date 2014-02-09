@@ -334,7 +334,7 @@ void repl_states_by_m_N::write_table(file_output &out,
 	  out.fprintf(" %s%4zd%s\n",
 		      continuationlist ? "" : "/* ",
 		      OFFSET(parity,m,_rng_N),
-		      continuationlist ? "" : " */");
+		      continuationlist ? "," : " */");
 	}
     }
   out.fprintf("\n");
