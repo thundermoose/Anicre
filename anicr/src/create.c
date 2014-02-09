@@ -58,11 +58,11 @@ void ammend_table(uint32_t *table, int nmemb)
 void ammend_tables()
 {
   ammend_table(_table_1_0_info._miss,
-	       _table_1_0_info._offset[2 * _table_1_0_info._parity_mult]);
+	       _table_1_0_info._offset[2 * _table_1_0_info._parity_stride]);
   ammend_table(_table_2_0_info._miss,
-	       _table_2_0_info._offset[2 * _table_2_0_info._parity_mult]);
+	       _table_2_0_info._offset[2 * _table_2_0_info._parity_stride]);
   ammend_table(_table_3_0_info._miss,
-	       _table_3_0_info._offset[2 * _table_3_0_info._parity_mult]);
+	       _table_3_0_info._offset[2 * _table_3_0_info._parity_stride]);
 
 }
 
@@ -298,17 +298,22 @@ void create_states(int *in_sp_other,
   if (max_add_E >= miss_info->_num_E)
     max_add_E = miss_info->_num_E - 1;
 
+  int table_end_E = (max_add_E + miss_parity) / 2 + 1;
+
   int offset_poss_sp =
-    miss_info->_offset[miss_info->_parity_mult * miss_parity +
-		       miss_info->_num_E * (miss_m - miss_info->_m_min) / 2];
+    miss_info->_offset[miss_info->_parity_stride * miss_parity +
+		       miss_info->_m_stride *
+		       (miss_m - miss_info->_m_min) / 2];
   int offset_poss_sp_end =
-    miss_info->_offset[miss_info->_parity_mult * miss_parity +
-		       miss_info->_num_E * (miss_m - miss_info->_m_min) / 2 +
-		       max_add_E + 1];
+    miss_info->_offset[miss_info->_parity_stride * miss_parity +
+		       miss_info->_m_stride *
+		       (miss_m - miss_info->_m_min) / 2 +
+		       table_end_E];
 
 #if DEBUG_ANICR
-  printf ("max_add_E=%3d -> %d states (%d)\n",
-	  max_add_E, offset_poss_sp_end - offset_poss_sp,
+  printf ("max_add_E=%3d [%d] -> %d states (%d)\n",
+	  max_add_E, table_end_E,
+	  offset_poss_sp_end - offset_poss_sp,
 	  offset_poss_sp);
 #endif
 
@@ -436,15 +441,17 @@ void create_states_1st(int *in_sp_other,
     max_add_E = miss_info->_num_E - 1;
 
   printf ("%d %d %d %d %d\n",
-	  miss_info->_parity_mult, miss_parity,
+	  miss_info->_parity_stride, miss_parity,
 	  miss_info->_num_E, miss_m, miss_info->_m_min);
 
   int offset_poss_sp =
-    miss_info->_offset[miss_info->_parity_mult * miss_parity +
-		       miss_info->_num_E * (miss_m - miss_info->_m_min) / 2];
+    miss_info->_offset[miss_info->_parity_stride * miss_parity +
+		       miss_info->_m_stride *
+		       (miss_m - miss_info->_m_min) / 2];
   int offset_poss_sp_end =
-    miss_info->_offset[miss_info->_parity_mult * miss_parity +
-		       miss_info->_num_E * (miss_m - miss_info->_m_min) / 2 +
+    miss_info->_offset[miss_info->_parity_stride * miss_parity +
+		       miss_info->_m_stride *
+		       (miss_m - miss_info->_m_min) / 2 +
 		       max_add_E + 1];
 
 #if DEBUG_ANICR

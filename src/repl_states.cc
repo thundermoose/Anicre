@@ -172,16 +172,34 @@ void repl_states_by_m_N::write_table(file_output &out) const
     {
       if (parity)
         out.fprintf("\n");
-      out.fprintf("  /*   m */  /* parity = %d */\n", parity);
+      out.fprintf("  /* parity = %d */\n", parity);
+      out.fprintf("\n");
+      out.fprintf("  /*   m \\ N");
+      for (int N = 0; N < _rng_N; N++)
+	{
+	  if (N && ((N ^ parity) & 1))
+	    continue;
+	  out.fprintf("%4d  ", N);
+	}
+      out.fprintf("*/\n");
       out.fprintf("\n");
       
       for (int m = _min_m; m < _min_m + _rng_m; m += 2)
 	{
 	  out.fprintf("  /* %3d */", m);
-	  
+
 	  for (int N = 0; N < _rng_N; N++)
 	    {
 	      int off = (m - _min_m) * _rng_N + N;
+
+	      if (N && ((N ^ parity) & 1))
+		{
+		  if (offset[parity * sz + off] !=
+		      offset[parity * sz + off + 1])
+		    FATAL("Internal error excluding useless "
+			  "energy steps in tables.");
+		  continue;
+		}
 	      
 	      out.fprintf(" %4zd,", offset[parity * sz + off]);
 	    }
@@ -195,11 +213,15 @@ void repl_states_by_m_N::write_table(file_output &out) const
   out.fprintf("};\n");
   out.fprintf("\n");
 
+  int m_stride = _rng_N / 2 + 1;
+  int parity_stride = ((_rng_m+1) / 2) * m_stride;
+
   out.fprintf("info_state_for_miss _table_%d_%d_info =\n",
 	      _miss1, _miss2);
   out.fprintf("{\n");
-  out.fprintf("  %d, %d, %d, %d,\n",
-	      _min_m, _rng_m, _rng_N, ((_rng_m+1) / 2) * _rng_N);
+  out.fprintf("  %d, %d, %d, %d, %d,\n",
+	      _min_m, _rng_m, m_stride,
+	      _rng_N, parity_stride);
   out.fprintf("  _table_%d_%d_miss,\n", _miss1, _miss2);
   out.fprintf("  _table_%d_%d_offset,\n", _miss1, _miss2);
   out.fprintf("};\n");
