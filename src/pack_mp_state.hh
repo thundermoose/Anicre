@@ -34,6 +34,8 @@ public:
 public:
   void generate_code(file_output &out);
 
+  void generate_tables(file_output &out);
+
 };
 
 #endif//__PACK_MP_STATE_HH__

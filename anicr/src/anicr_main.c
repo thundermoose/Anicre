@@ -99,10 +99,22 @@ int main(int argc, char *argv[])
 
   uint64_t *mp = _mp;
 
+  int packed = 0;
+
+  if (argc > 1 && strcmp(argv[1],"--packed") == 0)
+    packed = 1;
+
   for (i = 0; i < num_mp; i++)
     {
-	/* annihilate_states(mp + CFG_NUM_SP_STATES0, mp); */
-	annihilate_packed_states(mp);
+      if (packed)
+	{
+	  packed_annihilate_states(mp);
+	}
+      else
+	{
+	  /* annihilate_states(mp + CFG_NUM_SP_STATES0, mp); */
+	  annihilate_packed_states(mp);
+	}
 
       mp += CFG_PACK_WORDS;
       

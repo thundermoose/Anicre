@@ -30,6 +30,13 @@ typedef struct info_state_for_miss_t
 
 } info_state_for_miss;
 
+typedef struct mp_pack_info_t
+{
+  int _word;
+  int _shift;
+  uint64_t _mask;
+} mp_pack_info;
+
 /**********************************************************************/
 
 extern sp_state_info _table_sp_states[];
@@ -37,6 +44,8 @@ extern sp_state_info _table_sp_states[];
 extern info_state_for_miss _table_1_0_info;
 extern info_state_for_miss _table_2_0_info;
 extern info_state_for_miss _table_3_0_info;
+
+extern mp_pack_info _mp_pack_info[];
 
 /**********************************************************************/
 

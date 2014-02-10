@@ -2,6 +2,8 @@
 #include "pack_mp_state.hh"
 #include <stdlib.h>
 #include <stdint.h>
+#define __STDC_FORMAT_MACROS
+#include <inttypes.h>
 
 template<typename pack_T>
 pack_mp_state<pack_T>::pack_mp_state()
@@ -132,6 +134,30 @@ void pack_mp_state<pack_T>::generate_code(file_output &out)
   out.fprintf ("}\n");
 
   out.fprintf ("\n");
+
+
+}
+
+template<typename pack_T>
+void pack_mp_state<pack_T>::generate_tables(file_output &out)
+{
+  out.fprintf("/********************************************/\n");
+  out.fprintf("\n");
+  out.fprintf("mp_pack_info _mp_pack_info[] = \n");
+  out.fprintf("{\n");
+
+  for (int i = 0; i < _len[0] + _len[1]; i++)
+    {
+      out.fprintf ("  { /* %2d */ %d, %2d, 0x%016"PRIx64"ull },\n",
+		   i,
+		   _items[i]._word,
+		   _items[i]._shift,
+		   ((((uint64_t) 1) << _items[i]._bits)-1) <<
+		   _items[i]._shift);
+    }
+
+  out.fprintf("};\n");
+  out.fprintf("\n");
 
 
 }

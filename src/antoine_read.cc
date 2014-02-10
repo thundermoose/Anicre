@@ -842,6 +842,8 @@ void mr_antoine_reader<header_version_t>::find_used_states()
       out_table.fprintf("/* Editing is useless.                   */\n");
       out_table.fprintf("\n");
 
+      bit_packing.generate_tables(out_table);
+
       sp_states_table(out_table, sps);
 
       missing_mpr_tables(out_table, M, parity, sps);
