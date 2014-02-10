@@ -22,6 +22,8 @@
 
 #define sp_info _table_sp_states
 
+uint32_t sp_jmEp[CFG_NUM_SP_STATES];
+
 #define SHIFT_J  28
 #define SHIFT_M  23
 #define SHIFT_E  18
@@ -47,7 +49,7 @@ void ammend_table(uint32_t *table, int nmemb)
       int m = sp_info[sp]._m;
 
       int cmpr_j = (j - 1) / 2; /* = j / 2, j always odd here */
-      int cmpr_m = (m - j) / 2;
+      int cmpr_m = (m + j) / 2;
       int E = 2 * n + l;
 
       table[i] = sp |
@@ -60,6 +62,15 @@ void ammend_table(uint32_t *table, int nmemb)
 
 void ammend_tables()
 {
+  int i;
+
+  /* Such that it can be filled by ammend_table :-) */
+
+  for (i = 0; i < CFG_NUM_SP_STATES; i++)
+    sp_jmEp[i] = (uint32_t) i;
+
+  ammend_table(sp_jmEp, CFG_NUM_SP_STATES);    
+
   ammend_table(_table_1_0_info._miss,
 	       _table_1_0_info._offset[2 * _table_1_0_info._parity_stride]);
   ammend_table(_table_2_0_info._miss,
@@ -599,6 +610,22 @@ void created_state(int *in_sp_other,
   (void) sp_anni;
   (void) sp_crea;
 #endif
+
+  uint32_t jm_a1 = EXTRACT_JM(sp_jmEp[sp_anni1]);
+  uint32_t jm_a2 = EXTRACT_JM(sp_jmEp[sp_anni2]);
+  uint32_t jm_c1 = EXTRACT_JM(sp_jmEp[sp_crea1]);
+  uint32_t jm_c2 = EXTRACT_JM(sp_jmEp[sp_crea2]);
+  /*
+  printf ("%3d %3d %3d %3d   %3x %3x %3x %3x\n",
+	  sp_anni1, sp_anni2, sp_crea1, sp_crea2,
+	  jm_a1, jm_a2, jm_c1, jm_c2);
+  */
+
+  uint64_t jms =
+    jm_a1 | (((uint64_t) jm_a2) << 9) |
+    (((uint64_t) jm_c1) << 18) | (((uint64_t) jm_c2) << 27);
+
+  (void) jms;
 
   /*
   int lookfor[CFG_NUM_SP_STATES0 + CFG_NUM_SP_STATES1];
