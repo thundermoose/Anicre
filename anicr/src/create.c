@@ -12,7 +12,7 @@
 
 #define DEBUG_ANICR 0
 
-#define ANICR2      0
+#define ANICR2      1
 
 /* Annihilate states. */
 
@@ -22,16 +22,16 @@
 
 #define sp_info _table_sp_states
 
-#define SHIFT_J  27
-#define SHIFT_M  22
-#define SHIFT_E  17
-#define SHIFT_P  16
+#define SHIFT_J  28
+#define SHIFT_M  23
+#define SHIFT_E  18
+#define SHIFT_P  17
 
-#define EXTRACT_SP(x)      ((x) & 0xffff)
+#define EXTRACT_SP(x)      ((x) & 0x1ffff)
 #define GET_P(x)           ((x) >> SHIFT_P)
 #define EXTRACT_E(x)       (((x) >> SHIFT_E) & 0x1f)
 #define EXTRACT_CMPR_M(x)  (((x) >> SHIFT_M) & 0x1f)
-#define EXTRACT_JM(x)      (((x) >> SHIFT_M) & 0x3ff)
+#define EXTRACT_JM(x)      (((x) >> SHIFT_M) & 0x1ff)
 
 void ammend_table(uint32_t *table, int nmemb)
 {
@@ -46,11 +46,12 @@ void ammend_table(uint32_t *table, int nmemb)
       int j = sp_info[sp]._j;
       int m = sp_info[sp]._m;
 
+      int cmpr_j = (j - 1) / 2; /* = j / 2, j always odd here */
       int cmpr_m = (m - j) / 2;
       int E = 2 * n + l;
 
       table[i] = sp |
-	(uint32_t) ((j      << SHIFT_J) |
+	(uint32_t) ((cmpr_j << SHIFT_J) |
 		    (cmpr_m << SHIFT_M) |
 		    (E      << SHIFT_J) |
 		    ((l & 1) << SHIFT_P));

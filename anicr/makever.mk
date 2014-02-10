@@ -9,9 +9,9 @@ OBJS = anicr_main.o anicr_tables.o create.o packed_create.o
 
 ####################################################################
 
-CFLAGS = -lm -O3 -g
+CFLAGS = -lm -O3 -g # -pg
 
-LINKFLAGS += -g
+LINKFLAGS += -g # -pg
 
 CFLAGS += -ansi -Wall -Wno-unused-function -Wno-unused-label \
 	-W -Wshadow -Wwrite-strings -Wconversion \
