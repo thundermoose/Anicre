@@ -8,6 +8,8 @@
 
 #include "create.h"
 
+#include "code.h"
+
 #define DEBUG_ANICR 0
 
 #define ANICR2      0
@@ -100,6 +102,15 @@ void annihilate_states_2nd(int *in_sp_other,
 			   int *in_sp,
 			   int sp_anni1,
 			   int miss_parity, int miss_m, int E);
+
+void annihilate_packed_states(uint64_t *packed)
+{
+  int list[CFG_NUM_SP_STATES0 + CFG_NUM_SP_STATES1];
+
+  packed_to_int_list(list,packed);
+
+  annihilate_states(list + CFG_NUM_SP_STATES0, list);
+}
 
 void annihilate_states(int *in_sp_other,
 		       int *in_sp)
@@ -588,12 +599,21 @@ void created_state(int *in_sp_other,
   (void) sp_crea;
 #endif
 
+  /*
   int lookfor[CFG_NUM_SP_STATES0 + CFG_NUM_SP_STATES1];
 
   for (i = 0; i < CFG_NUM_SP_STATES0; i++)
     lookfor[i] = in_sp[i];
   for (i = 0; i < CFG_NUM_SP_STATES1; i++)
     lookfor[CFG_NUM_SP_STATES0 + i] = in_sp_other[i];
+  */
+
+  (void) i;
+
+  uint64_t lookfor_packed[CFG_PACK_WORDS];
+
+  int_list2_to_packed(lookfor_packed, in_sp, in_sp_other);
+
 
 #if DEBUG_ANICR
   for (i = 0; i < CFG_NUM_SP_STATES0 + CFG_NUM_SP_STATES1; i++)
@@ -601,7 +621,7 @@ void created_state(int *in_sp_other,
   printf ("\n");
 #endif
 
-  if (!find_mp_state(lookfor))
+  if (!find_mp_state(lookfor_packed))
     {
       printf ("NOT FOUND!\n");
 

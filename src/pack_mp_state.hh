@@ -2,6 +2,8 @@
 #ifndef __PACK_MP_STATE_HH__
 #define __PACK_MP_STATE_HH__
 
+#include "file_output.hh"
+
 struct pms_info
 {
   char _bits;
@@ -24,6 +26,13 @@ public:
 
 public:
   void setup_pack(int A0, int A1,int *max_index0, int *max_index1);
+
+public:
+  void clear_packed(pack_T *pack);
+  void insert_packed(pack_T *pack, int i, int value);
+
+public:
+  void generate_code(file_output &out);
 
 };
 
