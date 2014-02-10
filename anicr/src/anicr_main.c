@@ -215,7 +215,7 @@ int main(int argc, char *argv[])
 
       mp += CFG_PACK_WORDS;
       
-      if (i % 1000 == 0)
+      if (i % 10000 == 0)
 	{
 	  printf ("anicr %zd / %zd\r", i, num_mp);
 	  fflush (stdout);
