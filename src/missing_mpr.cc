@@ -181,7 +181,7 @@ void missing_mpr_tables(file_output &out,
 
   (void) repl_st3;
 
-  repl_st1->write_table(out);
-  repl_st2->write_table(out);
-  repl_st3->write_table(out);
+  repl_st1->write_table(out, false);
+  repl_st2->write_table(out, true);
+  repl_st3->write_table(out, true);
 }

@@ -9,6 +9,8 @@
 #include "sp_states.hh"
 #include "missing_mpr.hh"
 
+#include "pack_mp_state.hh"
+
 #include "file_output.hh"
 
 #include <string.h>
@@ -82,6 +84,11 @@ bool mr_antoine_reader<header_version_t>::level1_read()
     TRY_HAS_FORTRAN_BLOCK(mr_antoine_fon_ben_t,
     _offset_fon_ben);
   */
+
+  for ( ; ; ) {
+    if (SKIP_POSSIBLE_FORTRAN_BLOCK == -1)
+      break;
+  }
   
   return true;
 }
@@ -523,7 +530,7 @@ void mr_antoine_reader<header_version_t>::find_used_states()
 	  jm_used += __builtin_popcountl(jm_u_i[j]);
 	}
 
-      printf ("JM %zd used: %d\n", i, jm_used);
+      printf ("JM %2zd used: %4d\n", i, jm_used);
 
       if (i == 0)
 	sp_used = jm_used;
@@ -573,6 +580,56 @@ void mr_antoine_reader<header_version_t>::find_used_states()
 	}
     }
 
+  /* Now that we know who are used, we can for each sp location in the
+   * mp state find which is the maximum index used.
+   */
+
+  int *_jm_max_spi =
+    (int *) malloc (sizeof (int) * _jm_used_slots);
+
+  for (size_t i = 0; i < _jm_used_slots; i++)
+    {
+      _jm_max_spi[i] = -1;
+
+      BITSONE_CONTAINER_TYPE *jm_u_i = jm_u + i * _jm_used_items_per_slot;
+
+      for (size_t j = 0; j < _jm_used_items_per_slot; j++)
+        {
+	  BITSONE_CONTAINER_TYPE used = *(jm_u_i++);
+	  int off = 0;
+
+	  for ( ; used; )
+	    {
+	      if (used & 1)
+		{
+		  int orig_sp = (int) (j * sizeof (used) * 8 + off);
+		  int map_sp = sps_map[orig_sp];
+
+		  if (map_sp > _jm_max_spi[i])
+		    _jm_max_spi[i] = map_sp;
+		}
+	      used >>= 1;
+	      off++;
+	    }
+	}
+    }
+
+#define BIT_PACK_T uint64_t
+
+  pack_mp_state<BIT_PACK_T> bit_packing;
+
+  bit_packing.setup_pack(_header.A[0], _header.A[1],
+			 &_jm_max_spi[1], &_jm_max_spi[1 + _header.A[0]]);
+
+  for (size_t i = 1; i < _jm_used_slots; i++)
+    {
+      printf ("JM %2zd max sp %4d, %2d bits @ %2d in word %d\n",
+	      i, _jm_max_spi[i],
+	      bit_packing._items[i-1]._bits,
+	      bit_packing._items[i-1]._shift,
+	      bit_packing._items[i-1]._word);
+    }
+
   /* To calculate the maximum energy, we must map the istate in chunks,
    * and for each chunk, we must map the occ states for both particle
    * kinds in chunks too...
@@ -594,12 +651,12 @@ void mr_antoine_reader<header_version_t>::find_used_states()
   if (istate_chunk_sz > CHUNK_SZ)
     istate_chunk_sz = CHUNK_SZ;
 
-  size_t mp_states_stride = _header.A[0] + _header.A[1];
+  size_t mp_states_stride = bit_packing._words;
 
   size_t mp_states_sz =
-    sizeof (int) * istate_chunk_sz * mp_states_stride;
+    sizeof (BIT_PACK_T) * istate_chunk_sz * mp_states_stride;
 
-  int *mp_states = (int *) malloc (mp_states_sz);
+  BIT_PACK_T *mp_states = (BIT_PACK_T *) malloc (mp_states_sz);
 
   if (!mp_states)
     FATAL("Memory allocation error (mp_states, %zd bytes).", mp_states_sz);
@@ -637,7 +694,7 @@ void mr_antoine_reader<header_version_t>::find_used_states()
 
 	      mr_antoine_istate_item_t *pistate = cm_istate.ptr();
 
-	      int *mp_ptr = mp_states;
+	      BIT_PACK_T *mp_ptr = mp_states;
 
 	      for (unsigned int j = 0; j < cm_istate.num(); j++)
 		{
@@ -662,7 +719,11 @@ void mr_antoine_reader<header_version_t>::find_used_states()
 				   _header.A[1]),
 			};
 
-		      int *mp_ptr_this = mp_ptr;
+		      BIT_PACK_T *mp_ptr_this = mp_ptr;
+
+		      bit_packing.clear_packed(mp_ptr_this);
+
+		      int kk = 0;
 
 		      for (unsigned int i = 0; i < 2; i++)
 			{
@@ -697,7 +758,8 @@ void mr_antoine_reader<header_version_t>::find_used_states()
 			      else
 				sum_neg_m += mpr;
 
-			      *(mp_ptr_this++) = sps_map[jm];
+			      bit_packing.insert_packed(mp_ptr_this, kk++,
+							sps_map[jm]);
 			    }
 			}
 		      /*
@@ -708,6 +770,7 @@ void mr_antoine_reader<header_version_t>::find_used_states()
 			max_N = sum_N;
 		      if (sum_N < min_N)
 			min_N = sum_N;
+
 
 		      if (sum_m > max_m)
 			max_m = sum_m;
@@ -736,7 +799,7 @@ void mr_antoine_reader<header_version_t>::find_used_states()
       if (out_states)
 	{
 	  size_t mp_used_sz =
-	    sizeof (int) * cm_istate.num() * mp_states_stride;
+	    sizeof (BIT_PACK_T) * cm_istate.num() * mp_states_stride;
 
 	  out_states->fwrite (mp_states, mp_used_sz, 1);
 	}
@@ -744,6 +807,8 @@ void mr_antoine_reader<header_version_t>::find_used_states()
 
   if (out_states)
     delete out_states;
+
+  free(mp_states);
 
   printf ("N_min:     %2d  N_max:     %2d\n", min_N, max_N);
   printf ("m_min:     %2d  m_max:     %2d\n", min_m, max_m);
@@ -777,6 +842,8 @@ void mr_antoine_reader<header_version_t>::find_used_states()
       out_table.fprintf("/* Editing is useless.                   */\n");
       out_table.fprintf("\n");
 
+      bit_packing.generate_tables(out_table);
+
       sp_states_table(out_table, sps);
 
       missing_mpr_tables(out_table, M, parity, sps);
@@ -802,9 +869,21 @@ void mr_antoine_reader<header_version_t>::find_used_states()
 			 max_N);
       out_config.fprintf("#define CFG_SUM_M           %d\n",
 			 max_m); /* = min_m */
+      out_config.fprintf("#define CFG_PACK_WORDS      %d\n",
+			 bit_packing._words);
+    }
 
+  if (_config._td_dir)
+    {
+      #define FILENAME_CODE "/code.h"
 
+      file_output out_code(_config._td_dir, FILENAME_CODE);
 
+      out_code.fprintf("/* This file is automatically generated. */\n");
+      out_code.fprintf("/* Editing is useless.                   */\n");
+      out_code.fprintf("\n");
+
+      bit_packing.generate_code(out_code);
 
     }
 }

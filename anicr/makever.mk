@@ -5,7 +5,7 @@ endif
 
 all: anicr
 
-OBJS = anicr_main.o anicr_tables.o create.o
+OBJS = anicr_main.o anicr_tables.o create.o packed_create.o
 
 ####################################################################
 

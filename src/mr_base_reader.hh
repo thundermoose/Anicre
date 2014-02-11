@@ -37,6 +37,13 @@ public:
 
 ////////////////////////////////////////////////////////////////////////
 
+#define SKIP_POSSIBLE_FORTRAN_BLOCK					\
+  (__extension__							\
+   ({ ssize_t len = _file_reader->has_fortran_block(cur_offset,-1);	\
+     if (len != -1)							\
+       cur_offset += len + 2 * sizeof(uint32_t);			\
+     len; }))								\
+
 #define TRY_GET_FORTRAN_BLOCK(block)					\
   do {									\
     if (!_file_reader->get_fortran_block(cur_offset,			\
@@ -50,8 +57,8 @@ public:
 
 #define TRY_HAS_FORTRAN_BLOCK(block,offset)				\
   do {									\
-    if (!_file_reader->has_fortran_block(cur_offset,			\
-					 sizeof(block)))		\
+    if (_file_reader->has_fortran_block(cur_offset,			\
+					sizeof(block)) == -1)		\
       return false;							\
     if (_debug >= 1)							\
       INFO(" Good block for '%s' "					\
@@ -62,8 +69,8 @@ public:
 
 #define TRY_HAS_FORTRAN_BLOCK_ITEMS(block_item,nitems,offset)		\
   do {									\
-    if (!_file_reader->has_fortran_block(cur_offset,			\
-					 sizeof(block_item)*nitems))	\
+    if (_file_reader->has_fortran_block(cur_offset,			\
+					sizeof(block_item)*nitems) == -1) \
       return false;							\
     if (_debug >= 1)							\
       INFO(" Good block for %" PRIuPTR					\
