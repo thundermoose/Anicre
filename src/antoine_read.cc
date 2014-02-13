@@ -321,10 +321,13 @@ void mr_antoine_reader<header_version_t>::dump_info()
       if (_header.nsd > 11)
 	printf ("...\n");
 
-      cm_istate.map(_file_reader, _offset_istate,
-                    _header.nsd - 1, 1);
+      if (_header.nsd > 10)
+	{
+	  cm_istate.map(_file_reader, _offset_istate,
+			_header.nsd - 1, 1);
 
-      dump_istate_chunk(cm_istate);
+	  dump_istate_chunk(cm_istate);
+	}
     }
 
   printf ("===================================\n");
