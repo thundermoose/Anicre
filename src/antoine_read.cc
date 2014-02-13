@@ -475,8 +475,20 @@ void mr_antoine_reader<header_version_t>::find_used_states()
   BITSONE_CONTAINER_TYPE *jm_u_all = _jm_used;
   BITSONE_CONTAINER_TYPE *jm_u = _jm_used + _jm_used_items_per_slot;
 
+  size_t max_jm_for_jm_sz = 2 * sizeof (uint32_t) * _header.num_of_jm;
+
+  uint32_t *_max_jm_for_jm = (uint32_t *) malloc (max_jm_for_jm_sz);
+
+  memset(_max_jm_for_jm, 0, max_jm_for_jm_sz);
+
+  char *jm_jm_used = (char *) malloc (_header.num_of_jm * _header.num_of_jm);
+
+  memset (jm_jm_used, 0, _header.num_of_jm * _header.num_of_jm);
+
   for (int i = 0; i < 2; i++)
     {
+      uint32_t *max_jm_for_jm = _max_jm_for_jm + _header.num_of_jm * i;
+
       for (mr_file_chunk<mr_antoine_occ_item_t>
 	     cm_occ(_header.nslt[i], 1000000, _header.A[i]);
 	   cm_occ.map_next(_file_reader, _offset_occ[i]); )
@@ -487,9 +499,15 @@ void mr_antoine_reader<header_version_t>::find_used_states()
 	    {
 	      BITSONE_CONTAINER_TYPE *jm_u_k = jm_u;
 
+	      mr_antoine_occ_item_t *pocc1 = pocc;
+
+	      uint32_t jm_array[32];
+
 	      for (unsigned int j = 0; j < _header.A[i]; j++)
 		{
 		  uint32_t jm = (pocc++)->sp - 1;
+
+		  jm_array[j] = jm;
 
 		  BITSONE_CONTAINER_TYPE mask =
 		    ((BITSONE_CONTAINER_TYPE) 1) <<
@@ -507,13 +525,56 @@ void mr_antoine_reader<header_version_t>::find_used_states()
 		  jm_u_k[offset] |= mask;
 
 		  jm_u_k += _jm_used_items_per_slot;
-
 		}
+
+	      uint32_t jm_max_plus1 = (pocc1 + _header.A[i] - 1)->sp;
+	  
+	      for (unsigned int j = 0; j < _header.A[i] - 1; j++)
+                {
+		  uint32_t jm = (pocc1++)->sp - 1;
+
+		  if (jm_max_plus1 > max_jm_for_jm[jm])
+		    max_jm_for_jm[jm] = jm_max_plus1;
+		}
+
+	      for (unsigned int j1 = 0; j1 < _header.A[i] - 1; j1++)
+		{
+		  for (unsigned int j2 = j1 + 1; j2 < _header.A[i]; j2++)
+		    {
+		      jm_jm_used[jm_array[j1] +
+				 jm_array[j2] * _header.num_of_jm] = 1;
+		    }
+		}
+	      /*
+	      (void) pocc1;
+	      (void) max_jm_for_jm;
+	      */
 	    }
 	}
 
       jm_u += _header.A[i] * _jm_used_items_per_slot;
     }
+
+  for (unsigned int i = 0; i < _header.num_of_jm; i++)
+    {
+      printf ("max_jm_for_jm %4d: %4d %4d\n",
+	      i,
+	      _max_jm_for_jm[i],
+	      _max_jm_for_jm[i + _header.num_of_jm]);
+    }
+
+  uint64_t combs = 0;
+
+  for (unsigned int j1 = 0; j1 < _header.num_of_jm; j1++)
+    {
+      for (unsigned int j2 = 0; j2 < _header.num_of_jm; j2++)
+	{
+	  combs += jm_jm_used[j1 + j2 * _header.num_of_jm];
+	}
+    }
+
+  printf ("jm x jm used: %"PRIu64" /  %"PRIu64"\n",
+	  combs, (uint64_t) _header.num_of_jm * (uint64_t) _header.num_of_jm);
 
   jm_u = _jm_used;
 
