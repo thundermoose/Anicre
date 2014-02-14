@@ -6,10 +6,23 @@
 #include "mr_file_chunk.hh"
 #include "antoine_struct.hh"
 
+#include <vector>
+
 #define BITSONE_CONTAINER_TYPE    unsigned long
 #define BITSONE_CONTAINER_BITS    (sizeof(BITSONE_CONTAINER_TYPE)*8)
 
-template<class header_version_t>
+template<class fon_en_version_t>
+class mr_antoine_reader_wavefunc
+{
+public:
+  fon_en_version_t _fon_en;
+
+public:
+  std::vector<uint64_t> _offset_coeff;
+
+};
+
+template<class header_version_t, class fon_en_version_t>
 class mr_antoine_reader
   : public mr_base_reader
 {
