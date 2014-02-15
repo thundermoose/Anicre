@@ -391,6 +391,36 @@ void mr_antoine_reader<header_version_t, fon_version_t>::dump_info()
 	}
     }
 
+  if (_wavefcns.size())
+    {
+      printf ("===================================\n");
+
+      printf ("== %swavefcns %s ==\n",
+	      CT_OUT(BOLD_BLUE),
+	      CT_OUT(NORM_DEF_COL));
+
+      printf ("      mjtot parity    jt2  coul iprec        en\n");
+    }
+
+  for (size_t i = 0; i < _wavefcns.size(); i++)
+    {
+      wavefcn_t *wavefcn = _wavefcns[i];
+
+      printf ("#%s%3zd%s: %s%5d %6d %6d %5d %5d %9.4f%s\n",
+	      CT_OUT(GREEN),
+	      i+1,
+	      CT_OUT(NORM_DEF_COL),
+	      CT_OUT(MAGENTA),
+	      wavefcn->_fon._.mjtotal,
+	      wavefcn->_fon._.iparity,
+	      wavefcn->_fon._.jt2,
+	      wavefcn->_fon._.coul,
+	      wavefcn->_fon._.iprec,
+	      wavefcn->_en,
+	      CT_OUT(NORM_DEF_COL));
+
+    }
+
   printf ("===================================\n");
 }
 
