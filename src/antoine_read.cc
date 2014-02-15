@@ -93,8 +93,6 @@ fill_coeff(double *dest,
 {
   dest += val_off;
 
-  (void) src_off;
-
   for ( ; num; )
     {
       set_coeff_info::iterator itup;
@@ -124,6 +122,65 @@ fill_coeff(double *dest,
 			       file_reader,
 			       ci._offset, src_off - ci._start);
 	}
+
+      src_off += use;
+      num -= use;
+    }
+}
+
+template<typename item_t>
+void dump_items(mr_file_reader *file_reader,
+		uint64_t src_file_offset,
+		size_t src_off, size_t num)
+{
+  mr_mapped_data h;
+
+  item_t *src = (item_t *)
+    file_reader->map_block_data(src_file_offset + 
+				src_off * sizeof (item_t),
+				num * sizeof (item_t), h);
+
+  for (size_t i = 0; i < num; i++)
+    {
+      printf ("#%s%3zd%s: %s%12.6f%s\n",
+	      CT_OUT(GREEN),
+	      i,
+	      CT_OUT(NORM_DEF_COL),
+	      CT_OUT(MAGENTA),
+	      *src,
+	      CT_OUT(NORM_DEF_COL));
+      src++;
+    }
+
+  h.unmap();
+}
+
+template<class fon_version_t>
+void mr_antoine_reader_wavefcn<fon_version_t>::
+dump_coeff(mr_file_reader *file_reader,
+	   size_t src_off, size_t num)
+{
+  for ( ; num; )
+    {
+      set_coeff_info::iterator itup;
+      coeff_info find;
+
+      find._start = src_off;
+      itup = _offset_coeff.upper_bound(find);
+      --itup;
+
+      const coeff_info &ci = *itup;
+
+      assert(ci._start <= src_off);
+
+      size_t use = ci._len;
+      if (use > num)
+	use = num;
+      
+      if (_fon._.iprec == 1)
+	::dump_items<float>(file_reader, ci._offset, src_off, num);
+      else /* 0 or 2 */
+	::dump_items<double>(file_reader, ci._offset, src_off, num);
 
       src_off += use;
       num -= use;
@@ -495,6 +552,13 @@ void mr_antoine_reader<header_version_t, fon_version_t>::dump_info()
 	      wavefcn->_en,
 	      CT_OUT(NORM_DEF_COL));
 
+
+      if (_config._dump == DUMP_FULL)
+	{
+	  wavefcn->dump_coeff(_file_reader,
+			      0, _header.nsd);
+
+	}
     }
 
   printf ("===================================\n");

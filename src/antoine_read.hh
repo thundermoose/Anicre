@@ -45,6 +45,9 @@ public:
 		  size_t src_off, size_t num,
 		  size_t stride, size_t val_off);
 
+  void dump_coeff(mr_file_reader *file_reader,
+		  size_t src_off, size_t num);
+
 };
 
 template<class header_version_t, class fon_version_t>
