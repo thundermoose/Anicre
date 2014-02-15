@@ -193,7 +193,7 @@ void annihilate_states(int *in_sp_other,
 
   /* And now try with all other missing ones. */
 
-  for (i = 0; i < NSP - 1; i++)
+  for (i = 0; i < NSP - (ANICR2 ? 2 : 1); i++)
     {
       /* We always have the space at [0] empty. */
 
@@ -248,11 +248,12 @@ void annihilate_states_2nd(int *in_sp_other,
 
   /* The out_sp list is missing sp state 0 and 1. */
 
-  create_states_1st(in_sp_other,
-		    out_sp, sp_anni1, in_sp[1],
-		    (sp_info[in_sp[1]]._l ^ miss_parity) & 1,
-		    miss_m + sp_info[in_sp[1]]._m,
-		    E - SP_STATE_E(sp_info[in_sp[1]]));
+  if (sp_anni1 < in_sp[1])
+    create_states_1st(in_sp_other,
+		      out_sp, sp_anni1, in_sp[1],
+		      (sp_info[in_sp[1]]._l ^ miss_parity) & 1,
+		      miss_m + sp_info[in_sp[1]]._m,
+		      E - SP_STATE_E(sp_info[in_sp[1]]));
 
   /* And now try with all other missing ones. */
 
@@ -262,11 +263,12 @@ void annihilate_states_2nd(int *in_sp_other,
 
       out_sp[i+1] = in_sp[i];
 
-      create_states_1st(in_sp_other,
-			out_sp, sp_anni1, in_sp[i+1],
-			(sp_info[in_sp[i+1]]._l ^ miss_parity) & 1,
-			miss_m + sp_info[in_sp[i+1]]._m,
-			E - SP_STATE_E(sp_info[in_sp[i+1]]));
+      if (sp_anni1 < in_sp[i+1])
+	create_states_1st(in_sp_other,
+			  out_sp, sp_anni1, in_sp[i+1],
+			  (sp_info[in_sp[i+1]]._l ^ miss_parity) & 1,
+			  miss_m + sp_info[in_sp[i+1]]._m,
+			  E - SP_STATE_E(sp_info[in_sp[i+1]]));
     }
 }
 
