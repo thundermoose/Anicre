@@ -43,6 +43,9 @@ mr_antoine_reader<header_version_t, fon_en_version_t>::~mr_antoine_reader()
   for (int i = 0; i < 2; i++)
     free(_occ_used[i]);
   free(_jm_used);
+
+  for (size_t i = 0; i < _wavefcns.size(); i++)
+    delete _wavefcns[i];
 }
 
 
@@ -54,6 +57,41 @@ const char *mr_antoine_reader<header_version_t,
     return "ANTOINE_OLD";
   else
     return "ANTOINE_NEW";
+}
+
+#define ANTOINE_COEFF_CHUNK_SZ 1000000
+
+template<class header_version_t, class fon_en_version_t>
+bool mr_antoine_reader<header_version_t, fon_en_version_t>::
+level1_read_wavefcn(wavefcn_t *wavefcn,
+		    uint64_t &cur_offset, uint32_t nsd)
+{
+  TRY_GET_FORTRAN_BLOCK(wavefcn->_fon_en);
+  /* And then there are to be blocks with the coefficients. */
+  for ( ; ; )
+    {
+      uint32_t block_elem = nsd;
+      if (block_elem > ANTOINE_COEFF_CHUNK_SZ)
+	block_elem = ANTOINE_COEFF_CHUNK_SZ;
+
+      uint64_t offset;
+
+      if (wavefcn->_fon_en.fon._.iprec == 0)
+	{
+	  float f;
+	  TRY_HAS_FORTRAN_BLOCK_ITEMS(f, block_elem, offset);
+	}
+      else
+	{
+	  double d;
+	  TRY_HAS_FORTRAN_BLOCK_ITEMS(d, block_elem, offset);
+	}
+
+      wavefcn->_offset_coeff.push_back(offset);
+
+      nsd -= block_elem;
+    }
+  return true;
 }
 
 template<class header_version_t, class fon_en_version_t>
@@ -87,10 +125,26 @@ bool mr_antoine_reader<header_version_t, fon_en_version_t>::level1_read()
   */
 
   for ( ; ; ) {
+    wavefcn_t *wavefcn = new wavefcn_t;
+    uint64_t &wavefcn_cur_offset = cur_offset;
+
+    if (level1_read_wavefcn(wavefcn, wavefcn_cur_offset, _header.nsd))
+      {
+	_wavefcns.push_back(wavefcn);
+	cur_offset = wavefcn_cur_offset;
+      }
+    else
+      {
+	delete wavefcn;
+	break;
+      }
+  }
+  /*
+  for ( ; ; ) {
     if (SKIP_POSSIBLE_FORTRAN_BLOCK == -1)
       break;
   }
-  
+  */
   return true;
 }
 
@@ -302,17 +356,19 @@ void mr_antoine_reader<header_version_t, fon_en_version_t>::dump_info()
 	  CT_OUT(BOLD_BLUE),
 	  CT_OUT(NORM_DEF_COL));
 
+#define CHUNK_DUMP_SZ 1000000
+
   if (_config._dump == DUMP_FULL)
     {
       for (mr_file_chunk<mr_antoine_istate_item_t>
-	     cm_istate(_header.nsd, 1000000);
+	     cm_istate(_header.nsd, CHUNK_DUMP_SZ);
 	   cm_istate.map_next(_file_reader, _offset_istate); )
 	dump_istate_chunk(cm_istate);
     }
   else
     {
       mr_file_chunk<mr_antoine_istate_item_t>
-	cm_istate(_header.nsd, 1000000);
+	cm_istate(_header.nsd, CHUNK_DUMP_SZ);
 
       cm_istate.map(_file_reader, _offset_istate,
 		    0, std::min<unsigned int>(10,_header.nsd));
@@ -417,8 +473,10 @@ void mr_antoine_reader<header_version_t, fon_en_version_t>::find_used_states()
 	     _occ_used_items[i] * sizeof (BITSONE_CONTAINER_TYPE));
     }
 
+#define CHUNK_FIND_SZ 1000000
+
   for (mr_file_chunk<mr_antoine_istate_item_t>
-	 cm_istate(_header.nsd, 1000000);
+	 cm_istate(_header.nsd, CHUNK_FIND_SZ);
        cm_istate.map_next(_file_reader, _offset_istate); )
     {
       mr_antoine_istate_item_t *pistate = cm_istate.ptr();
@@ -494,7 +552,7 @@ void mr_antoine_reader<header_version_t, fon_en_version_t>::find_used_states()
       uint32_t *max_jm_for_jm = _max_jm_for_jm + _header.num_of_jm * i;
 
       for (mr_file_chunk<mr_antoine_occ_item_t>
-	     cm_occ(_header.nslt[i], 1000000, _header.A[i]);
+	     cm_occ(_header.nslt[i], CHUNK_FIND_SZ, _header.A[i]);
 	   cm_occ.map_next(_file_reader, _offset_occ[i]); )
 	{
 	  mr_antoine_occ_item_t *pocc = cm_occ.ptr();
