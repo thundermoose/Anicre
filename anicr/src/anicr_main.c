@@ -12,6 +12,7 @@
 #include <stdint.h>
 #include <inttypes.h>
 #include <string.h>
+#include <assert.h>
 
 int compare_packed_mp_state(const void *p1, const void *p2)
 {
@@ -78,7 +79,9 @@ int main(int argc, char *argv[])
   size_t num_mp = CFG_NUM_MP_STATES;
   /* size_t num_sp = CFG_NUM_SP_STATES0 + CFG_NUM_SP_STATES1; */
 
-  size_t mp_sz = sizeof (uint64_t) * CFG_PACK_WORDS * num_mp;
+  assert(sizeof (uint64_t) == sizeof (double));
+
+  size_t mp_sz = sizeof (uint64_t) * (CFG_PACK_WORDS + CFG_WAVEFCNS) * num_mp;
 
   _mp = (uint64_t *) malloc (mp_sz);
 
@@ -91,7 +94,7 @@ int main(int argc, char *argv[])
   for (_hash_mask = 1; _hash_mask < num_mp * 2; _hash_mask <<= 1)
     ;
   
-  size_t hashed_mp_sz = sizeof (uint64_t) * CFG_PACK_WORDS * _hash_mask;
+  size_t hashed_mp_sz = sizeof (uint64_t) * (CFG_PACK_WORDS + CFG_WAVEFCNS) * _hash_mask;
 
   _hash_mask -= 1;
 
@@ -157,7 +160,7 @@ int main(int argc, char *argv[])
 
       uint64_t coll = 0;
 
-      while (_hashed_mp[j * CFG_PACK_WORDS] != 0)
+      while (_hashed_mp[j * (CFG_PACK_WORDS + CFG_WAVEFCNS)] != 0)
 	{
 	  j = (j + 1) & _hash_mask;
 	  coll++;
@@ -171,10 +174,14 @@ int main(int argc, char *argv[])
 
       for (k = 0; k < CFG_PACK_WORDS; k++)
 	{
-	  _hashed_mp[j * CFG_PACK_WORDS + k] = mp[k];
+	  _hashed_mp[j * (CFG_PACK_WORDS + CFG_WAVEFCNS) + k] = mp[k];
+	}
+      for (k = 0; k < CFG_WAVEFCNS; k++)
+	{
+	  _hashed_mp[j * (CFG_PACK_WORDS + CFG_WAVEFCNS) + CFG_PACK_WORDS + k] = mp[CFG_PACK_WORDS + k];
 	}
 
-      mp += CFG_PACK_WORDS;
+      mp += (CFG_PACK_WORDS + CFG_WAVEFCNS);
     }
 
   printf ("Hash: %"PRIu64" entries (%.1f), "
@@ -186,7 +193,7 @@ int main(int argc, char *argv[])
    * in original antoine order...
    */
  
-  qsort (_mp, num_mp, sizeof (uint64_t) * CFG_PACK_WORDS,
+  qsort (_mp, num_mp, sizeof (uint64_t) * (CFG_PACK_WORDS + CFG_WAVEFCNS),
 	 compare_packed_mp_state);
   
   printf ("Sorted %zd mp states.\n", num_mp);
@@ -213,7 +220,7 @@ int main(int argc, char *argv[])
 	  annihilate_packed_states(mp);
 	}
 
-      mp += CFG_PACK_WORDS;
+      mp += (CFG_PACK_WORDS + CFG_WAVEFCNS);
       
       if (i % 10000 == 0)
 	{
@@ -238,7 +245,7 @@ int find_mp_state(uint64_t *lookfor)
 
   void *found =
     bsearch (lookfor,
-	     _mp, num_mp, sizeof (uint64_t) * CFG_PACK_WORDS,
+	     _mp, num_mp, sizeof (uint64_t) * (CFG_PACK_WORDS + CFG_WAVEFCNS),
 	     compare_packed_mp_state);
 #endif
 
@@ -253,7 +260,7 @@ int find_mp_state(uint64_t *lookfor)
 
     for ( ; ; )
       {
-	uint64_t *p = &_hashed_mp[j * CFG_PACK_WORDS];
+	uint64_t *p = &_hashed_mp[j * (CFG_PACK_WORDS + CFG_WAVEFCNS)];
 	
 	int k;
 	

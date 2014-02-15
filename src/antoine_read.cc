@@ -61,6 +61,75 @@ const char *mr_antoine_reader<header_version_t,
 
 #define ANTOINE_COEFF_CHUNK_SZ 1000000
 
+template<typename item_t>
+void pick_items(double *dest, size_t num, size_t dest_stride,
+		mr_file_reader *file_reader,
+		uint64_t src_file_offset,
+		uint64_t src_item_offset)
+{
+  mr_mapped_data h;
+
+  item_t *src = (item_t *)
+    file_reader->map_block_data(src_file_offset + 
+				src_item_offset * sizeof (item_t),
+				num * sizeof (item_t), h);
+
+  for (size_t i = 0; i < num; i++)
+    {
+      *dest = *src;
+      src++;
+      dest += dest_stride;
+    }
+
+  h.unmap();
+}
+
+template<class fon_version_t>
+void mr_antoine_reader_wavefcn<fon_version_t>::
+fill_coeff(double *dest,
+	   mr_file_reader *file_reader,
+	   size_t src_off, size_t num,
+	   size_t stride, size_t val_off)
+{
+  dest += val_off;
+
+  (void) src_off;
+
+  for ( ; num; )
+    {
+      set_coeff_info::iterator itup;
+      coeff_info find;
+
+      find._start = src_off;
+      itup = _offset_coeff.upper_bound(find);
+      --itup;
+
+      const coeff_info &ci = *itup;
+
+      assert(ci._start <= src_off);
+
+      size_t use = ci._len;
+      if (use > num)
+	use = num;
+      
+      if (_fon._.iprec == 1)
+	{
+	  ::pick_items<float>(dest, use, stride,
+			      file_reader,
+			      ci._offset, src_off - ci._start);
+	}
+      else /* 0 or 2 */
+	{
+	  ::pick_items<double>(dest, use, stride,
+			       file_reader,
+			       ci._offset, src_off - ci._start);
+	}
+
+      src_off += use;
+      num -= use;
+    }
+}
+
 template<class header_version_t, class fon_version_t>
 bool mr_antoine_reader<header_version_t, fon_version_t>::
 level1_read_wavefcn(wavefcn_t *wavefcn,
@@ -69,9 +138,10 @@ level1_read_wavefcn(wavefcn_t *wavefcn,
   TRY_GET_FORTRAN_2_BLOCK(wavefcn->_fon, wavefcn->_en);
   CHECK_REASONABLE_RANGE_0(wavefcn->_fon._.iprec,2);
   /* And then there are to be blocks with the coefficients. */
-  for ( ; nsd; )
+  uint32_t start = 0;
+  for ( ; start < nsd; )
     {
-      uint32_t block_elem = nsd;
+      uint32_t block_elem = nsd - start;
       if (block_elem > ANTOINE_COEFF_CHUNK_SZ)
 	block_elem = ANTOINE_COEFF_CHUNK_SZ;
 
@@ -88,9 +158,15 @@ level1_read_wavefcn(wavefcn_t *wavefcn,
 	  TRY_HAS_FORTRAN_BLOCK_ITEMS(coeff_d, block_elem, offset);
 	}
 
-      wavefcn->_offset_coeff.push_back(offset);
+      coeff_info ci;
 
-      nsd -= block_elem;
+      ci._start  = start;
+      ci._len    = block_elem;
+      ci._offset = offset;
+
+      wavefcn->_offset_coeff.insert(ci);
+
+      start += block_elem;
     }
   return true;
 }
@@ -808,7 +884,17 @@ void mr_antoine_reader<header_version_t, fon_version_t>::find_used_states()
   if (istate_chunk_sz > CHUNK_SZ)
     istate_chunk_sz = CHUNK_SZ;
 
-  size_t mp_states_stride = bit_packing._words;
+  if (sizeof (BIT_PACK_T) != sizeof (double))
+    {
+      /* Alignment will be broken. */
+      /* Also!: allocation calculations below will be botched. */
+      FATAL("sizeof (BIT_PACK_T) = %zd != sizeof (double) = %zd",
+	    sizeof (BIT_PACK_T), sizeof (double));
+    }
+
+  int n_wavefcns = _wavefcns.size() > 0 ? 1 : 0;
+
+  size_t mp_states_stride = bit_packing._words + n_wavefcns;
 
   size_t mp_states_sz =
     sizeof (BIT_PACK_T) * istate_chunk_sz * mp_states_stride;
@@ -955,6 +1041,17 @@ void mr_antoine_reader<header_version_t, fon_version_t>::find_used_states()
 
       if (out_states)
 	{
+	  /* Fill in the wavefunctions. */
+
+	  for (int i = 0; i < n_wavefcns; i++)
+	    {
+	      _wavefcns[i]->fill_coeff((double *) mp_states,
+				       _file_reader,
+				       cm_istate.start(), cm_istate.num(),
+				       mp_states_stride,
+				       bit_packing._words + i);
+	    }
+
 	  size_t mp_used_sz =
 	    sizeof (BIT_PACK_T) * cm_istate.num() * mp_states_stride;
 
@@ -1030,6 +1127,8 @@ void mr_antoine_reader<header_version_t, fon_version_t>::find_used_states()
 			 max_m); /* = min_m */
       out_config.fprintf("#define CFG_PACK_WORDS      %d\n",
 			 bit_packing._words);
+      out_config.fprintf("#define CFG_WAVEFCNS        %d\n",
+			 n_wavefcns);
     }
 
   if (_config._td_dir)
