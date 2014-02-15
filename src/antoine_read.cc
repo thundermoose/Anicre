@@ -729,10 +729,12 @@ void mr_antoine_reader<header_version_t, fon_version_t>::find_used_states()
 
   for (unsigned int i = 0; i < _header.num_of_jm; i++)
     {
+      /*
       printf ("max_jm_for_jm %4d: %4d %4d\n",
 	      i,
 	      _max_jm_for_jm[i],
 	      _max_jm_for_jm[i + _header.num_of_jm]);
+      */
     }
 
   uint64_t combs = 0;
@@ -811,6 +813,14 @@ void mr_antoine_reader<header_version_t, fon_version_t>::find_used_states()
 	  used >>= 1;
 	  off++;
 	}
+    }
+
+  unsigned int max_jm_first = -1;
+
+  for (unsigned int i = 0; i < _header.num_of_jm; i++)
+    {
+      if (_max_jm_for_jm[i] || _max_jm_for_jm[i + _header.num_of_jm])
+	max_jm_first = sps_map[i];
     }
 
   /* Now that we know who are used, we can for each sp location in the
@@ -1129,6 +1139,25 @@ void mr_antoine_reader<header_version_t, fon_version_t>::find_used_states()
 			 bit_packing._words);
       out_config.fprintf("#define CFG_WAVEFCNS        %d\n",
 			 n_wavefcns);
+      out_config.fprintf("#define CFG_END_JM_FIRST    %d\n",
+			 max_jm_first + 1);
+
+      /* sum_i=0^(CFG_END_JM_FIRST-1) CFG_NUM_SP_STATES-i */
+      /*
+      index = first * CFG_NUM_SP_STATES - first * (first - 1)/2 +
+        (second - first);
+      index = first * (2 * CFG_NUM_SP_STATES - (first - 1))/2 +
+        (second - first);
+      index = first * (2 * CFG_NUM_SP_STATES - first - 1)/2 + second;
+      total = first * (2 * CFG_NUM_SP_STATES - first + 1)/2;
+      */
+
+      uint64_t end_first = max_jm_first + 1;
+      uint64_t total2 = end_first * (2 * sps.size() - end_first + 1)/2;
+
+      out_config.fprintf("#define CFG_TOT_FIRST_SCND    %"PRIu64"\n",
+                         total2);
+
     }
 
   if (_config._td_dir)
