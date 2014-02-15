@@ -247,6 +247,8 @@ int main(int argc, char *argv[])
 
   printf ("Found %"PRIu64"/%"PRIu64".\n", _found, _lookups);
 
+  couple_accumulate();
+
   return 0;
 }
 

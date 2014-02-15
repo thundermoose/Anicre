@@ -14,7 +14,7 @@
 
 #define DEBUG_ANICR 0
 
-#define ANICR2      1
+#define ANICR2      0
 
 /* Annihilate states. */
 
@@ -597,13 +597,15 @@ double *_accumulate;
 
 void alloc_accumulate()
 {
-  size_t accum_sz;
+  size_t num_accum;
 
 #if ANICR2
-  accum_sz = sizeof (double) * CFG_TOT_FIRST_SCND * CFG_TOT_FIRST_SCND;
+  num_accum = CFG_TOT_FIRST_SCND * CFG_TOT_FIRST_SCND;
 #else
-  accum_sz = sizeof (double) * CFG_NUM_SP_STATES * CFG_NUM_SP_STATES;
+  num_accum = CFG_NUM_SP_STATES * CFG_NUM_SP_STATES;
 #endif
+
+  size_t accum_sz = sizeof (double) * num_accum;
 
   _accumulate = (double *) malloc (accum_sz);
 
@@ -613,7 +615,7 @@ void alloc_accumulate()
       exit(1);
     }
 
-  printf ("Allocated %zd bytes for accumulation.\n", accum_sz);
+  printf ("Allocated %zd items for accumulation.\n", num_accum);
 
   memset (_accumulate, 0, accum_sz); 
 }
@@ -715,4 +717,30 @@ void created_state(int *in_sp_other,
   /* printf ("%4d %4d\n", sp_anni, sp_crea); */
 
   _accumulate[acc_i]++;
+}
+
+void couple_accumulate()
+{
+  size_t num_accum;
+  size_t non_zero = 0;
+  size_t i;
+
+#if ANICR2
+  num_accum = CFG_TOT_FIRST_SCND * CFG_TOT_FIRST_SCND;
+#else
+  num_accum = CFG_NUM_SP_STATES * CFG_NUM_SP_STATES;
+#endif
+
+  for (i = 0; i < num_accum; i++)
+    {
+      if (_accumulate[i])
+	non_zero++;
+    }
+
+  for (i = 0; i < num_accum && i < 100; i++)
+    {
+      printf ("%3zd %.6f\n", i, _accumulate[i]);
+    }
+
+  printf ("%zd non-0 accumulate items.\n", non_zero);
 }
