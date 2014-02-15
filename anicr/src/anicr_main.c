@@ -213,6 +213,8 @@ int main(int argc, char *argv[])
 
   ammend_tables();
 
+  alloc_accumulate();
+
   mp = _mp;
 
   int packed = 0;

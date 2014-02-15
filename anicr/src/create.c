@@ -2,6 +2,8 @@
 #include <assert.h>
 #include <limits.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "anicr_tables.h"
 #include "anicr_config.h"
@@ -591,6 +593,31 @@ void create_states_1st(int *in_sp_other,
 
 }
 
+double *_accumulate;
+
+void alloc_accumulate()
+{
+  size_t accum_sz;
+
+#if ANICR2
+  accum_sz = sizeof (double) * CFG_TOT_FIRST_SCND * CFG_TOT_FIRST_SCND;
+#else
+  accum_sz = sizeof (double) * CFG_NUM_SP_STATES * CFG_NUM_SP_STATES;
+#endif
+
+  _accumulate = (double *) malloc (accum_sz);
+
+  if (!_accumulate)
+    {
+      fprintf (stderr, "Memory allocation error (%zd bytes).\n", accum_sz);
+      exit(1);
+    }
+
+  printf ("Allocated %zd bytes for accumulation.\n", accum_sz);
+
+  memset (_accumulate, 0, accum_sz); 
+}
+
 void created_state(int *in_sp_other,
 		   int *in_sp,
 #if ANICR2
@@ -651,11 +678,11 @@ void created_state(int *in_sp_other,
   assert (sp_a >= 0 && sp_a < CFG_TOT_FIRST_SCND);
   assert (sp_c >= 0 && sp_c < CFG_TOT_FIRST_SCND);
 
-  int acc_i = sp_a * sp_c;
+  int acc_i = sp_a * CFG_TOT_FIRST_SCND + sp_c;
 
   (void) acc_i;
 #else
-  int acc_i = sp_anni * sp_crea;
+  int acc_i = sp_anni * CFG_NUM_SP_STATES + sp_crea;
 #endif
 
   /*
@@ -686,4 +713,6 @@ void created_state(int *in_sp_other,
 
     }
   /* printf ("%4d %4d\n", sp_anni, sp_crea); */
+
+  _accumulate[acc_i]++;
 }
