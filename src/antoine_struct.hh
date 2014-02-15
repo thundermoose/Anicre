@@ -46,7 +46,7 @@ struct mr_antoine_occ_item_t // A[i] * nslt[i], i = 1,2
   uint32_t sp;
 };
 
-struct mr_antoine_fon_en_new_t
+struct mr_antoine_fon_new_t
 {
   union
   {
@@ -64,10 +64,9 @@ struct mr_antoine_fon_en_new_t
       uint32_t iprec; /* (14) */
     } _;
   } fon;
-  double   en;
 };
 
-struct mr_antoine_fon_en_old_t
+struct mr_antoine_fon_old_t
 {
   union
   {
@@ -86,7 +85,6 @@ struct mr_antoine_fon_en_old_t
       uint32_t iprec; /* (13) */
     } _;
   } fon;
-  double   en;
 };
 
 #endif/*__MAGIC_ANTOINE_READ_HH__*/

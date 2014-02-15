@@ -11,11 +11,12 @@
 #define BITSONE_CONTAINER_TYPE    unsigned long
 #define BITSONE_CONTAINER_BITS    (sizeof(BITSONE_CONTAINER_TYPE)*8)
 
-template<class fon_en_version_t>
+template<class fon_version_t>
 class mr_antoine_reader_wavefcn
 {
 public:
-  fon_en_version_t _fon_en;
+  fon_version_t _fon;
+  double _en;
 
 public:
   std::vector<uint64_t> _offset_coeff;
@@ -25,7 +26,7 @@ public:
 
 };
 
-template<class header_version_t, class fon_en_version_t>
+template<class header_version_t, class fon_version_t>
 class mr_antoine_reader
   : public mr_base_reader
 {
@@ -49,7 +50,7 @@ public:
   //mr_antoine_occ_item_t      *_occ[2];
   //mr_antoine_fon_ben_t       *_fon_ben;
 
-  typedef mr_antoine_reader_wavefcn<fon_en_version_t> wavefcn_t;
+  typedef mr_antoine_reader_wavefcn<fon_version_t> wavefcn_t;
 
   std::vector<wavefcn_t *> _wavefcns;
 

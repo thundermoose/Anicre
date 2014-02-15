@@ -23,8 +23,8 @@ extern int _debug;
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 
-template<class header_version_t, class fon_en_version_t>
-mr_antoine_reader<header_version_t, fon_en_version_t>::
+template<class header_version_t, class fon_version_t>
+mr_antoine_reader<header_version_t, fon_version_t>::
 mr_antoine_reader(mr_file_reader *file_reader)
   : mr_base_reader(file_reader)
 {
@@ -35,8 +35,8 @@ mr_antoine_reader(mr_file_reader *file_reader)
   _jm_used = NULL;
 }
 
-template<class header_version_t, class fon_en_version_t>
-mr_antoine_reader<header_version_t, fon_en_version_t>::~mr_antoine_reader()
+template<class header_version_t, class fon_version_t>
+mr_antoine_reader<header_version_t, fon_version_t>::~mr_antoine_reader()
 {
   free(_nr_ll_jj);
   free(_num_mpr);
@@ -49,9 +49,9 @@ mr_antoine_reader<header_version_t, fon_en_version_t>::~mr_antoine_reader()
 }
 
 
-template<class header_version_t, class fon_en_version_t>
+template<class header_version_t, class fon_version_t>
 const char *mr_antoine_reader<header_version_t,
-			      fon_en_version_t>::get_format_name()
+			      fon_version_t>::get_format_name()
 { 
   if (sizeof(header_version_t) == sizeof(mr_antoine_header_old_t))
     return "ANTOINE_OLD";
@@ -61,12 +61,13 @@ const char *mr_antoine_reader<header_version_t,
 
 #define ANTOINE_COEFF_CHUNK_SZ 1000000
 
-template<class header_version_t, class fon_en_version_t>
-bool mr_antoine_reader<header_version_t, fon_en_version_t>::
+template<class header_version_t, class fon_version_t>
+bool mr_antoine_reader<header_version_t, fon_version_t>::
 level1_read_wavefcn(wavefcn_t *wavefcn,
 		    uint64_t &cur_offset, uint32_t nsd)
 {
-  TRY_GET_FORTRAN_BLOCK(wavefcn->_fon_en);
+  TRY_GET_FORTRAN_2_BLOCK(wavefcn->_fon, wavefcn->_en);
+  CHECK_REASONABLE_RANGE(wavefcn->_fon.fon._.iprec,1,2);
   /* And then there are to be blocks with the coefficients. */
   for ( ; ; )
     {
@@ -76,12 +77,12 @@ level1_read_wavefcn(wavefcn_t *wavefcn,
 
       uint64_t offset;
 
-      if (wavefcn->_fon_en.fon._.iprec == 0)
+      if (wavefcn->_fon.fon._.iprec == 1)
 	{
 	  float f;
 	  TRY_HAS_FORTRAN_BLOCK_ITEMS(f, block_elem, offset);
 	}
-      else
+      else /* 2 */
 	{
 	  double d;
 	  TRY_HAS_FORTRAN_BLOCK_ITEMS(d, block_elem, offset);
@@ -94,8 +95,8 @@ level1_read_wavefcn(wavefcn_t *wavefcn,
   return true;
 }
 
-template<class header_version_t, class fon_en_version_t>
-bool mr_antoine_reader<header_version_t, fon_en_version_t>::level1_read()
+template<class header_version_t, class fon_version_t>
+bool mr_antoine_reader<header_version_t, fon_version_t>::level1_read()
 {
   uint64_t cur_offset = 0;
   
@@ -148,8 +149,8 @@ bool mr_antoine_reader<header_version_t, fon_en_version_t>::level1_read()
   return true;
 }
 
-template<class header_version_t, class fon_en_version_t>
-bool mr_antoine_reader<header_version_t, fon_en_version_t>::level2_read()
+template<class header_version_t, class fon_version_t>
+bool mr_antoine_reader<header_version_t, fon_version_t>::level2_read()
 {
   ALLOC_GET_FORTRAN_BLOCK_ITEMS(_nr_ll_jj,
 				_header.num_of_shell,
@@ -177,8 +178,8 @@ bool mr_antoine_reader<header_version_t, fon_en_version_t>::level2_read()
   return true;
 }
 
-template<class header_version_t, class fon_en_version_t>
-void mr_antoine_reader<header_version_t, fon_en_version_t>::dump_info()
+template<class header_version_t, class fon_version_t>
+void mr_antoine_reader<header_version_t, fon_version_t>::dump_info()
 {
   printf ("===================================\n");
   printf ("== %sHeader%s ==\n",
@@ -390,8 +391,8 @@ void mr_antoine_reader<header_version_t, fon_en_version_t>::dump_info()
   printf ("===================================\n");
 }
 
-template<class header_version_t, class fon_en_version_t>
-void mr_antoine_reader<header_version_t, fon_en_version_t>::
+template<class header_version_t, class fon_version_t>
+void mr_antoine_reader<header_version_t, fon_version_t>::
 dump_occ_chunk(int k,uint32_t start,uint32_t num)
 {
   mr_mapped_data h;
@@ -422,8 +423,8 @@ dump_occ_chunk(int k,uint32_t start,uint32_t num)
   h.unmap();
 }
 
-template<class header_version_t, class fon_en_version_t>
-void mr_antoine_reader<header_version_t, fon_en_version_t>::
+template<class header_version_t, class fon_version_t>
+void mr_antoine_reader<header_version_t, fon_version_t>::
 dump_istate_chunk(mr_file_chunk<mr_antoine_istate_item_t> &chunk)
 {
   mr_antoine_istate_item_t *pistate = chunk.ptr();
@@ -447,8 +448,8 @@ dump_istate_chunk(mr_file_chunk<mr_antoine_istate_item_t> &chunk)
 }
 
 
-template<class header_version_t, class fon_en_version_t>
-void mr_antoine_reader<header_version_t, fon_en_version_t>::find_used_states()
+template<class header_version_t, class fon_version_t>
+void mr_antoine_reader<header_version_t, fon_version_t>::find_used_states()
 {
   /* First find out which occ states are used by the istates. */
   /*
@@ -1013,22 +1014,22 @@ void mr_antoine_reader<header_version_t, fon_en_version_t>::find_used_states()
     }
 }
 
-#define INSTANTIATE_ANTOINE(header_t,fon_en_t)				\
-  template mr_antoine_reader<header_t,fon_en_t>::			\
+#define INSTANTIATE_ANTOINE(header_t,fon_t)				\
+  template mr_antoine_reader<header_t,fon_t>::				\
   mr_antoine_reader(mr_file_reader *file_reader);			\
-  template mr_antoine_reader<header_t,fon_en_t>::~mr_antoine_reader();	\
-  template const char *mr_antoine_reader<header_t,fon_en_t>::		\
+  template mr_antoine_reader<header_t,fon_t>::~mr_antoine_reader();	\
+  template const char *mr_antoine_reader<header_t,fon_t>::		\
   get_format_name();							\
-  template bool mr_antoine_reader<header_t,fon_en_t>::level1_read();	\
-  template bool mr_antoine_reader<header_t,fon_en_t>::level2_read();	\
-  template void mr_antoine_reader<header_t,fon_en_t>::dump_info();	\
-  template void mr_antoine_reader<header_t,fon_en_t>::			\
+  template bool mr_antoine_reader<header_t,fon_t>::level1_read();	\
+  template bool mr_antoine_reader<header_t,fon_t>::level2_read();	\
+  template void mr_antoine_reader<header_t,fon_t>::dump_info();		\
+  template void mr_antoine_reader<header_t,fon_t>::			\
   dump_occ_chunk(int k,uint32_t start,uint32_t num);			\
-  template void mr_antoine_reader<header_t,fon_en_t>::			\
+  template void mr_antoine_reader<header_t,fon_t>::			\
   dump_istate_chunk(mr_file_chunk<mr_antoine_istate_item_t> &chunk);	\
-  template void mr_antoine_reader<header_t,fon_en_t>::			\
+  template void mr_antoine_reader<header_t,fon_t>::			\
   find_used_states();							\
   ;
 
-INSTANTIATE_ANTOINE(mr_antoine_header_old_t,mr_antoine_fon_en_old_t);
-INSTANTIATE_ANTOINE(mr_antoine_header_new_t,mr_antoine_fon_en_new_t);
+INSTANTIATE_ANTOINE(mr_antoine_header_old_t,mr_antoine_fon_old_t);
+INSTANTIATE_ANTOINE(mr_antoine_header_new_t,mr_antoine_fon_new_t);

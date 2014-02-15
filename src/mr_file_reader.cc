@@ -149,15 +149,18 @@ void mr_file_reader::get_fortran_block_data(uint64_t offset_data,
 }
 
 bool mr_file_reader::get_fortran_block(uint64_t offset,
-				       void *block,size_t size)
+				       void *block1,size_t size1,
+				       void *block2,size_t size2)
 {
-  if (has_fortran_block (offset,size) == -1)
+  if (has_fortran_block (offset,size1+size2) == -1)
     return false;
 
   // Since we got the block header and footer, the data should never
   // fail, (even if file format guess is wrong)
 
-  get_fortran_block_data(offset+sizeof(uint32_t),block,size);
+  get_fortran_block_data(offset+sizeof(uint32_t),block1,size1);
+  if (size2)
+    get_fortran_block_data(offset+sizeof(uint32_t)+size1,block2,size2);
 
   return true;
 }
