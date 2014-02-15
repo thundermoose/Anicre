@@ -26,6 +26,9 @@ void add_pms_item(pms_info &info, int max_index, int &words, int &offset)
   int bits =
     (int) (sizeof (unsigned int) * 8 - __builtin_clz(max_index));
 
+  if (!max_index)
+    bits = 0;
+
   info._bits = (char) bits;
   if (offset + bits > (int) sizeof (pack_T) * 8)
     {
