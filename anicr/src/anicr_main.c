@@ -197,7 +197,8 @@ int main(int argc, char *argv[])
 
   printf ("Hash: %"PRIu64" entries (%.1f), "
 	  "avg coll = %.2f, max coll = %"PRIu64"\n",
-	  _hash_mask + 1, (double) num_mp / (double) (_hash_mask + 1),
+	  _hash_mask + 1,
+	  (double) num_mp / ((double) (_hash_mask + 1) / _hash_stride),
 	  (double) sum_coll / (double) num_mp, max_coll);
 #if 0 
   /* It turns out that lookup is ~ 20 % faster with original states
