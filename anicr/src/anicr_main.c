@@ -41,6 +41,7 @@ uint64_t *_hashed_mp = NULL;
 
 uint64_t  _hash_mask = 0;
 uint32_t  _hash_stride = 0;
+int       _hash_stride_shift = 0;
 
 uint64_t _lookups = 0;
 uint64_t _found = 0;
@@ -95,11 +96,15 @@ int main(int argc, char *argv[])
   for (_hash_mask = 1; _hash_mask < num_mp * 2; _hash_mask <<= 1)
     ;
 
-  for (_hash_stride = 1; _hash_stride < CFG_PACK_WORDS + CFG_WAVEFCNS; 
-	_hash_stride <<= 1)
+  for (_hash_stride_shift = 0;
+       (1 << _hash_stride_shift) < CFG_PACK_WORDS + CFG_WAVEFCNS; 
+	_hash_stride_shift++)
     ;
+
+  _hash_stride = ((uint32_t) 1) << _hash_stride_shift;
+  _hash_mask *= _hash_stride;
   
-  size_t hashed_mp_sz = sizeof (uint64_t) * _hash_stride * _hash_mask;
+  size_t hashed_mp_sz = sizeof (uint64_t) * _hash_mask;
 
   _hash_mask -= 1;
 
@@ -161,13 +166,13 @@ int main(int argc, char *argv[])
 
       x ^= x >> 32;
 
-      uint64_t j = x & _hash_mask;
+      uint64_t j = (x << _hash_stride_shift) & _hash_mask;
 
       uint64_t coll = 0;
 
-      while (_hashed_mp[j * _hash_stride] != 0)
+      while (_hashed_mp[j] != 0)
 	{
-	  j = (j + 1) & _hash_mask;
+	  j = (j + _hash_stride) & _hash_mask;
 	  coll++;
 	}
 
@@ -179,11 +184,11 @@ int main(int argc, char *argv[])
 
       for (k = 0; k < CFG_PACK_WORDS; k++)
 	{
-	  _hashed_mp[j * _hash_stride + k] = mp[k];
+	  _hashed_mp[j + k] = mp[k];
 	}
       for (k = 0; k < CFG_WAVEFCNS; k++)
 	{
-	  _hashed_mp[j * _hash_stride + CFG_PACK_WORDS + k] =
+	  _hashed_mp[j + CFG_PACK_WORDS + k] =
 	    mp[CFG_PACK_WORDS + k];
 	}
 
@@ -262,11 +267,11 @@ int find_mp_state(uint64_t *lookfor)
     
     x ^= x >> 32;
     
-    uint64_t j = x & _hash_mask;
+    uint64_t j = (x << _hash_stride_shift) & _hash_mask;
 
     for ( ; ; )
       {
-	uint64_t *p = &_hashed_mp[j * _hash_stride];
+	uint64_t *p = &_hashed_mp[j];
 	
 	int k;
 	
@@ -286,7 +291,7 @@ int find_mp_state(uint64_t *lookfor)
 	    break;
 	  }
 	
-	j = (j + 1) & _hash_mask;
+	j = (j + _hash_stride) & _hash_mask;
       }
   }
 
