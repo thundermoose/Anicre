@@ -299,7 +299,11 @@ void create_states(int *in_sp_other,
   /* Print the state. */
 
 #if DEBUG_ANICR
-  printf ("------------------------------------------------------------------------------\n");
+#if ANICR2
+  printf ("--- a %3d a %3d c %3d --------------------------------------------------------\n", sp_anni1, sp_anni2, sp_crea1);
+#else
+  printf ("--- a %3d --------------------------------------------------------------------\n", sp_anni);
+#endif
 #endif
 
 #if DEBUG_ANICR
@@ -451,7 +455,11 @@ void create_states_1st(int *in_sp_other,
   /* Print the state. */
 
 #if DEBUG_ANICR
-  printf ("------------------------------------------------------------------------------\n");
+#if ANICR2
+  printf ("--- a %3d a %3d --------------------------------------------------------------\n", sp_anni1, sp_anni2);
+#else
+  printf ("----a %3d --------------------------------------------------------------------\n", sp_anni1);
+#endif
 #endif
 
 #if DEBUG_ANICR
@@ -613,6 +621,7 @@ void created_state(int *in_sp_other,
   (void) sp_crea;
 #endif
 
+#if 0
   uint32_t jm_a1 = EXTRACT_JM(sp_jmEp[sp_anni1]);
   uint32_t jm_a2 = EXTRACT_JM(sp_jmEp[sp_anni2]);
   uint32_t jm_c1 = EXTRACT_JM(sp_jmEp[sp_crea1]);
@@ -628,6 +637,26 @@ void created_state(int *in_sp_other,
     (((uint64_t) jm_c1) << 18) | (((uint64_t) jm_c2) << 27);
 
   (void) jms;
+#endif
+
+#if ANICR2
+  int sp_a = sp_anni1 * (2 * CFG_NUM_SP_STATES - sp_anni1 - 1) / 2 + sp_anni2;
+  int sp_c = sp_crea1 * (2 * CFG_NUM_SP_STATES - sp_crea1 - 1) / 2 + sp_crea2;
+  /*
+  printf ("%3d %3d %3d %3d   %6d %6d\n",
+	  sp_anni1, sp_anni2, sp_crea1, sp_crea2,
+	  sp_a, sp_c);
+  */
+
+  assert (sp_a >= 0 && sp_a < CFG_TOT_FIRST_SCND);
+  assert (sp_c >= 0 && sp_c < CFG_TOT_FIRST_SCND);
+
+  int acc_i = sp_a * sp_c;
+
+  (void) acc_i;
+#else
+  int acc_i = sp_anni * sp_crea;
+#endif
 
   /*
   int lookfor[CFG_NUM_SP_STATES0 + CFG_NUM_SP_STATES1];
@@ -644,13 +673,13 @@ void created_state(int *in_sp_other,
 
   int_list2_to_packed(lookfor_packed, in_sp, in_sp_other);
 
-
+  /*
 #if DEBUG_ANICR
   for (i = 0; i < CFG_NUM_SP_STATES0 + CFG_NUM_SP_STATES1; i++)
     printf (" %4d", lookfor[i]);
   printf ("\n");
 #endif
-
+  */
   if (!find_mp_state(lookfor_packed))
     {
       printf ("NOT FOUND!\n");
