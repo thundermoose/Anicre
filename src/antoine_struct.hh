@@ -46,45 +46,39 @@ struct mr_antoine_occ_item_t // A[i] * nslt[i], i = 1,2
   uint32_t sp;
 };
 
-struct mr_antoine_fon_new_t
+union mr_antoine_fon_new_t
 {
-  union
+  uint32_t raw[14];
+  struct
   {
-    uint32_t raw[14];
-    struct
-    {
-      uint32_t dummy0[6];
-      uint32_t mjtotal; /* (7) */
-      uint32_t iparity; /* (8) */
-      uint32_t dummy9;
-      uint32_t jt2;   /* (10) */ /* Jx = jt2*0.5 */
-      uint32_t dummy11;
-      uint32_t coul;  /* (12) */
-      uint32_t dummy13;
-      uint32_t iprec; /* (14) */
-    } _;
-  } fon;
+    uint32_t dummy0[6];
+    uint32_t mjtotal; /* (7) */
+    uint32_t iparity; /* (8) */
+    uint32_t dummy9;
+    uint32_t jt2;   /* (10) */ /* Jx = jt2*0.5 */
+    uint32_t dummy11;
+    uint32_t coul;  /* (12) */
+    uint32_t dummy13;
+    uint32_t iprec; /* (14) */
+  } _;
 };
 
-struct mr_antoine_fon_old_t
+union mr_antoine_fon_old_t
 {
-  union
+  uint32_t raw[13];
+  struct
   {
-    uint32_t raw[13];
-    struct
-    {
-      uint32_t dummy0[5];
-      uint32_t mjtotal; /* (6) */
-      uint32_t iparity; /* (7) */
-      uint32_t dummy8;
-      uint32_t jt2;   /* (9) */ /* Jx = jt2*0.5 */
-      uint32_t dummy10;
-      uint32_t coul;  /* (11) */
-      uint32_t dummy12;
-      /* not clear if iprec is in old */
-      uint32_t iprec; /* (13) */
-    } _;
-  } fon;
+    uint32_t dummy0[5];
+    uint32_t mjtotal; /* (6) */
+    uint32_t iparity; /* (7) */
+    uint32_t dummy8;
+    uint32_t jt2;   /* (9) */ /* Jx = jt2*0.5 */
+    uint32_t dummy10;
+    uint32_t coul;  /* (11) */
+    uint32_t dummy12;
+    /* not clear if iprec is in old */
+    uint32_t iprec; /* (13) */
+  } _;
 };
 
 #endif/*__MAGIC_ANTOINE_READ_HH__*/

@@ -67,7 +67,7 @@ level1_read_wavefcn(wavefcn_t *wavefcn,
 		    uint64_t &cur_offset, uint32_t nsd)
 {
   TRY_GET_FORTRAN_2_BLOCK(wavefcn->_fon, wavefcn->_en);
-  CHECK_REASONABLE_RANGE_0(wavefcn->_fon.fon._.iprec,2);
+  CHECK_REASONABLE_RANGE_0(wavefcn->_fon._.iprec,2);
   /* And then there are to be blocks with the coefficients. */
   for ( ; nsd; )
     {
@@ -77,7 +77,7 @@ level1_read_wavefcn(wavefcn_t *wavefcn,
 
       uint64_t offset;
 
-      if (wavefcn->_fon.fon._.iprec == 1)
+      if (wavefcn->_fon._.iprec == 1)
 	{
 	  float coeff_f;
 	  TRY_HAS_FORTRAN_BLOCK_ITEMS(coeff_f, block_elem, offset);
