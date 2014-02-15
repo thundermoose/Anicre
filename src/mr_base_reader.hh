@@ -42,7 +42,13 @@ public:
    ({ ssize_t len = _file_reader->has_fortran_block(cur_offset,-1);	\
      if (len != -1)							\
        cur_offset += len + 2 * sizeof(uint32_t);			\
-     len; }))								\
+     len; }))
+
+#define VERIFY_EOF					\
+  do {							\
+    if (!_file_reader->verify_eof(cur_offset))		\
+      return false;					\
+  } while (0)
 
 #define TRY_GET_FORTRAN_BLOCK(block)					\
   do {									\

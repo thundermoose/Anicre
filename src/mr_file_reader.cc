@@ -148,6 +148,25 @@ void mr_file_reader::get_fortran_block_data(uint64_t offset_data,
     }
 }
 
+bool mr_file_reader::verify_eof(uint64_t offset)
+{
+  off_t end = lseek(_fd,0,SEEK_END);
+
+  if (end == -1)
+    {
+      perror("lseek");
+      FATAL("Seek error.");
+    }
+
+  if ((uint64_t) end != offset)
+    {
+      INFO("Expected EOF at %" PRIuPTR ", is at %" PRIuPTR ".",
+	   offset, end);
+      return false;
+    }
+  return true;
+}
+
 bool mr_file_reader::get_fortran_block(uint64_t offset,
 				       void *block1,size_t size1,
 				       void *block2,size_t size2)

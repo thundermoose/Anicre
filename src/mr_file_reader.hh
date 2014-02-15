@@ -45,6 +45,8 @@ public:
 
   void *map_block_data(uint64_t offset_data,size_t size,
 		       mr_mapped_data &handle);
+
+  bool verify_eof(uint64_t offset);
 };
 
 #endif/*__MR_FILE_READER_HH__*/

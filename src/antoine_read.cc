@@ -67,9 +67,9 @@ level1_read_wavefcn(wavefcn_t *wavefcn,
 		    uint64_t &cur_offset, uint32_t nsd)
 {
   TRY_GET_FORTRAN_2_BLOCK(wavefcn->_fon, wavefcn->_en);
-  CHECK_REASONABLE_RANGE(wavefcn->_fon.fon._.iprec,1,2);
+  CHECK_REASONABLE_RANGE_0(wavefcn->_fon.fon._.iprec,2);
   /* And then there are to be blocks with the coefficients. */
-  for ( ; ; )
+  for ( ; nsd; )
     {
       uint32_t block_elem = nsd;
       if (block_elem > ANTOINE_COEFF_CHUNK_SZ)
@@ -79,13 +79,13 @@ level1_read_wavefcn(wavefcn_t *wavefcn,
 
       if (wavefcn->_fon.fon._.iprec == 1)
 	{
-	  float f;
-	  TRY_HAS_FORTRAN_BLOCK_ITEMS(f, block_elem, offset);
+	  float coeff_f;
+	  TRY_HAS_FORTRAN_BLOCK_ITEMS(coeff_f, block_elem, offset);
 	}
-      else /* 2 */
+      else /* 0 or 2 */
 	{
-	  double d;
-	  TRY_HAS_FORTRAN_BLOCK_ITEMS(d, block_elem, offset);
+	  double coeff_d;
+	  TRY_HAS_FORTRAN_BLOCK_ITEMS(coeff_d, block_elem, offset);
 	}
 
       wavefcn->_offset_coeff.push_back(offset);
@@ -140,6 +140,9 @@ bool mr_antoine_reader<header_version_t, fon_version_t>::level1_read()
 	break;
       }
   }
+
+  VERIFY_EOF;
+
   /*
   for ( ; ; ) {
     if (SKIP_POSSIBLE_FORTRAN_BLOCK == -1)
