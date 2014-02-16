@@ -328,7 +328,9 @@ void packed_created_state(uint64_t *packed,
   packed_dump(packed);
 #endif
 
-  if (!find_mp_state(packed))
+  double val;
+
+  if (!find_mp_state(packed, &val))
     {
       printf ("NOT FOUND!\n");
 

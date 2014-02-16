@@ -620,6 +620,8 @@ void alloc_accumulate()
   memset (_accumulate, 0, accum_sz); 
 }
 
+extern double _cur_val;
+
 void created_state(int *in_sp_other,
 		   int *in_sp,
 #if ANICR2
@@ -709,14 +711,19 @@ void created_state(int *in_sp_other,
   printf ("\n");
 #endif
   */
-  if (!find_mp_state(lookfor_packed))
+
+  double val;
+
+  if (!find_mp_state(lookfor_packed, &val))
     {
       printf ("NOT FOUND!\n");
 
     }
   /* printf ("%4d %4d\n", sp_anni, sp_crea); */
 
-  _accumulate[acc_i]++;
+  _accumulate[acc_i] += val * _cur_val;
+
+  printf ("%5d %15.10f\n", acc_i, val * _cur_val);
 }
 
 void couple_accumulate()

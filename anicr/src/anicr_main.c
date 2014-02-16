@@ -46,6 +46,8 @@ int       _hash_stride_shift = 0;
 uint64_t _lookups = 0;
 uint64_t _found = 0;
 
+double   _cur_val;
+
 uint64_t packed_hash_key(uint64_t *key)
 {
   uint64_t x = 0, y = 0;
@@ -224,6 +226,8 @@ int main(int argc, char *argv[])
 
   for (i = 0; i < num_mp; i++)
     {
+      _cur_val = *(((double *) mp) + CFG_PACK_WORDS);
+
       if (packed)
 	{
 	  packed_annihilate_states(mp);
@@ -252,7 +256,7 @@ int main(int argc, char *argv[])
   return 0;
 }
 
-int find_mp_state(uint64_t *lookfor)
+int find_mp_state(uint64_t *lookfor, double *val)
 {
   /* size_t num_sp = CFG_NUM_SP_STATES0 + CFG_NUM_SP_STATES1; */
 
@@ -302,7 +306,10 @@ int find_mp_state(uint64_t *lookfor)
 
 
   if (found)
-    _found++;
+    {
+      _found++;
+      *val = *(((double *) found) + CFG_PACK_WORDS);
+    }
   _lookups++;
 
   return found != NULL;
