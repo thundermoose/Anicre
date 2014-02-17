@@ -19,16 +19,16 @@
 
 #define sp_info _table_sp_states
 
-#define SHIFT_J  27
-#define SHIFT_M  22
-#define SHIFT_E  17
-#define SHIFT_P  16
+#define SHIFT_J  28
+#define SHIFT_M  23
+#define SHIFT_E  18
+#define SHIFT_P  17
 
-#define EXTRACT_SP(x)      ((x) & 0xffff)
+#define EXTRACT_SP(x)      ((x) & 0x1ffff)
 #define GET_P(x)           ((x) >> SHIFT_P)
 #define EXTRACT_E(x)       (((x) >> SHIFT_E) & 0x1f)
 #define EXTRACT_CMPR_M(x)  (((x) >> SHIFT_M) & 0x1f)
-#define EXTRACT_JM(x)      (((x) >> SHIFT_M) & 0x3ff)
+#define EXTRACT_JM(x)      (((x) >> SHIFT_M) & 0x1ff)
 
 void packed_create_states(uint64_t *packed,
 			  int sp_anni,

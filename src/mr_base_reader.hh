@@ -42,7 +42,13 @@ public:
    ({ ssize_t len = _file_reader->has_fortran_block(cur_offset,-1);	\
      if (len != -1)							\
        cur_offset += len + 2 * sizeof(uint32_t);			\
-     len; }))								\
+     len; }))
+
+#define VERIFY_EOF					\
+  do {							\
+    if (!_file_reader->verify_eof(cur_offset))		\
+      return false;					\
+  } while (0)
 
 #define TRY_GET_FORTRAN_BLOCK(block)					\
   do {									\
@@ -53,6 +59,20 @@ public:
       INFO(" Good block for '%s' "					\
 	   "(%" PRIuPTR " bytes).", #block, sizeof(block));		\
     cur_offset += sizeof(block) + 2 * sizeof(uint32_t);			\
+  } while (0)
+
+#define TRY_GET_FORTRAN_2_BLOCK(block1, block2)				\
+  do {									\
+    if (!_file_reader->get_fortran_block(cur_offset,			\
+					 &block1,sizeof(block1),	\
+					 &block2,sizeof(block2)))	\
+      return false;							\
+    if (_debug >= 1)							\
+      INFO(" Good block for '%s'+'%s' "					\
+	   "(%" PRIuPTR "+%" PRIuPTR " bytes).",			\
+	   #block1, #block2, sizeof(block1), sizeof(block2));		\
+    cur_offset +=							\
+      sizeof(block1) + sizeof(block2) + 2 * sizeof(uint32_t);		\
   } while (0)
 
 #define TRY_HAS_FORTRAN_BLOCK(block,offset)				\

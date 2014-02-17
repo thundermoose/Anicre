@@ -2,6 +2,8 @@
 #include <assert.h>
 #include <limits.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "anicr_tables.h"
 #include "anicr_config.h"
@@ -12,7 +14,7 @@
 
 #define DEBUG_ANICR 0
 
-#define ANICR2      0
+#define ANICR2      1
 
 /* Annihilate states. */
 
@@ -22,16 +24,18 @@
 
 #define sp_info _table_sp_states
 
-#define SHIFT_J  27
-#define SHIFT_M  22
-#define SHIFT_E  17
-#define SHIFT_P  16
+uint32_t sp_jmEp[CFG_NUM_SP_STATES];
 
-#define EXTRACT_SP(x)      ((x) & 0xffff)
+#define SHIFT_J  28
+#define SHIFT_M  23
+#define SHIFT_E  18
+#define SHIFT_P  17
+
+#define EXTRACT_SP(x)      ((x) & 0x1ffff)
 #define GET_P(x)           ((x) >> SHIFT_P)
 #define EXTRACT_E(x)       (((x) >> SHIFT_E) & 0x1f)
 #define EXTRACT_CMPR_M(x)  (((x) >> SHIFT_M) & 0x1f)
-#define EXTRACT_JM(x)      (((x) >> SHIFT_M) & 0x3ff)
+#define EXTRACT_JM(x)      (((x) >> SHIFT_M) & 0x1ff)
 
 void ammend_table(uint32_t *table, int nmemb)
 {
@@ -46,11 +50,12 @@ void ammend_table(uint32_t *table, int nmemb)
       int j = sp_info[sp]._j;
       int m = sp_info[sp]._m;
 
-      int cmpr_m = (m - j) / 2;
+      int cmpr_j = (j - 1) / 2; /* = j / 2, j always odd here */
+      int cmpr_m = (m + j) / 2;
       int E = 2 * n + l;
 
       table[i] = sp |
-	(uint32_t) ((j      << SHIFT_J) |
+	(uint32_t) ((cmpr_j << SHIFT_J) |
 		    (cmpr_m << SHIFT_M) |
 		    (E      << SHIFT_J) |
 		    ((l & 1) << SHIFT_P));
@@ -59,6 +64,15 @@ void ammend_table(uint32_t *table, int nmemb)
 
 void ammend_tables()
 {
+  int i;
+
+  /* Such that it can be filled by ammend_table :-) */
+
+  for (i = 0; i < CFG_NUM_SP_STATES; i++)
+    sp_jmEp[i] = (uint32_t) i;
+
+  ammend_table(sp_jmEp, CFG_NUM_SP_STATES);    
+
   ammend_table(_table_1_0_info._miss,
 	       _table_1_0_info._offset[2 * _table_1_0_info._parity_stride]);
   ammend_table(_table_2_0_info._miss,
@@ -181,7 +195,7 @@ void annihilate_states(int *in_sp_other,
 
   /* And now try with all other missing ones. */
 
-  for (i = 0; i < NSP - 1; i++)
+  for (i = 0; i < NSP - (ANICR2 ? 2 : 1); i++)
     {
       /* We always have the space at [0] empty. */
 
@@ -236,11 +250,12 @@ void annihilate_states_2nd(int *in_sp_other,
 
   /* The out_sp list is missing sp state 0 and 1. */
 
-  create_states_1st(in_sp_other,
-		    out_sp, sp_anni1, in_sp[1],
-		    (sp_info[in_sp[1]]._l ^ miss_parity) & 1,
-		    miss_m + sp_info[in_sp[1]]._m,
-		    E - SP_STATE_E(sp_info[in_sp[1]]));
+  if (sp_anni1 < in_sp[1])
+    create_states_1st(in_sp_other,
+		      out_sp, sp_anni1, in_sp[1],
+		      (sp_info[in_sp[1]]._l ^ miss_parity) & 1,
+		      miss_m + sp_info[in_sp[1]]._m,
+		      E - SP_STATE_E(sp_info[in_sp[1]]));
 
   /* And now try with all other missing ones. */
 
@@ -250,11 +265,12 @@ void annihilate_states_2nd(int *in_sp_other,
 
       out_sp[i+1] = in_sp[i];
 
-      create_states_1st(in_sp_other,
-			out_sp, sp_anni1, in_sp[i+1],
-			(sp_info[in_sp[i+1]]._l ^ miss_parity) & 1,
-			miss_m + sp_info[in_sp[i+1]]._m,
-			E - SP_STATE_E(sp_info[in_sp[i+1]]));
+      if (sp_anni1 < in_sp[i+1])
+	create_states_1st(in_sp_other,
+			  out_sp, sp_anni1, in_sp[i+1],
+			  (sp_info[in_sp[i+1]]._l ^ miss_parity) & 1,
+			  miss_m + sp_info[in_sp[i+1]]._m,
+			  E - SP_STATE_E(sp_info[in_sp[i+1]]));
     }
 }
 
@@ -285,7 +301,11 @@ void create_states(int *in_sp_other,
   /* Print the state. */
 
 #if DEBUG_ANICR
-  printf ("------------------------------------------------------------------------------\n");
+#if ANICR2
+  printf ("--- a %3d a %3d c %3d --------------------------------------------------------\n", sp_anni1, sp_anni2, sp_crea1);
+#else
+  printf ("--- a %3d --------------------------------------------------------------------\n", sp_anni);
+#endif
 #endif
 
 #if DEBUG_ANICR
@@ -437,7 +457,11 @@ void create_states_1st(int *in_sp_other,
   /* Print the state. */
 
 #if DEBUG_ANICR
-  printf ("------------------------------------------------------------------------------\n");
+#if ANICR2
+  printf ("--- a %3d a %3d --------------------------------------------------------------\n", sp_anni1, sp_anni2);
+#else
+  printf ("----a %3d --------------------------------------------------------------------\n", sp_anni1);
+#endif
 #endif
 
 #if DEBUG_ANICR
@@ -569,6 +593,31 @@ void create_states_1st(int *in_sp_other,
 
 }
 
+double *_accumulate;
+
+void alloc_accumulate()
+{
+  size_t accum_sz;
+
+#if ANICR2
+  accum_sz = sizeof (double) * CFG_TOT_FIRST_SCND * CFG_TOT_FIRST_SCND;
+#else
+  accum_sz = sizeof (double) * CFG_NUM_SP_STATES * CFG_NUM_SP_STATES;
+#endif
+
+  _accumulate = (double *) malloc (accum_sz);
+
+  if (!_accumulate)
+    {
+      fprintf (stderr, "Memory allocation error (%zd bytes).\n", accum_sz);
+      exit(1);
+    }
+
+  printf ("Allocated %zd bytes for accumulation.\n", accum_sz);
+
+  memset (_accumulate, 0, accum_sz); 
+}
+
 void created_state(int *in_sp_other,
 		   int *in_sp,
 #if ANICR2
@@ -599,6 +648,43 @@ void created_state(int *in_sp_other,
   (void) sp_crea;
 #endif
 
+#if 0
+  uint32_t jm_a1 = EXTRACT_JM(sp_jmEp[sp_anni1]);
+  uint32_t jm_a2 = EXTRACT_JM(sp_jmEp[sp_anni2]);
+  uint32_t jm_c1 = EXTRACT_JM(sp_jmEp[sp_crea1]);
+  uint32_t jm_c2 = EXTRACT_JM(sp_jmEp[sp_crea2]);
+  /*
+  printf ("%3d %3d %3d %3d   %3x %3x %3x %3x\n",
+	  sp_anni1, sp_anni2, sp_crea1, sp_crea2,
+	  jm_a1, jm_a2, jm_c1, jm_c2);
+  */
+
+  uint64_t jms =
+    jm_a1 | (((uint64_t) jm_a2) << 9) |
+    (((uint64_t) jm_c1) << 18) | (((uint64_t) jm_c2) << 27);
+
+  (void) jms;
+#endif
+
+#if ANICR2
+  int sp_a = sp_anni1 * (2 * CFG_NUM_SP_STATES - sp_anni1 - 1) / 2 + sp_anni2;
+  int sp_c = sp_crea1 * (2 * CFG_NUM_SP_STATES - sp_crea1 - 1) / 2 + sp_crea2;
+  /*
+  printf ("%3d %3d %3d %3d   %6d %6d\n",
+	  sp_anni1, sp_anni2, sp_crea1, sp_crea2,
+	  sp_a, sp_c);
+  */
+
+  assert (sp_a >= 0 && sp_a < CFG_TOT_FIRST_SCND);
+  assert (sp_c >= 0 && sp_c < CFG_TOT_FIRST_SCND);
+
+  int acc_i = sp_a * CFG_TOT_FIRST_SCND + sp_c;
+
+  (void) acc_i;
+#else
+  int acc_i = sp_anni * CFG_NUM_SP_STATES + sp_crea;
+#endif
+
   /*
   int lookfor[CFG_NUM_SP_STATES0 + CFG_NUM_SP_STATES1];
 
@@ -614,17 +700,19 @@ void created_state(int *in_sp_other,
 
   int_list2_to_packed(lookfor_packed, in_sp, in_sp_other);
 
-
+  /*
 #if DEBUG_ANICR
   for (i = 0; i < CFG_NUM_SP_STATES0 + CFG_NUM_SP_STATES1; i++)
     printf (" %4d", lookfor[i]);
   printf ("\n");
 #endif
-
+  */
   if (!find_mp_state(lookfor_packed))
     {
       printf ("NOT FOUND!\n");
 
     }
   /* printf ("%4d %4d\n", sp_anni, sp_crea); */
+
+  _accumulate[acc_i]++;
 }

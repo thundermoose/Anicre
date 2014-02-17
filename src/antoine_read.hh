@@ -6,10 +6,51 @@
 #include "mr_file_chunk.hh"
 #include "antoine_struct.hh"
 
+#include <set>
+#include <vector>
+
 #define BITSONE_CONTAINER_TYPE    unsigned long
 #define BITSONE_CONTAINER_BITS    (sizeof(BITSONE_CONTAINER_TYPE)*8)
 
-template<class header_version_t>
+struct coeff_info
+{
+  uint64_t _start;   /* first item. */
+  uint64_t _len;     /* number of items */
+  uint64_t _offset;  /* block offset in file */  
+
+public:
+  bool operator<(const struct coeff_info &rhs) const {
+    return _start < rhs._start;
+  }
+};
+
+template<class fon_version_t>
+class mr_antoine_reader_wavefcn
+{
+public:
+  fon_version_t _fon;
+  double _en;
+
+public:
+  typedef std::set<coeff_info> set_coeff_info;
+
+  set_coeff_info _offset_coeff;
+
+public:
+  bool level1_read();
+
+public:
+  void fill_coeff(double *dest,
+		  mr_file_reader *file_reader,
+		  size_t src_off, size_t num,
+		  size_t stride, size_t val_off);
+
+  void dump_coeff(mr_file_reader *file_reader,
+		  size_t src_off, size_t num);
+
+};
+
+template<class header_version_t, class fon_version_t>
 class mr_antoine_reader
   : public mr_base_reader
 {
@@ -33,6 +74,10 @@ public:
   //mr_antoine_occ_item_t      *_occ[2];
   //mr_antoine_fon_ben_t       *_fon_ben;
 
+  typedef mr_antoine_reader_wavefcn<fon_version_t> wavefcn_t;
+
+  std::vector<wavefcn_t *> _wavefcns;
+
 public:
   BITSONE_CONTAINER_TYPE     *_occ_used[2];
   size_t                      _occ_used_items[2];
@@ -40,6 +85,10 @@ public:
   BITSONE_CONTAINER_TYPE     *_jm_used;
   size_t                      _jm_used_items_per_slot;
   size_t                      _jm_used_slots;
+
+public:
+  bool level1_read_wavefcn(wavefcn_t *wavefcn,
+			   uint64_t &cur_offset, uint32_t nsd);
 
 public:
   virtual bool level1_read();

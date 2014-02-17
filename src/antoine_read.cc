@@ -23,8 +23,8 @@ extern int _debug;
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 
-template<class header_version_t>
-mr_antoine_reader<header_version_t>::
+template<class header_version_t, class fon_version_t>
+mr_antoine_reader<header_version_t, fon_version_t>::
 mr_antoine_reader(mr_file_reader *file_reader)
   : mr_base_reader(file_reader)
 {
@@ -35,19 +35,23 @@ mr_antoine_reader(mr_file_reader *file_reader)
   _jm_used = NULL;
 }
 
-template<class header_version_t>
-mr_antoine_reader<header_version_t>::~mr_antoine_reader()
+template<class header_version_t, class fon_version_t>
+mr_antoine_reader<header_version_t, fon_version_t>::~mr_antoine_reader()
 {
   free(_nr_ll_jj);
   free(_num_mpr);
   for (int i = 0; i < 2; i++)
     free(_occ_used[i]);
   free(_jm_used);
+
+  for (size_t i = 0; i < _wavefcns.size(); i++)
+    delete _wavefcns[i];
 }
 
 
-template<class header_version_t>
-const char *mr_antoine_reader<header_version_t>::get_format_name() 
+template<class header_version_t, class fon_version_t>
+const char *mr_antoine_reader<header_version_t,
+			      fon_version_t>::get_format_name()
 { 
   if (sizeof(header_version_t) == sizeof(mr_antoine_header_old_t))
     return "ANTOINE_OLD";
@@ -55,8 +59,177 @@ const char *mr_antoine_reader<header_version_t>::get_format_name()
     return "ANTOINE_NEW";
 }
 
-template<class header_version_t>
-bool mr_antoine_reader<header_version_t>::level1_read()
+#define ANTOINE_COEFF_CHUNK_SZ 1000000
+
+template<typename item_t>
+void pick_items(double *dest, size_t num, size_t dest_stride,
+		mr_file_reader *file_reader,
+		uint64_t src_file_offset,
+		uint64_t src_item_offset)
+{
+  mr_mapped_data h;
+
+  item_t *src = (item_t *)
+    file_reader->map_block_data(src_file_offset + 
+				src_item_offset * sizeof (item_t),
+				num * sizeof (item_t), h);
+
+  for (size_t i = 0; i < num; i++)
+    {
+      *dest = *src;
+      src++;
+      dest += dest_stride;
+    }
+
+  h.unmap();
+}
+
+template<class fon_version_t>
+void mr_antoine_reader_wavefcn<fon_version_t>::
+fill_coeff(double *dest,
+	   mr_file_reader *file_reader,
+	   size_t src_off, size_t num,
+	   size_t stride, size_t val_off)
+{
+  dest += val_off;
+
+  for ( ; num; )
+    {
+      set_coeff_info::iterator itup;
+      coeff_info find;
+
+      find._start = src_off;
+      itup = _offset_coeff.upper_bound(find);
+      --itup;
+
+      const coeff_info &ci = *itup;
+
+      assert(ci._start <= src_off);
+
+      size_t use = ci._len;
+      if (use > num)
+	use = num;
+      
+      if (_fon._.iprec == 1)
+	{
+	  ::pick_items<float>(dest, use, stride,
+			      file_reader,
+			      ci._offset, src_off - ci._start);
+	}
+      else /* 0 or 2 */
+	{
+	  ::pick_items<double>(dest, use, stride,
+			       file_reader,
+			       ci._offset, src_off - ci._start);
+	}
+
+      src_off += use;
+      num -= use;
+    }
+}
+
+template<typename item_t>
+void dump_items(mr_file_reader *file_reader,
+		uint64_t src_file_offset,
+		size_t src_off, size_t num)
+{
+  mr_mapped_data h;
+
+  item_t *src = (item_t *)
+    file_reader->map_block_data(src_file_offset + 
+				src_off * sizeof (item_t),
+				num * sizeof (item_t), h);
+
+  for (size_t i = 0; i < num; i++)
+    {
+      printf ("#%s%3zd%s: %s%12.6f%s\n",
+	      CT_OUT(GREEN),
+	      i,
+	      CT_OUT(NORM_DEF_COL),
+	      CT_OUT(MAGENTA),
+	      *src,
+	      CT_OUT(NORM_DEF_COL));
+      src++;
+    }
+
+  h.unmap();
+}
+
+template<class fon_version_t>
+void mr_antoine_reader_wavefcn<fon_version_t>::
+dump_coeff(mr_file_reader *file_reader,
+	   size_t src_off, size_t num)
+{
+  for ( ; num; )
+    {
+      set_coeff_info::iterator itup;
+      coeff_info find;
+
+      find._start = src_off;
+      itup = _offset_coeff.upper_bound(find);
+      --itup;
+
+      const coeff_info &ci = *itup;
+
+      assert(ci._start <= src_off);
+
+      size_t use = ci._len;
+      if (use > num)
+	use = num;
+      
+      if (_fon._.iprec == 1)
+	::dump_items<float>(file_reader, ci._offset, src_off, num);
+      else /* 0 or 2 */
+	::dump_items<double>(file_reader, ci._offset, src_off, num);
+
+      src_off += use;
+      num -= use;
+    }
+}
+
+template<class header_version_t, class fon_version_t>
+bool mr_antoine_reader<header_version_t, fon_version_t>::
+level1_read_wavefcn(wavefcn_t *wavefcn,
+		    uint64_t &cur_offset, uint32_t nsd)
+{
+  TRY_GET_FORTRAN_2_BLOCK(wavefcn->_fon, wavefcn->_en);
+  CHECK_REASONABLE_RANGE_0(wavefcn->_fon._.iprec,2);
+  /* And then there are to be blocks with the coefficients. */
+  uint32_t start = 0;
+  for ( ; start < nsd; )
+    {
+      uint32_t block_elem = nsd - start;
+      if (block_elem > ANTOINE_COEFF_CHUNK_SZ)
+	block_elem = ANTOINE_COEFF_CHUNK_SZ;
+
+      uint64_t offset;
+
+      if (wavefcn->_fon._.iprec == 1)
+	{
+	  float coeff_f;
+	  TRY_HAS_FORTRAN_BLOCK_ITEMS(coeff_f, block_elem, offset);
+	}
+      else /* 0 or 2 */
+	{
+	  double coeff_d;
+	  TRY_HAS_FORTRAN_BLOCK_ITEMS(coeff_d, block_elem, offset);
+	}
+
+      coeff_info ci;
+
+      ci._start  = start;
+      ci._len    = block_elem;
+      ci._offset = offset;
+
+      wavefcn->_offset_coeff.insert(ci);
+
+      start += block_elem;
+    }
+  return true;
+}
+
+template<class header_version_t, class fon_version_t>
+bool mr_antoine_reader<header_version_t, fon_version_t>::level1_read()
 {
   uint64_t cur_offset = 0;
   
@@ -86,15 +259,34 @@ bool mr_antoine_reader<header_version_t>::level1_read()
   */
 
   for ( ; ; ) {
+    wavefcn_t *wavefcn = new wavefcn_t;
+    uint64_t &wavefcn_cur_offset = cur_offset;
+
+    if (level1_read_wavefcn(wavefcn, wavefcn_cur_offset, _header.nsd))
+      {
+	_wavefcns.push_back(wavefcn);
+	cur_offset = wavefcn_cur_offset;
+      }
+    else
+      {
+	delete wavefcn;
+	break;
+      }
+  }
+
+  VERIFY_EOF;
+
+  /*
+  for ( ; ; ) {
     if (SKIP_POSSIBLE_FORTRAN_BLOCK == -1)
       break;
   }
-  
+  */
   return true;
 }
 
-template<class header_version_t>
-bool mr_antoine_reader<header_version_t>::level2_read()
+template<class header_version_t, class fon_version_t>
+bool mr_antoine_reader<header_version_t, fon_version_t>::level2_read()
 {
   ALLOC_GET_FORTRAN_BLOCK_ITEMS(_nr_ll_jj,
 				_header.num_of_shell,
@@ -122,8 +314,8 @@ bool mr_antoine_reader<header_version_t>::level2_read()
   return true;
 }
 
-template<class header_version_t>
-void mr_antoine_reader<header_version_t>::dump_info()
+template<class header_version_t, class fon_version_t>
+void mr_antoine_reader<header_version_t, fon_version_t>::dump_info()
 {
   printf ("===================================\n");
   printf ("== %sHeader%s ==\n",
@@ -301,17 +493,19 @@ void mr_antoine_reader<header_version_t>::dump_info()
 	  CT_OUT(BOLD_BLUE),
 	  CT_OUT(NORM_DEF_COL));
 
+#define CHUNK_DUMP_SZ 1000000
+
   if (_config._dump == DUMP_FULL)
     {
       for (mr_file_chunk<mr_antoine_istate_item_t>
-	     cm_istate(_header.nsd, 1000000);
+	     cm_istate(_header.nsd, CHUNK_DUMP_SZ);
 	   cm_istate.map_next(_file_reader, _offset_istate); )
 	dump_istate_chunk(cm_istate);
     }
   else
     {
       mr_file_chunk<mr_antoine_istate_item_t>
-	cm_istate(_header.nsd, 1000000);
+	cm_istate(_header.nsd, CHUNK_DUMP_SZ);
 
       cm_istate.map(_file_reader, _offset_istate,
 		    0, std::min<unsigned int>(10,_header.nsd));
@@ -321,17 +515,57 @@ void mr_antoine_reader<header_version_t>::dump_info()
       if (_header.nsd > 11)
 	printf ("...\n");
 
-      cm_istate.map(_file_reader, _offset_istate,
-                    _header.nsd - 1, 1);
+      if (_header.nsd > 10)
+	{
+	  cm_istate.map(_file_reader, _offset_istate,
+			_header.nsd - 1, 1);
 
-      dump_istate_chunk(cm_istate);
+	  dump_istate_chunk(cm_istate);
+	}
+    }
+
+  if (_wavefcns.size())
+    {
+      printf ("===================================\n");
+
+      printf ("== %swavefcns %s ==\n",
+	      CT_OUT(BOLD_BLUE),
+	      CT_OUT(NORM_DEF_COL));
+
+      printf ("      mjtot parity    jt2  coul iprec        en\n");
+    }
+
+  for (size_t i = 0; i < _wavefcns.size(); i++)
+    {
+      wavefcn_t *wavefcn = _wavefcns[i];
+
+      printf ("#%s%3zd%s: %s%5d %6d %6d %5d %5d %9.4f%s\n",
+	      CT_OUT(GREEN),
+	      i+1,
+	      CT_OUT(NORM_DEF_COL),
+	      CT_OUT(MAGENTA),
+	      wavefcn->_fon._.mjtotal,
+	      wavefcn->_fon._.iparity,
+	      wavefcn->_fon._.jt2,
+	      wavefcn->_fon._.coul,
+	      wavefcn->_fon._.iprec,
+	      wavefcn->_en,
+	      CT_OUT(NORM_DEF_COL));
+
+
+      if (_config._dump == DUMP_FULL)
+	{
+	  wavefcn->dump_coeff(_file_reader,
+			      0, _header.nsd);
+
+	}
     }
 
   printf ("===================================\n");
 }
 
-template<class header_version_t>
-void mr_antoine_reader<header_version_t>::
+template<class header_version_t, class fon_version_t>
+void mr_antoine_reader<header_version_t, fon_version_t>::
 dump_occ_chunk(int k,uint32_t start,uint32_t num)
 {
   mr_mapped_data h;
@@ -362,8 +596,8 @@ dump_occ_chunk(int k,uint32_t start,uint32_t num)
   h.unmap();
 }
 
-template<class header_version_t>
-void mr_antoine_reader<header_version_t>::
+template<class header_version_t, class fon_version_t>
+void mr_antoine_reader<header_version_t, fon_version_t>::
 dump_istate_chunk(mr_file_chunk<mr_antoine_istate_item_t> &chunk)
 {
   mr_antoine_istate_item_t *pistate = chunk.ptr();
@@ -387,8 +621,8 @@ dump_istate_chunk(mr_file_chunk<mr_antoine_istate_item_t> &chunk)
 }
 
 
-template<class header_version_t>
-void mr_antoine_reader<header_version_t>::find_used_states()
+template<class header_version_t, class fon_version_t>
+void mr_antoine_reader<header_version_t, fon_version_t>::find_used_states()
 {
   /* First find out which occ states are used by the istates. */
   /*
@@ -413,8 +647,10 @@ void mr_antoine_reader<header_version_t>::find_used_states()
 	     _occ_used_items[i] * sizeof (BITSONE_CONTAINER_TYPE));
     }
 
+#define CHUNK_FIND_SZ 1000000
+
   for (mr_file_chunk<mr_antoine_istate_item_t>
-	 cm_istate(_header.nsd, 1000000);
+	 cm_istate(_header.nsd, CHUNK_FIND_SZ);
        cm_istate.map_next(_file_reader, _offset_istate); )
     {
       mr_antoine_istate_item_t *pistate = cm_istate.ptr();
@@ -475,10 +711,22 @@ void mr_antoine_reader<header_version_t>::find_used_states()
   BITSONE_CONTAINER_TYPE *jm_u_all = _jm_used;
   BITSONE_CONTAINER_TYPE *jm_u = _jm_used + _jm_used_items_per_slot;
 
+  size_t max_jm_for_jm_sz = 2 * sizeof (uint32_t) * _header.num_of_jm;
+
+  uint32_t *_max_jm_for_jm = (uint32_t *) malloc (max_jm_for_jm_sz);
+
+  memset(_max_jm_for_jm, 0, max_jm_for_jm_sz);
+
+  char *jm_jm_used = (char *) malloc (_header.num_of_jm * _header.num_of_jm);
+
+  memset (jm_jm_used, 0, _header.num_of_jm * _header.num_of_jm);
+
   for (int i = 0; i < 2; i++)
     {
+      uint32_t *max_jm_for_jm = _max_jm_for_jm + _header.num_of_jm * i;
+
       for (mr_file_chunk<mr_antoine_occ_item_t>
-	     cm_occ(_header.nslt[i], 1000000, _header.A[i]);
+	     cm_occ(_header.nslt[i], CHUNK_FIND_SZ, _header.A[i]);
 	   cm_occ.map_next(_file_reader, _offset_occ[i]); )
 	{
 	  mr_antoine_occ_item_t *pocc = cm_occ.ptr();
@@ -487,9 +735,15 @@ void mr_antoine_reader<header_version_t>::find_used_states()
 	    {
 	      BITSONE_CONTAINER_TYPE *jm_u_k = jm_u;
 
+	      mr_antoine_occ_item_t *pocc1 = pocc;
+
+	      uint32_t jm_array[32];
+
 	      for (unsigned int j = 0; j < _header.A[i]; j++)
 		{
 		  uint32_t jm = (pocc++)->sp - 1;
+
+		  jm_array[j] = jm;
 
 		  BITSONE_CONTAINER_TYPE mask =
 		    ((BITSONE_CONTAINER_TYPE) 1) <<
@@ -507,13 +761,58 @@ void mr_antoine_reader<header_version_t>::find_used_states()
 		  jm_u_k[offset] |= mask;
 
 		  jm_u_k += _jm_used_items_per_slot;
-
 		}
+
+	      uint32_t jm_max_plus1 = (pocc1 + _header.A[i] - 1)->sp;
+	  
+	      for (unsigned int j = 0; j < _header.A[i] - 1; j++)
+                {
+		  uint32_t jm = (pocc1++)->sp - 1;
+
+		  if (jm_max_plus1 > max_jm_for_jm[jm])
+		    max_jm_for_jm[jm] = jm_max_plus1;
+		}
+
+	      for (unsigned int j1 = 0; j1 < _header.A[i] - 1; j1++)
+		{
+		  for (unsigned int j2 = j1 + 1; j2 < _header.A[i]; j2++)
+		    {
+		      jm_jm_used[jm_array[j1] +
+				 jm_array[j2] * _header.num_of_jm] = 1;
+		    }
+		}
+	      /*
+	      (void) pocc1;
+	      (void) max_jm_for_jm;
+	      */
 	    }
 	}
 
       jm_u += _header.A[i] * _jm_used_items_per_slot;
     }
+
+  for (unsigned int i = 0; i < _header.num_of_jm; i++)
+    {
+      /*
+      printf ("max_jm_for_jm %4d: %4d %4d\n",
+	      i,
+	      _max_jm_for_jm[i],
+	      _max_jm_for_jm[i + _header.num_of_jm]);
+      */
+    }
+
+  uint64_t combs = 0;
+
+  for (unsigned int j1 = 0; j1 < _header.num_of_jm; j1++)
+    {
+      for (unsigned int j2 = 0; j2 < _header.num_of_jm; j2++)
+	{
+	  combs += jm_jm_used[j1 + j2 * _header.num_of_jm];
+	}
+    }
+
+  printf ("jm x jm used: %"PRIu64" /  %"PRIu64"\n",
+	  combs, (uint64_t) _header.num_of_jm * (uint64_t) _header.num_of_jm);
 
   jm_u = _jm_used;
 
@@ -578,6 +877,14 @@ void mr_antoine_reader<header_version_t>::find_used_states()
 	  used >>= 1;
 	  off++;
 	}
+    }
+
+  unsigned int max_jm_first = -1;
+
+  for (unsigned int i = 0; i < _header.num_of_jm; i++)
+    {
+      if (_max_jm_for_jm[i] || _max_jm_for_jm[i + _header.num_of_jm])
+	max_jm_first = sps_map[i];
     }
 
   /* Now that we know who are used, we can for each sp location in the
@@ -651,7 +958,17 @@ void mr_antoine_reader<header_version_t>::find_used_states()
   if (istate_chunk_sz > CHUNK_SZ)
     istate_chunk_sz = CHUNK_SZ;
 
-  size_t mp_states_stride = bit_packing._words;
+  if (sizeof (BIT_PACK_T) != sizeof (double))
+    {
+      /* Alignment will be broken. */
+      /* Also!: allocation calculations below will be botched. */
+      FATAL("sizeof (BIT_PACK_T) = %zd != sizeof (double) = %zd",
+	    sizeof (BIT_PACK_T), sizeof (double));
+    }
+
+  int n_wavefcns = _wavefcns.size() > 0 ? 1 : 0;
+
+  size_t mp_states_stride = bit_packing._words + n_wavefcns;
 
   size_t mp_states_sz =
     sizeof (BIT_PACK_T) * istate_chunk_sz * mp_states_stride;
@@ -798,6 +1115,17 @@ void mr_antoine_reader<header_version_t>::find_used_states()
 
       if (out_states)
 	{
+	  /* Fill in the wavefunctions. */
+
+	  for (int i = 0; i < n_wavefcns; i++)
+	    {
+	      _wavefcns[i]->fill_coeff((double *) mp_states,
+				       _file_reader,
+				       cm_istate.start(), cm_istate.num(),
+				       mp_states_stride,
+				       bit_packing._words + i);
+	    }
+
 	  size_t mp_used_sz =
 	    sizeof (BIT_PACK_T) * cm_istate.num() * mp_states_stride;
 
@@ -861,6 +1189,8 @@ void mr_antoine_reader<header_version_t>::find_used_states()
 
       out_config.fprintf("#define CFG_NUM_MP_STATES   %d\n",
 			 _header.nsd);
+      out_config.fprintf("#define CFG_NUM_SP_STATES   %zd\n",
+			 sps.size());
       out_config.fprintf("#define CFG_NUM_SP_STATES0  %d\n",
 			 _header.A[0]);
       out_config.fprintf("#define CFG_NUM_SP_STATES1  %d\n",
@@ -871,6 +1201,27 @@ void mr_antoine_reader<header_version_t>::find_used_states()
 			 max_m); /* = min_m */
       out_config.fprintf("#define CFG_PACK_WORDS      %d\n",
 			 bit_packing._words);
+      out_config.fprintf("#define CFG_WAVEFCNS        %d\n",
+			 n_wavefcns);
+      out_config.fprintf("#define CFG_END_JM_FIRST    %d\n",
+			 max_jm_first + 1);
+
+      /* sum_i=0^(CFG_END_JM_FIRST-1) CFG_NUM_SP_STATES-i */
+      /*
+      index = first * CFG_NUM_SP_STATES - first * (first - 1)/2 +
+        (second - first);
+      index = first * (2 * CFG_NUM_SP_STATES - (first - 1))/2 +
+        (second - first);
+      index = first * (2 * CFG_NUM_SP_STATES - first - 1)/2 + second;
+      total = first * (2 * CFG_NUM_SP_STATES - first + 1)/2;
+      */
+
+      uint64_t end_first = max_jm_first + 1;
+      uint64_t total2 = end_first * (2 * sps.size() - end_first + 1)/2;
+
+      out_config.fprintf("#define CFG_TOT_FIRST_SCND    %"PRIu64"\n",
+                         total2);
+
     }
 
   if (_config._td_dir)
@@ -888,20 +1239,22 @@ void mr_antoine_reader<header_version_t>::find_used_states()
     }
 }
 
-#define INSTANTIATE_ANTOINE(header_t)					\
-  template mr_antoine_reader<header_t>::				\
+#define INSTANTIATE_ANTOINE(header_t,fon_t)				\
+  template mr_antoine_reader<header_t,fon_t>::				\
   mr_antoine_reader(mr_file_reader *file_reader);			\
-  template mr_antoine_reader<header_t>::~mr_antoine_reader();		\
-  template const char *mr_antoine_reader<header_t>::get_format_name();	\
-  template bool mr_antoine_reader<header_t>::level1_read();		\
-  template bool mr_antoine_reader<header_t>::level2_read();		\
-  template void mr_antoine_reader<header_t>::dump_info();		\
-  template void mr_antoine_reader<header_t>::				\
+  template mr_antoine_reader<header_t,fon_t>::~mr_antoine_reader();	\
+  template const char *mr_antoine_reader<header_t,fon_t>::		\
+  get_format_name();							\
+  template bool mr_antoine_reader<header_t,fon_t>::level1_read();	\
+  template bool mr_antoine_reader<header_t,fon_t>::level2_read();	\
+  template void mr_antoine_reader<header_t,fon_t>::dump_info();		\
+  template void mr_antoine_reader<header_t,fon_t>::			\
   dump_occ_chunk(int k,uint32_t start,uint32_t num);			\
-  template void mr_antoine_reader<header_t>::				\
+  template void mr_antoine_reader<header_t,fon_t>::			\
   dump_istate_chunk(mr_file_chunk<mr_antoine_istate_item_t> &chunk);	\
-  template void mr_antoine_reader<header_t>::find_used_states();	\
+  template void mr_antoine_reader<header_t,fon_t>::			\
+  find_used_states();							\
   ;
 
-INSTANTIATE_ANTOINE(mr_antoine_header_old_t);
-INSTANTIATE_ANTOINE(mr_antoine_header_new_t);
+INSTANTIATE_ANTOINE(mr_antoine_header_old_t,mr_antoine_fon_old_t);
+INSTANTIATE_ANTOINE(mr_antoine_header_new_t,mr_antoine_fon_new_t);

@@ -68,8 +68,10 @@ void check_create_dir(const char *dir)
 mr_base_reader *identify_file(mr_file_reader *file_reader)
 {
   mr_base_reader *readers[] = {
-    new mr_antoine_reader<mr_antoine_header_old_t>(file_reader),
-    new mr_antoine_reader<mr_antoine_header_new_t>(file_reader),
+    new mr_antoine_reader<mr_antoine_header_old_t,
+			  mr_antoine_fon_old_t>(file_reader),
+    new mr_antoine_reader<mr_antoine_header_new_t,
+			  mr_antoine_fon_new_t>(file_reader),
   };
 
   mr_base_reader *matching = NULL;

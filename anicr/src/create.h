@@ -9,3 +9,5 @@ void annihilate_states(int *in_sp_other,
 void annihilate_packed_states(uint64_t *packed);
 
 int find_mp_state(uint64_t *lookfor);
+
+void alloc_accumulate();

@@ -148,16 +148,38 @@ void mr_file_reader::get_fortran_block_data(uint64_t offset_data,
     }
 }
 
-bool mr_file_reader::get_fortran_block(uint64_t offset,
-				       void *block,size_t size)
+bool mr_file_reader::verify_eof(uint64_t offset)
 {
-  if (has_fortran_block (offset,size) == -1)
+  off_t end = lseek(_fd,0,SEEK_END);
+
+  if (end == -1)
+    {
+      perror("lseek");
+      FATAL("Seek error.");
+    }
+
+  if ((uint64_t) end != offset)
+    {
+      INFO("Expected EOF at %" PRIuPTR ", is at %" PRIuPTR ".",
+	   offset, end);
+      return false;
+    }
+  return true;
+}
+
+bool mr_file_reader::get_fortran_block(uint64_t offset,
+				       void *block1,size_t size1,
+				       void *block2,size_t size2)
+{
+  if (has_fortran_block (offset,size1+size2) == -1)
     return false;
 
   // Since we got the block header and footer, the data should never
   // fail, (even if file format guess is wrong)
 
-  get_fortran_block_data(offset+sizeof(uint32_t),block,size);
+  get_fortran_block_data(offset+sizeof(uint32_t),block1,size1);
+  if (size2)
+    get_fortran_block_data(offset+sizeof(uint32_t)+size1,block2,size2);
 
   return true;
 }
