@@ -22,6 +22,9 @@ SRC_DIRS = ../anicr/src
 CFLAGS += $(addprefix -I ,$(SRC_DIRS))
 CFLAGS += -I .
 
+CFLAGS    += `gsl-config --cflags`
+LINKFLAGS += `gsl-config --libs`
+
 ####################################################################
 
 ANICR_OBJS = $(addprefix build_anicr/,$(OBJS))

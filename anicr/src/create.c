@@ -723,8 +723,14 @@ void created_state(int *in_sp_other,
 
   _accumulate[acc_i] += val * _cur_val;
 
+#if DEBUG_ANICR
   printf ("%5d %15.10f\n", acc_i, val * _cur_val);
+#endif
 }
+
+#include <gsl/gsl_errno.h>
+#include "gsl/gsl_sf_coupling.h"
+
 
 void couple_accumulate()
 {
@@ -743,11 +749,99 @@ void couple_accumulate()
       if (_accumulate[i])
 	non_zero++;
     }
-
+  /*
   for (i = 0; i < num_accum && i < 100; i++)
     {
       printf ("%3zd %.6f\n", i, _accumulate[i]);
     }
-
+  */
   printf ("%zd non-0 accumulate items.\n", non_zero);
+
+#if !ANICR2
+  double final_1b[CFG_NUM_NLJ_STATES * CFG_NUM_NLJ_STATES];
+  int sp_anni;
+  int sp_crea;
+
+  memset (final_1b, 0, sizeof (final_1b));
+
+  int jtrans = 0;
+
+  for (sp_anni = 0; sp_anni < CFG_NUM_SP_STATES; sp_anni++)
+    {
+      for (sp_crea = 0; sp_crea < CFG_NUM_SP_STATES; sp_crea++)
+	{
+	  int acc_i = sp_anni * CFG_NUM_SP_STATES + sp_crea;
+
+	  if (_accumulate[acc_i])
+	    {
+	      sp_state_info *sp_a = &_table_sp_states[sp_anni];
+	      sp_state_info *sp_c = &_table_sp_states[sp_crea];
+
+	      printf ("a: %3d  c %3d : %2d %2d - %2d %2d [%10.6f]",
+		      sp_anni, sp_crea,
+		      sp_a->_j, sp_a->_m, sp_c->_j, sp_c->_m,
+		      _accumulate[acc_i]);
+
+	      /* searching for jtrans */
+
+	      int diff_j = abs(sp_a->_j - sp_c->_j);
+	      int sum_j  = sp_a->_j - sp_c->_j;
+	      int sum_m  = sp_a->_m - sp_c->_m;
+
+	      if (diff_j <= jtrans && sum_j >= jtrans &&
+		  abs(sum_m) <= jtrans)
+		{
+		  printf (" *");
+
+		  gsl_sf_result result;
+	  
+		  int ret =
+		    gsl_sf_coupling_3j_e(sp_a->_j, sp_c->_j, jtrans,
+					 sp_a->_m, -sp_c->_m, -sum_m,
+					 &result);
+
+		  if (ret != GSL_SUCCESS)
+		    {
+		      fprintf (stderr,"ERR! %d\n", ret);
+		      exit(1);
+		    }
+
+		  printf (" [%10.5f]", result.val);
+
+		  printf (" %2d %2d", sp_a->_nlj, sp_c->_nlj);
+
+		  int fin_i = sp_a->_nlj * CFG_NUM_NLJ_STATES + sp_c->_nlj;
+
+		  final_1b[fin_i] += result.val * _accumulate[acc_i];
+
+		}
+
+	      printf ("\n");
+	    }	  
+	}
+    }
+
+  int nlj_a, nlj_c;
+
+  for (nlj_a = 0; nlj_a < CFG_NUM_NLJ_STATES; nlj_a++)
+    {
+      for (nlj_c = 0; nlj_c < CFG_NUM_NLJ_STATES; nlj_c++)
+	{
+	  int fin_i = nlj_a * CFG_NUM_NLJ_STATES + nlj_c;
+	  
+	  /* if (final_1b[fin_i]) */
+	    {
+	      printf ("%3d %3d  %10.5f\n",
+		      nlj_a, nlj_c, final_1b[fin_i]);
+	    }
+
+
+
+	}
+    }
+
+
+#endif
+
+
 }
