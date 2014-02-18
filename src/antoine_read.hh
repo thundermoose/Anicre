@@ -86,6 +86,9 @@ public:
   size_t                      _jm_used_items_per_slot;
   size_t                      _jm_used_slots;
 
+  BITSONE_CONTAINER_TYPE     *_nlj_used;
+  size_t                      _nlj_used_items_per_slot;
+
 public:
   bool level1_read_wavefcn(wavefcn_t *wavefcn,
 			   uint64_t &cur_offset, uint32_t nsd);

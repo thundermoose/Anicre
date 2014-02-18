@@ -837,6 +837,93 @@ void mr_antoine_reader<header_version_t, fon_version_t>::find_used_states()
 
   (void) sp_used;
 
+  /* Find out which nlj indices are in use. */
+
+  _nlj_used_items_per_slot =
+    (_header.num_of_shell + BITSONE_CONTAINER_BITS-1) / BITSONE_CONTAINER_BITS;
+  
+  _nlj_used = (BITSONE_CONTAINER_TYPE *)
+    malloc (_nlj_used_items_per_slot *
+	    sizeof (BITSONE_CONTAINER_TYPE));
+
+  if (!_nlj_used)
+    FATAL("Memory allocation failure (_nlj_used).");
+
+  memset(_nlj_used, 0,
+	 _nlj_used_items_per_slot *
+	    sizeof (BITSONE_CONTAINER_TYPE));
+
+  for (size_t j = 0; j < _jm_used_items_per_slot; j++)
+    {
+      BITSONE_CONTAINER_TYPE used = jm_u[j];
+
+      int off = 0;
+
+      for ( ; used; )
+	{
+	  if (used & 1)
+	    {
+	      size_t i = j * sizeof (used) * 8 + off;
+
+	      mr_antoine_num_mpr_item_t &mpr = _num_mpr[i];
+	      uint32_t sh = mpr.num - 1;
+
+	      BITSONE_CONTAINER_TYPE mask =
+		((BITSONE_CONTAINER_TYPE) 1) <<
+		((sh) % (BITSONE_CONTAINER_BITS));
+	      size_t offset = sh / (BITSONE_CONTAINER_BITS);
+
+	      _nlj_used[offset] |= mask;
+	    }
+
+	  used >>= 1;
+	  off++;
+	}
+    }
+
+  /* */
+
+  int nlj_used = 0;
+  
+  vect_nlj_state nljs;
+
+  /* Mapping. */
+
+  int *nljs_map = (int *) malloc (sizeof (int) * _header.num_of_shell);
+
+  if (!nljs_map)
+    FATAL("Memory allocation failure (nljs_map).");
+
+  for (uint32_t i = 0; i < _header.num_of_shell; i++)
+    nljs_map[i] = -1;
+
+  for (size_t j = 0; j < _nlj_used_items_per_slot; j++)
+    {
+      nlj_used += __builtin_popcountl(_nlj_used[j]);
+
+      BITSONE_CONTAINER_TYPE used = _nlj_used[j];
+
+      int off = 0;
+
+      for ( ; used; )
+	{
+	  if (used & 1)
+	    {
+	      size_t i = j * sizeof (used) * 8 + off;
+
+	      mr_antoine_nr_ll_jj_item_t &shell = _nr_ll_jj[i];
+
+	      nljs_map[i] = (int) nljs.size();
+
+	      nljs.push_back(nlj_state(shell.nr, shell.ll, shell.jj));
+	    }
+	  used >>= 1;
+	  off++;
+	}
+    }
+
+  printf ("NLJ used: %4d\n", nlj_used);
+
   /* Fetch all the sp states that actually are in use.
    * No need to included unused ones in tables.
    */
@@ -866,18 +953,21 @@ void mr_antoine_reader<header_version_t, fon_version_t>::find_used_states()
 	      size_t i = j * sizeof (used) * 8 + off;
 
 	      mr_antoine_num_mpr_item_t &mpr = _num_mpr[i];
-	      uint32_t sh = mpr.num;
-	      mr_antoine_nr_ll_jj_item_t &shell = _nr_ll_jj[sh-1];
+	      uint32_t sh = mpr.num - 1;
+	      mr_antoine_nr_ll_jj_item_t &shell = _nr_ll_jj[sh];
 
 	      sps_map[i] = (int) sps.size();
 
-	      sps.push_back(sp_state(shell.nr, shell.ll, shell.jj, mpr.mpr));
+	      sps.push_back(sp_state(shell.nr, shell.ll, shell.jj, mpr.mpr,
+				     nljs_map[sh]));
 	    }
 
 	  used >>= 1;
 	  off++;
 	}
     }
+
+  /* */
 
   unsigned int max_jm_first = -1;
 
@@ -1171,6 +1261,8 @@ void mr_antoine_reader<header_version_t, fon_version_t>::find_used_states()
       out_table.fprintf("\n");
 
       bit_packing.generate_tables(out_table);
+
+      nlj_states_table(out_table, nljs);
 
       sp_states_table(out_table, sps);
 
