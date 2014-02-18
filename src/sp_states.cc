@@ -9,7 +9,7 @@ void nlj_states_table(file_output &out, vect_nlj_state &nljs)
   out.fprintf("\n");
   out.fprintf("nlj_state_info _table_nlj_states[] =\n");
   out.fprintf("{\n");
-  out.fprintf("  /*       i   N        n    l    j */\n");
+  out.fprintf("  /*       i   N        n    l   2j */\n");
   out.fprintf("\n");
   
   for (size_t i = 0; i < nljs.size(); i++)
@@ -33,7 +33,7 @@ void sp_states_table(file_output &out, vect_sp_state &sps)
   out.fprintf("\n");
   out.fprintf("sp_state_info _table_sp_states[] =\n");
   out.fprintf("{\n");
-  out.fprintf("  /*       i   N        n    l    j    m  nlj */\n");
+  out.fprintf("  /*       i   N        n    l   2j   2m  nlj */\n");
   out.fprintf("\n");
   
   for (size_t i = 0; i < sps.size(); i++)

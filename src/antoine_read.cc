@@ -1281,6 +1281,8 @@ void mr_antoine_reader<header_version_t, fon_version_t>::find_used_states()
 
       out_config.fprintf("#define CFG_NUM_MP_STATES   %d\n",
 			 _header.nsd);
+      out_config.fprintf("#define CFG_NUM_NLJ_STATES  %zd\n",
+			 nljs.size());
       out_config.fprintf("#define CFG_NUM_SP_STATES   %zd\n",
 			 sps.size());
       out_config.fprintf("#define CFG_NUM_SP_STATES0  %d\n",
