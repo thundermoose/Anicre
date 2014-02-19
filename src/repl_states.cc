@@ -16,7 +16,8 @@ repl_states_by_m_N::repl_states_by_m_N(int min_m, int max_m, int max_N,
 
   _min_m = min_m;
   _rng_m = max_m - min_m + 1;
-  _rng_N = max_N + 1;
+  // Trickery to make even and odd parity tables always equally long
+  _rng_N = ((max_N + 1) & ~1) + 1;
 
   _sz_parity = _rng_m * _rng_N;
 
