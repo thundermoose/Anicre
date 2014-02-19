@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 #include "anicr_tables.h"
 #include "anicr_config.h"
@@ -89,7 +90,7 @@ void create_states(int *in_sp_other,
 		   int sp_anni1, int sp_anni2, int sp_crea1,
 		   int fill,
 #else
-		   int sp_anni,
+		   int sp_anni, int phase_i,
 #endif
 		   int miss_parity, int miss_m, int E);
 
@@ -106,10 +107,11 @@ void created_state(int *in_sp_other,
 		   int *in_sp,
 #if ANICR2
 		   int sp_anni1, int sp_anni2,
-		   int sp_crea1, int sp_crea2
+		   int sp_crea1, int sp_crea2,
 #else
-		   int sp_anni, int sp_crea
+		   int sp_anni, int sp_crea,
 #endif
+		   int phase_i
 		   );
 
 void annihilate_states_2nd(int *in_sp_other,
@@ -186,7 +188,8 @@ void annihilate_states(int *in_sp_other,
 			sp_info[in_sp[0]]._m, E);
 #else
   create_states(in_sp_other,
-		out_sp, in_sp[0], 
+		out_sp,
+		in_sp[0], 0,
 		sp_info[in_sp[0]]._l & 1,
 		sp_info[in_sp[0]]._m, E);
 #endif
@@ -209,7 +212,8 @@ void annihilate_states(int *in_sp_other,
 			    E - SP_STATE_E(sp_info[in_sp[i+1]]));
 #else
       create_states(in_sp_other,
-		    out_sp, in_sp[i+1],
+		    out_sp, 
+		    in_sp[i+1], i+1,
 		    sp_info[in_sp[i+1]]._l & 1,
 		    sp_info[in_sp[i+1]]._m,
 		    E - SP_STATE_E(sp_info[in_sp[i+1]]));
@@ -284,7 +288,7 @@ void create_states(int *in_sp_other,
                    int sp_anni1, int sp_anni2, int sp_crea1,
 		   int fill,
 #else
-                   int sp_anni,
+                   int sp_anni, int phase_i,
 #endif
 		   int miss_parity, int miss_m, int E)
 {
@@ -434,7 +438,7 @@ void create_states(int *in_sp_other,
 #else
 		    sp_anni,
 #endif
-		    (int) crea_sp);
+		    (int) crea_sp, phase_i ^ fill);
     }
 
 
@@ -626,10 +630,11 @@ void created_state(int *in_sp_other,
 		   int *in_sp,
 #if ANICR2
 		   int sp_anni1, int sp_anni2,
-		   int sp_crea1, int sp_crea2
+		   int sp_crea1, int sp_crea2,
 #else
-		   int sp_anni, int sp_crea
+		   int sp_anni, int sp_crea,
 #endif
+		   int phase_i
 		   )
 {
   int i;
@@ -721,10 +726,12 @@ void created_state(int *in_sp_other,
     }
   /* printf ("%4d %4d\n", sp_anni, sp_crea); */
 
-  _accumulate[acc_i] += val * _cur_val;
+  int sign = 1 - 2 * (phase_i & 1);
+
+  _accumulate[acc_i] += val * _cur_val * sign;
 
 #if DEBUG_ANICR
-  printf ("%5d %15.10f\n", acc_i, val * _cur_val);
+  printf ("%5d %15.10f\n", acc_i, val * _cur_val * sign);
 #endif
 }
 
@@ -778,7 +785,7 @@ void couple_accumulate()
 	      sp_state_info *sp_c = &_table_sp_states[sp_crea];
 
 	      printf ("a: %3d  c %3d : %2d %2d - %2d %2d [%10.6f]",
-		      sp_anni, sp_crea,
+		      sp_anni+1, sp_crea+1,
 		      sp_a->_j, sp_a->_m, sp_c->_j, sp_c->_m,
 		      _accumulate[acc_i]);
 
@@ -796,8 +803,8 @@ void couple_accumulate()
 		  gsl_sf_result result;
 	  
 		  int ret =
-		    gsl_sf_coupling_3j_e(sp_a->_j, sp_c->_j, jtrans,
-					 sp_a->_m, -sp_c->_m, -sum_m,
+		    gsl_sf_coupling_3j_e(sp_a->_j, jtrans,  sp_c->_j,
+					 sp_a->_m, -sum_m, -sp_c->_m,
 					 &result);
 
 		  if (ret != GSL_SUCCESS)
@@ -806,13 +813,16 @@ void couple_accumulate()
 		      exit(1);
 		    }
 
-		  printf (" [%10.5f]", result.val);
+		  int sign = 1 - ((sp_c->_j - jtrans + sp_a->_m) & 2);
 
-		  printf (" %2d %2d", sp_a->_nlj, sp_c->_nlj);
+		  printf (" [%10.5f %2d]", result.val, sign);
+
+		  printf (" %2d %2d", sp_a->_nlj+1, sp_c->_nlj+1);
 
 		  int fin_i = sp_a->_nlj * CFG_NUM_NLJ_STATES + sp_c->_nlj;
 
-		  final_1b[fin_i] += result.val * _accumulate[acc_i];
+		  final_1b[fin_i] +=
+		    result.val * _accumulate[acc_i] * sign;
 
 		}
 
@@ -829,10 +839,10 @@ void couple_accumulate()
 	{
 	  int fin_i = nlj_a * CFG_NUM_NLJ_STATES + nlj_c;
 	  
-	  /* if (final_1b[fin_i]) */
+	  if (final_1b[fin_i])
 	    {
-	      printf ("%3d %3d  %10.5f\n",
-		      nlj_a, nlj_c, final_1b[fin_i]);
+	      printf ("%3d %3d  %11.6f\n",
+		      nlj_a+1, nlj_c+1, final_1b[fin_i]);
 	    }
 
 
