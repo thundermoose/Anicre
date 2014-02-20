@@ -15,7 +15,7 @@
 
 #define DEBUG_ANICR 0
 
-#define ANICR2      0
+#define ANICR2      1
 
 /* Annihilate states. */
 
@@ -90,12 +90,14 @@ void create_states(int *in_sp_other,
 		   int sp_anni1, int sp_anni2, int sp_crea1,
 		   int fill,
 #else
-		   int sp_anni, int phase_i,
+		   int sp_anni,
 #endif
+		   int phase_i,
 		   int miss_parity, int miss_m, int E);
 
 void create_states_1st(int *in_sp_other,
 		       int *in_sp, int sp_anni1, int sp_anni2,
+		       int phase_i,
 		       int miss_parity, int miss_m, int E);
 
 void create_states_2nd(int *in_sp_other,
@@ -117,6 +119,7 @@ void created_state(int *in_sp_other,
 void annihilate_states_2nd(int *in_sp_other,
 			   int *in_sp,
 			   int sp_anni1,
+			   int phase_i,
 			   int miss_parity, int miss_m, int E);
 
 void annihilate_packed_states(uint64_t *packed)
@@ -183,7 +186,7 @@ void annihilate_states(int *in_sp_other,
 
 #if ANICR2
   annihilate_states_2nd(in_sp_other,
-			out_sp, in_sp[0],
+			out_sp, in_sp[0], 0,
 			sp_info[in_sp[0]]._l,
 			sp_info[in_sp[0]]._m, E);
 #else
@@ -206,7 +209,7 @@ void annihilate_states(int *in_sp_other,
 
 #if ANICR2
       annihilate_states_2nd(in_sp_other,
-			    out_sp, in_sp[i+1],
+			    out_sp, in_sp[i+1], i+1,
 			    sp_info[in_sp[i+1]]._l,
 			    sp_info[in_sp[i+1]]._m,
 			    E - SP_STATE_E(sp_info[in_sp[i+1]]));
@@ -223,6 +226,7 @@ void annihilate_states(int *in_sp_other,
 
 void annihilate_states_2nd(int *in_sp_other,
 			   int *in_sp, int sp_anni1,
+			   int phase_i,
 			   int miss_parity, int miss_m, int E)
 {
   int i;
@@ -256,7 +260,7 @@ void annihilate_states_2nd(int *in_sp_other,
 
   if (sp_anni1 < in_sp[1])
     create_states_1st(in_sp_other,
-		      out_sp, sp_anni1, in_sp[1],
+		      out_sp, sp_anni1, in_sp[1], phase_i ^ 1,
 		      (sp_info[in_sp[1]]._l ^ miss_parity) & 1,
 		      miss_m + sp_info[in_sp[1]]._m,
 		      E - SP_STATE_E(sp_info[in_sp[1]]));
@@ -271,7 +275,7 @@ void annihilate_states_2nd(int *in_sp_other,
 
       if (sp_anni1 < in_sp[i+1])
 	create_states_1st(in_sp_other,
-			  out_sp, sp_anni1, in_sp[i+1],
+			  out_sp, sp_anni1, in_sp[i+1], phase_i ^ (i+1),
 			  (sp_info[in_sp[i+1]]._l ^ miss_parity) & 1,
 			  miss_m + sp_info[in_sp[i+1]]._m,
 			  E - SP_STATE_E(sp_info[in_sp[i+1]]));
@@ -288,8 +292,9 @@ void create_states(int *in_sp_other,
                    int sp_anni1, int sp_anni2, int sp_crea1,
 		   int fill,
 #else
-                   int sp_anni, int phase_i,
+                   int sp_anni,
 #endif
+		   int phase_i,
 		   int miss_parity, int miss_m, int E)
 {
   int i;
@@ -446,6 +451,7 @@ void create_states(int *in_sp_other,
 
 void create_states_1st(int *in_sp_other,
 		       int *in_sp, int sp_anni1, int sp_anni2,
+		       int phase_i,
 		       int miss_parity, int miss_m, int E)
 {
   int i;
@@ -575,7 +581,7 @@ void create_states_1st(int *in_sp_other,
 #if ANICR2
 	  create_states(in_sp_other,
 			out_sp, sp_anni1, sp_anni2,
-			(int) crea_sp, fill+1,
+			(int) crea_sp, fill+1,  phase_i ^ fill,
 			(sp_info[crea_sp]._l ^ miss_parity) & 1,
 			miss_m - sp_info[crea_sp]._m,
 			E + SP_STATE_E(sp_info[crea_sp]));
@@ -804,7 +810,7 @@ void couple_accumulate()
 	mult = 1 / (result.val) * sign;
       }
 
-
+      (void) mult;
 
 
 #if !ANICR2
