@@ -680,8 +680,8 @@ void created_state(int *in_sp_other,
 #endif
 
 #if ANICR2
-  int sp_a = sp_anni1 * (2 * CFG_NUM_SP_STATES - sp_anni1 - 1) / 2 + sp_anni2;
-  int sp_c = sp_crea1 * (2 * CFG_NUM_SP_STATES - sp_crea1 - 1) / 2 + sp_crea2;
+  int sp_a = sp_anni1 * (2 * CFG_NUM_SP_STATES - sp_anni1 - 3) / 2 + sp_anni2-1;
+  int sp_c = sp_crea1 * (2 * CFG_NUM_SP_STATES - sp_crea1 - 3) / 2 + sp_crea2-1;
   /*
   printf ("%3d %3d %3d %3d   %6d %6d\n",
 	  sp_anni1, sp_anni2, sp_crea1, sp_crea2,
