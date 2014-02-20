@@ -1299,6 +1299,9 @@ void mr_antoine_reader<header_version_t, fon_version_t>::find_used_states()
 			 n_wavefcns);
       out_config.fprintf("#define CFG_END_JM_FIRST    %d\n",
 			 max_jm_first + 1);
+      if (n_wavefcns)
+	out_config.fprintf("#define CFG_2J_FINAL         %d\n",
+			   _wavefcns[0]->_fon._.jt2);
 
       /* sum_i=0^(CFG_END_JM_FIRST-1) CFG_NUM_SP_STATES-i */
       /*

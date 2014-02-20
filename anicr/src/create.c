@@ -764,6 +764,8 @@ void couple_accumulate()
   */
   printf ("%zd non-0 accumulate items.\n", non_zero);
 
+  double mult = sqrt(CFG_2J_FINAL + 1);
+
 #if !ANICR2
   double final_1b[CFG_NUM_NLJ_STATES * CFG_NUM_NLJ_STATES];
   int sp_anni;
@@ -842,9 +844,8 @@ void couple_accumulate()
 	  if (final_1b[fin_i])
 	    {
 	      printf ("%3d %3d  %11.6f\n",
-		      nlj_a+1, nlj_c+1, final_1b[fin_i]);
+		      nlj_a+1, nlj_c+1, mult * final_1b[fin_i]);
 	    }
-
 
 
 	}
