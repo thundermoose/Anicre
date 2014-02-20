@@ -1307,6 +1307,11 @@ void mr_antoine_reader<header_version_t, fon_version_t>::find_used_states()
 			     _wavefcns[0]->_fon._.jt2);
 	}
 
+      out_config.fprintf("#define CFG_2M_INITIAL       %d\n",
+			 min_m);
+      out_config.fprintf("#define CFG_2M_FINAL         %d\n",
+			 min_m);
+      
       /* sum_i=0^(CFG_END_JM_FIRST-1) CFG_NUM_SP_STATES-i */
       /*
       index = first * CFG_NUM_SP_STATES - first * (first - 1)/2 +

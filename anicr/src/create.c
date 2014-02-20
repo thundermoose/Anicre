@@ -764,16 +764,49 @@ void couple_accumulate()
   */
   printf ("%zd non-0 accumulate items.\n", non_zero);
 
-  double mult = sqrt(CFG_2J_FINAL + 1);
+  /* double mult = sqrt(CFG_2J_FINAL + 1); */
 
   int jtrans_min = abs(CFG_2J_INITIAL - CFG_2J_FINAL);
   int jtrans_max = CFG_2J_INITIAL + CFG_2J_FINAL;
 
   int jtrans;
 
+  int mtrans = CFG_2M_INITIAL - CFG_2M_FINAL;
+
+  if (abs(mtrans) > jtrans_max)
+    {
+      fprintf (stderr, "FIXME: abs(mtrans) > jtrans_max.\n");
+      exit(1);
+    }
+
   for (jtrans = jtrans_min; jtrans <= jtrans_max; jtrans += 2)
     {
       printf ("Jtrans=%d\n", jtrans/2);
+
+      double mult;
+
+      {
+	gsl_sf_result result;
+	
+	int ret =
+	  gsl_sf_coupling_3j_e(CFG_2J_INITIAL,  jtrans,  CFG_2J_FINAL,
+			       CFG_2M_INITIAL, -mtrans, -CFG_2M_FINAL,
+			       &result);
+	
+	if (ret != GSL_SUCCESS)
+	  {
+	    fprintf (stderr,"ERR! %d\n", ret);
+	    exit(1);
+	  }
+
+	int sign = 1 - ((CFG_2J_INITIAL - jtrans + CFG_2M_FINAL) & 2);
+
+	mult = 1 / (result.val) * sign;
+      }
+
+
+
+
 #if !ANICR2
   double final_1b[CFG_NUM_NLJ_STATES * CFG_NUM_NLJ_STATES];
   int sp_anni;
