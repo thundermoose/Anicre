@@ -766,14 +766,20 @@ void couple_accumulate()
 
   double mult = sqrt(CFG_2J_FINAL + 1);
 
+  int jtrans_min = abs(CFG_2J_INITIAL - CFG_2J_FINAL);
+  int jtrans_max = CFG_2J_INITIAL + CFG_2J_FINAL;
+
+  int jtrans;
+
+  for (jtrans = jtrans_min; jtrans <= jtrans_max; jtrans += 2)
+    {
+      printf ("Jtrans=%d\n", jtrans/2);
 #if !ANICR2
   double final_1b[CFG_NUM_NLJ_STATES * CFG_NUM_NLJ_STATES];
   int sp_anni;
   int sp_crea;
 
   memset (final_1b, 0, sizeof (final_1b));
-
-  int jtrans = 0;
 
   for (sp_anni = 0; sp_anni < CFG_NUM_SP_STATES; sp_anni++)
     {
@@ -794,7 +800,7 @@ void couple_accumulate()
 	      /* searching for jtrans */
 
 	      int diff_j = abs(sp_a->_j - sp_c->_j);
-	      int sum_j  = sp_a->_j - sp_c->_j;
+	      int sum_j  = sp_a->_j + sp_c->_j;
 	      int sum_m  = sp_a->_m - sp_c->_m;
 
 	      if (diff_j <= jtrans && sum_j >= jtrans &&
@@ -851,8 +857,8 @@ void couple_accumulate()
 	}
     }
 
-
 #endif
+    }
 
 
 }
