@@ -156,7 +156,7 @@ void couple_accumulate()
 
 	      for (anni_j = diff_anni_j; anni_j <= sum_anni_j; anni_j += 2)
 		{
-		  if (anni_j & 2)
+		  if ((sp_a1->_nlj == sp_a2->_nlj) && (anni_j & 2))
 		    continue;
 
 		  double mult_anni, val_anni;
@@ -192,12 +192,12 @@ void couple_accumulate()
 	sign_anni = sign;
 
 	if (sp_a1->_nlj == sp_a2->_nlj)
-	  mult_anni *= M_SQRT1_2;
+	  mult_anni *= M_SQRT2;
       }
 
 		  for (crea_j = diff_crea_j; crea_j <= sum_crea_j; crea_j += 2)
 		    {
-		      if (crea_j & 2)
+		      if ((sp_c1->_nlj == sp_c2->_nlj) && (crea_j & 2))
 			continue;
 		      
 		      double mult_crea, val_crea;
@@ -226,7 +226,7 @@ void couple_accumulate()
 	sign_crea = sign;
 
 	if (sp_c1->_nlj == sp_c2->_nlj)
-	  mult_crea *= M_SQRT1_2;
+	  mult_crea *= M_SQRT2;
       }
 
 		      printf ("%2d %2d - %2d %2d [%10.5f %2d %10.5f %2d] ",
