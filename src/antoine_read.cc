@@ -897,6 +897,8 @@ void mr_antoine_reader<header_version_t, fon_version_t>::find_used_states()
   for (uint32_t i = 0; i < _header.num_of_shell; i++)
     nljs_map[i] = -1;
 
+  uint32_t max_j = 0;
+
   for (size_t j = 0; j < _nlj_used_items_per_slot; j++)
     {
       nlj_used += __builtin_popcountl(_nlj_used[j]);
@@ -916,6 +918,9 @@ void mr_antoine_reader<header_version_t, fon_version_t>::find_used_states()
 	      nljs_map[i] = (int) nljs.size();
 
 	      nljs.push_back(nlj_state(shell.nr, shell.ll, shell.jj));
+
+	      if (shell.jj > max_j)
+		max_j = shell.jj;
 	    }
 	  used >>= 1;
 	  off++;
@@ -923,6 +928,7 @@ void mr_antoine_reader<header_version_t, fon_version_t>::find_used_states()
     }
 
   printf ("NLJ used: %4d\n", nlj_used);
+  printf ("max j used: %4d\n", max_j);
 
   /* Fetch all the sp states that actually are in use.
    * No need to included unused ones in tables.
@@ -1291,6 +1297,8 @@ void mr_antoine_reader<header_version_t, fon_version_t>::find_used_states()
 			 _header.A[1]);
       out_config.fprintf("#define CFG_MAX_SUM_E       %d\n",
 			 max_N);
+      out_config.fprintf("#define CFG_MAX_J           %d\n",
+			 max_j);
       out_config.fprintf("#define CFG_SUM_M           %d\n",
 			 max_m); /* = min_m */
       out_config.fprintf("#define CFG_PACK_WORDS      %d\n",
