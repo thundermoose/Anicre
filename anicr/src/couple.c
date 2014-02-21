@@ -176,7 +176,7 @@ void couple_accumulate()
 	    exit(1);
 	  }
 
-	int sign = 1 - ((sp_a1->_j - anni_j + sp_a2->_m) & 2);
+	int sign = 1 - ((sp_a1->_j - sp_a2->_j + anni_m) & 2);
 
 	mult_anni = result.val * sign;
 
@@ -193,6 +193,8 @@ void couple_accumulate()
 
 	if (sp_a1->_nlj == sp_a2->_nlj)
 	  mult_anni *= M_SQRT2;
+
+	mult_anni *= sqrt(anni_j + 1); /* sqrt(2*j+1) */
       }
 
 		  for (crea_j = diff_crea_j; crea_j <= sum_crea_j; crea_j += 2)
@@ -218,7 +220,7 @@ void couple_accumulate()
 	    exit(1);
 	  }
 
-	int sign = 1 - ((sp_c1->_j - crea_j + sp_c2->_m) & 2);
+	int sign = 1 - ((sp_c1->_j - sp_c2->_j + 2 * crea_m) & 2);
 
 	mult_crea = result.val * sign;
 
@@ -227,6 +229,8 @@ void couple_accumulate()
 
 	if (sp_c1->_nlj == sp_c2->_nlj)
 	  mult_crea *= M_SQRT2;
+
+	mult_crea *= sqrt(crea_j + 1); /* sqrt(2*j+1) */
       }
 
 		      printf ("%2d %2d - %2d %2d [%10.5f %2d %10.5f %2d] ",
@@ -257,7 +261,7 @@ void couple_accumulate()
 		      exit(1);
 		    }
 
-		  int sign = 1 - ((crea_j - jtrans + anni_m) & 2);
+		  int sign = 1/* - ((crea_j - jtrans + anni_m) & 2)*/;
 
 		  printf (" [%10.5f %2d]", result.val, sign);
 		  
