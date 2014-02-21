@@ -79,7 +79,7 @@ void couple_accumulate()
 	    exit(1);
 	  }
 
-	int sign = 1 - ((CFG_2J_INITIAL - jtrans + CFG_2M_FINAL) & 2);
+	int sign = 1 - ((CFG_2J_INITIAL/* - jtrans*/ + CFG_2M_FINAL) & 2);
 
 	mult = 1 / (result.val) * sign;
       }
@@ -367,7 +367,7 @@ void couple_accumulate()
 		      exit(1);
 		    }
 
-		  int sign = 1 - ((sp_c->_j - jtrans + sp_a->_m) & 2);
+		  int sign = 1 - ((sp_c->_j/* - jtrans*/ + sp_a->_m) & 2);
 
 		  printf (" [%10.5f %2d]", result.val, sign);
 
