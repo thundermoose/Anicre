@@ -456,6 +456,8 @@ void create_states_1st(int *in_sp_other,
 
   int out_sp[NSP + 1];
 
+  (void) phase_i;
+
   /* We are missing a certain m, and also have a known
    * energy.
    */
