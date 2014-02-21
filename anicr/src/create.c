@@ -488,7 +488,7 @@ void create_states_1st(int *in_sp_other,
   if (max_add_E >= miss_info->_num_E)
     max_add_E = miss_info->_num_E - 1;
 
-  int table_end_E = (max_add_E + miss_parity) & ~1;
+  int table_end_E = ((max_add_E + miss_parity) & ~1) + 2;
 
 #if DEBUG_ANICR
   printf ("%d %d %d %d %d\n",
