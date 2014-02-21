@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <inttypes.h>
+#define __USE_XOPEN
 #include <math.h>
 
 #include "anicr_tables.h"
@@ -85,9 +86,12 @@ void couple_accumulate()
 
       (void) mult;
 
+#define END_J (CFG_MAX_J+1)
+
+#define J_STRIDE (CFG_NUM_NLJ_STATES * CFG_NUM_NLJ_STATES * CFG_NUM_NLJ_STATES * CFG_NUM_NLJ_STATES)
 
 #if ANICR2
-  double final_1b[CFG_NUM_NLJ_STATES * CFG_NUM_NLJ_STATES * CFG_NUM_NLJ_STATES * CFG_NUM_NLJ_STATES];
+      double final_1b[CFG_NUM_NLJ_STATES * CFG_NUM_NLJ_STATES * CFG_NUM_NLJ_STATES * CFG_NUM_NLJ_STATES * (END_J * END_J)];
   int sp_anni1;
   int sp_anni2;
   int sp_crea1;
@@ -107,11 +111,11 @@ void couple_accumulate()
 
 	    assert (sp_a >= 0 && sp_a < CFG_TOT_FIRST_SCND);
 	    assert (sp_c >= 0 && sp_c < CFG_TOT_FIRST_SCND);
-
+	    /*
 	    printf ("a: %3d,%3d  c %3d,%3d   %d %d\n", 
 		    sp_anni1, sp_anni2, sp_crea1, sp_crea2,
 		    sp_a, sp_c);
-	    
+	    */
 	    int acc_i = sp_a * CFG_TOT_FIRST_SCND + sp_c;
 
 	    /*
@@ -134,11 +138,106 @@ void couple_accumulate()
 		      sp_c1->_j, sp_c1->_m, sp_c2->_j, sp_c2->_m,
 		      _accumulate[acc_i]);
 
+	      /* We need to connect the annihilated and created states.
+	       */
+
+	      int diff_anni_j = abs(sp_a1->_j - sp_a2->_j);
+	      int sum_anni_j = sp_a1->_j + sp_a2->_j;
+	      int anni_m = sp_a1->_m + sp_a2->_m;
+
+	      int diff_crea_j = abs(sp_c1->_j - sp_c2->_j);
+	      int sum_crea_j = sp_c1->_j + sp_c2->_j;
+	      int crea_m = sp_c1->_m + sp_c2->_m;
+
+	      printf ("\n");
+
+	      int anni_j;
+	      int crea_j;
+
+	      for (anni_j = diff_anni_j; anni_j <= sum_anni_j; anni_j += 2)
+		{
+		  if (anni_j & 2)
+		    continue;
+
+		  double mult_anni, val_anni;
+		  int sign_anni;
+
+      {
+	gsl_sf_result result;
+	
+	int ret =
+	  gsl_sf_coupling_3j_e(sp_a1->_j, sp_a2->_j,  anni_j,
+			       sp_a1->_m, sp_a2->_m, -anni_m,
+			       &result);
+	
+	if (ret != GSL_SUCCESS)
+	  {
+	    fprintf (stderr,"ERR! %d\n", ret);
+	    exit(1);
+	  }
+
+	int sign = 1 - ((sp_a1->_j - anni_j + sp_a2->_m) & 2);
+
+	mult_anni = result.val * sign;
+
+	if (mult_anni > 10000. || mult_anni < -10000.0)
+	  {
+	    printf ("\n=== {%d %d %d, %d %d %d} [%11.6f %d] ===\n",
+		    sp_a1->_j, sp_a2->_j,  anni_j,
+		    sp_a1->_m, sp_a2->_m, -anni_m,
+		    result.val, sign);
+	  }
+
+	val_anni = result.val;
+	sign_anni = sign;
+
+	if (sp_a1->_nlj == sp_a2->_nlj)
+	  mult_anni *= M_SQRT1_2;
+      }
+
+		  for (crea_j = diff_crea_j; crea_j <= sum_crea_j; crea_j += 2)
+		    {
+		      if (crea_j & 2)
+			continue;
+		      
+		      double mult_crea, val_crea;
+		      int sign_crea;
+
+
+      {
+	gsl_sf_result result;
+	
+	int ret =
+	  gsl_sf_coupling_3j_e(sp_c1->_j, sp_c2->_j,  crea_j,
+			       sp_c1->_m, sp_c2->_m, -crea_m,
+			       &result);
+	
+	if (ret != GSL_SUCCESS)
+	  {
+	    fprintf (stderr,"ERR! %d\n", ret);
+	    exit(1);
+	  }
+
+	int sign = 1 - ((sp_c1->_j - crea_j + sp_c2->_m) & 2);
+
+	mult_crea = result.val * sign;
+
+	val_crea = result.val;
+	sign_crea = sign;
+
+	if (sp_c1->_nlj == sp_c2->_nlj)
+	  mult_crea *= M_SQRT1_2;
+      }
+
+		      printf ("%2d %2d - %2d %2d [%10.5f %2d %10.5f %2d] ",
+			      anni_j, anni_m, crea_j, crea_m,
+			      val_anni, sign_anni, val_crea, sign_crea);
+		      
 	      /* searching for jtrans */
-#if 0
-	      int diff_j = abs(sp_a->_j - sp_c->_j);
-	      int sum_j  = sp_a->_j + sp_c->_j;
-	      int sum_m  = sp_a->_m - sp_c->_m;
+
+	      int diff_j = abs(anni_j - crea_j);
+	      int sum_j  = anni_j + crea_j;
+	      int sum_m  = anni_m - crea_m;
 
 	      if (diff_j <= jtrans && sum_j >= jtrans &&
 		  abs(sum_m) <= jtrans)
@@ -148,8 +247,8 @@ void couple_accumulate()
 		  gsl_sf_result result;
 	  
 		  int ret =
-		    gsl_sf_coupling_3j_e(sp_a->_j, jtrans,  sp_c->_j,
-					 sp_a->_m, -sum_m, -sp_c->_m,
+		    gsl_sf_coupling_3j_e(anni_j, jtrans,  crea_j,
+					 anni_m, -sum_m, -crea_m,
 					 &result);
 
 		  if (ret != GSL_SUCCESS)
@@ -158,41 +257,66 @@ void couple_accumulate()
 		      exit(1);
 		    }
 
-		  int sign = 1 - ((sp_c->_j - jtrans + sp_a->_m) & 2);
+		  int sign = 1 - ((crea_j - jtrans + anni_m) & 2);
 
 		  printf (" [%10.5f %2d]", result.val, sign);
+		  
+		  printf (" %2d %2d %2d %2d",
+			  sp_a1->_nlj+1, sp_a2->_nlj+1,
+			  sp_c1->_nlj+1, sp_c2->_nlj+1);
 
-		  printf (" %2d %2d", sp_a->_nlj+1, sp_c->_nlj+1);
+		  int fin_i = 
+		    J_STRIDE * ((anni_j/2) * END_J + (crea_j/2)) +
+		    sp_a1->_nlj * CFG_NUM_NLJ_STATES * CFG_NUM_NLJ_STATES * CFG_NUM_NLJ_STATES + 
+		    sp_a2->_nlj * CFG_NUM_NLJ_STATES * CFG_NUM_NLJ_STATES + 
+		    sp_c1->_nlj * CFG_NUM_NLJ_STATES + 
+		    sp_c2->_nlj;
 
-		  int fin_i = sp_a->_nlj * CFG_NUM_NLJ_STATES + sp_c->_nlj;
-
-		  final_1b[fin_i] +=
+		  final_1b[fin_i] += mult_anni * mult_crea *
 		    result.val * _accumulate[acc_i] * sign;
-
+		  
 		}
-#endif
-	      printf ("\n");
+		  printf ("\n");
+		    }
+		}
 	    }	  
     }
 
   printf ("%" PRIu64 " checked\n", checked);
 
-  int nlj_a, nlj_c;
+  int nlj_a1, nlj_a2, nlj_c1, nlj_c2;
+  int anni_j, crea_j;
 
-  for (nlj_a = 0; nlj_a < CFG_NUM_NLJ_STATES; nlj_a++)
+  for (anni_j = 0; anni_j < END_J; anni_j++)
+  for (crea_j = 0; crea_j < END_J; crea_j++)
+
+  for (nlj_a1 = 0; nlj_a1 < CFG_NUM_NLJ_STATES; nlj_a1++)
     {
-      for (nlj_c = 0; nlj_c < CFG_NUM_NLJ_STATES; nlj_c++)
+  for (nlj_a2 = 0; nlj_a2 < CFG_NUM_NLJ_STATES; nlj_a2++)
+    {
+      for (nlj_c1 = 0; nlj_c1 < CFG_NUM_NLJ_STATES; nlj_c1++)
 	{
-	  int fin_i = nlj_a * CFG_NUM_NLJ_STATES + nlj_c;
+      for (nlj_c2 = 0; nlj_c2 < CFG_NUM_NLJ_STATES; nlj_c2++)
+	{
+	  int fin_i = 
+	    J_STRIDE * ((anni_j) * END_J + (crea_j)) +
+	    nlj_a1 * CFG_NUM_NLJ_STATES * CFG_NUM_NLJ_STATES * CFG_NUM_NLJ_STATES + 
+	    nlj_a2 * CFG_NUM_NLJ_STATES * CFG_NUM_NLJ_STATES + 
+	    nlj_c1 * CFG_NUM_NLJ_STATES + 
+	    nlj_c2;
 	  
 	  if (final_1b[fin_i])
 	    {
-	      printf ("%3d %3d  %11.6f\n",
-		      nlj_a+1, nlj_c+1, mult * final_1b[fin_i]);
+	      printf ("%3d %3d : %2d | %3d %3d : %2d = %11.6f\n",
+		      nlj_a1+1, nlj_a2+1, anni_j,
+		      nlj_c1+1, nlj_c2+1, crea_j,
+		      mult * final_1b[fin_i]);
 	    }
 
 
 	}
+	}
+    }
     }
 
 
