@@ -36,6 +36,7 @@ void couple_accumulate()
       if (_accumulate[i])
 	non_zero++;
     }
+
   /*
   for (i = 0; i < num_accum && i < 100; i++)
     {
@@ -91,7 +92,12 @@ void couple_accumulate()
 #define J_STRIDE (CFG_NUM_NLJ_STATES * CFG_NUM_NLJ_STATES * CFG_NUM_NLJ_STATES * CFG_NUM_NLJ_STATES)
 
 #if ANICR2
-      double final_1b[CFG_NUM_NLJ_STATES * CFG_NUM_NLJ_STATES * CFG_NUM_NLJ_STATES * CFG_NUM_NLJ_STATES * (END_J * END_J)];
+      double *final_1b = NULL;    
+
+      size_t n_final_1b = CFG_NUM_NLJ_STATES * CFG_NUM_NLJ_STATES * CFG_NUM_NLJ_STATES * CFG_NUM_NLJ_STATES * (END_J * END_J);
+
+      final_1b = (double *) malloc(sizeof (double) * n_final_1b);
+
   int sp_anni1;
   int sp_anni2;
   int sp_crea1;
@@ -131,12 +137,14 @@ void couple_accumulate()
 	      sp_state_info *sp_c1 = &_table_sp_states[sp_crea1];
 	      sp_state_info *sp_c2 = &_table_sp_states[sp_crea2];
 
+#if DEBUG_ACCUMULATE
 	      printf ("a: %3d,%3d  c %3d,%3d"
 		      " : %2d %2d,%2d %2d - %2d %2d,%2d %2d [%10.6f]",
 		      sp_anni1+1, sp_anni2+1, sp_crea1+1, sp_crea2+1,
 		      sp_a1->_j, sp_a1->_m, sp_a2->_j, sp_a2->_m, 
 		      sp_c1->_j, sp_c1->_m, sp_c2->_j, sp_c2->_m,
 		      _accumulate[acc_i]);
+#endif
 
 	      /* We need to connect the annihilated and created states.
 	       */
@@ -149,7 +157,9 @@ void couple_accumulate()
 	      int sum_crea_j = sp_c1->_j + sp_c2->_j;
 	      int crea_m = sp_c1->_m + sp_c2->_m;
 
+#if DEBUG_ACCUMULATE
 	      printf ("\n");
+#endif
 
 	      int anni_j;
 	      int crea_j;
@@ -182,10 +192,12 @@ void couple_accumulate()
 
 	if (mult_anni > 10000. || mult_anni < -10000.0)
 	  {
+#if DEBUG_ACCUMULATE
 	    printf ("\n=== {%d %d %d, %d %d %d} [%11.6f %d] ===\n",
 		    sp_a1->_j, sp_a2->_j,  anni_j,
 		    sp_a1->_m, sp_a2->_m, -anni_m,
 		    result.val, sign);
+#endif
 	  }
 
 	val_anni = result.val;
@@ -233,9 +245,11 @@ void couple_accumulate()
 	mult_crea *= sqrt(crea_j + 1); /* sqrt(2*j+1) */
       }
 
+#if DEBUG_ACCUMULATE
 		      printf ("%2d %2d - %2d %2d [%10.5f %2d %10.5f %2d] ",
 			      anni_j, anni_m, crea_j, crea_m,
 			      val_anni, sign_anni, val_crea, sign_crea);
+#endif
 		      
 	      /* searching for jtrans */
 
@@ -246,7 +260,9 @@ void couple_accumulate()
 	      if (diff_j <= jtrans && sum_j >= jtrans &&
 		  abs(sum_m) <= jtrans)
 		{
+#if DEBUG_ACCUMULATE
 		  printf (" *");
+#endif
 
 		  gsl_sf_result result;
 	  
@@ -263,11 +279,13 @@ void couple_accumulate()
 
 		  int sign = 1/* - ((crea_j - jtrans + anni_m) & 2)*/;
 
+#if DEBUG_ACCUMULATE
 		  printf (" [%10.5f %2d]", result.val, sign);
 		  
 		  printf (" %2d %2d %2d %2d",
 			  sp_a1->_nlj+1, sp_a2->_nlj+1,
 			  sp_c1->_nlj+1, sp_c2->_nlj+1);
+#endif
 
 		  int fin_i = 
 		    J_STRIDE * ((anni_j/2) * END_J + (crea_j/2)) +
@@ -280,7 +298,9 @@ void couple_accumulate()
 		    result.val * _accumulate[acc_i] * sign;
 		  
 		}
+#if DEBUG_ACCUMULATE
 		  printf ("\n");
+#endif
 		    }
 		}
 	    }	  
