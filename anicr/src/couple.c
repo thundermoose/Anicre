@@ -176,7 +176,7 @@ void couple_accumulate()
 	    exit(1);
 	  }
 
-	int sign = 1 - ((sp_a1->_j - sp_a2->_j + anni_m) & 2);
+	int sign = 1 - ((sp_a1->_j - sp_a2->_j + anni_m+anni_j) & 2);
 
 	mult_anni = result.val * sign;
 
