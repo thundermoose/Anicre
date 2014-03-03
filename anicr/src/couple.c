@@ -250,6 +250,10 @@ void couple_accumulate()
 			      anni_j, anni_m, crea_j, crea_m,
 			      val_anni, sign_anni, val_crea, sign_crea);
 #endif
+		      (void) sign_anni;
+		      (void) val_anni;
+		      (void) sign_crea;
+		      (void) val_crea;
 		      
 	      /* searching for jtrans */
 
