@@ -1,0 +1,185 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{color}
+\usepackage{transparent}
+%\usepackage{tensor}
+%\usepackage{dcolumn}% Align table columns on decimal point
+
+%-------------------------
+% inline notes
+\usepackage{todonotes}
+%\usepackage[disable]{todonotes}
+%
+% Small inline comments/notes  (to be changed)
+  \newcommand{\nb}[1]{\textcolor{magenta}{\emph{[#1]}}}
+% Journal abbreviations from AAS, used by the ADS database
+%\usepackage{aas_macros} 
+% additional journal abbreviations not found in AAS
+%\usepackage{aas_macros_extra} 
+% Define \nuc{A}{Z} command
+  \def\nuc#1#2{\relax\ifmmode{}^{#1}{\protect\text{#2}}\else${}^{#1}$#2\fi}
+  \def\itnuc#1#2{\setbox\@tempboxa=\hbox{\scriptsize\it #1}
+    \def\@tempa{{}^{\box\@tempboxa}\!\protect\text{\it #2}}\relax
+    \ifmmode \@tempa \else $\@tempa$\fi}
+% Topic specific shorthands
+  \newcommand{\nm}{\ensuremath{N_\mathrm{max}}}
+  \newcommand{\ho}{\ensuremath{\hbar \Omega}}
+  \newcommand{\lsrg}{\ensuremath{\Lambda_\mathrm{SRG}}}
+  \newcommand{\innnlo}{I-N${}^3$LO}
+  \newcommand{\nn}{\ensuremath{N\!N}}
+  \newcommand{\nnn}{\ensuremath{3N\mathrm{F}}}
+  \newcommand{\co}{(Color online)} % APS journals. Info about color
+                                % figures online should be in the beginning of captions.
+
+\newcommand{\vertiii}[1]{{\left\vert\kern-0.25ex\left\vert\kern-0.25ex\left\vert #1 
+    \right\vert\kern-0.25ex\right\vert\kern-0.25ex\right\vert}}
+
+\newcommand{\ket}[1]{\left| #1 \right>} % for Dirac bras
+\newcommand{\bra}[1]{\left< #1 \right|} % for Dirac kets
+\newcommand{\braket}[2]{\left \langle #1 \vphantom{#2} \right|
+ \left. #2 \vphantom{#1} \right\rangle} % for Dirac brackets
+\newcommand{\matrixel}[3]{\left\langle #1 \vphantom{#2#3} \right|
+ #2 \left| #3 \vphantom{#1#2} \right\rangle} % for Dirac matrix elements
+\newcommand{\rrmatrixel}[3]{\left \langle #1 \vertiii{
+ #2 } #3\right \rangle} % for double reduced matrix elements
+\newcommand{\trej}[6]{
+\begin{pmatrix}
+  #1 & #2 & #3 \\
+  #4 & #5 & #6
+\end{pmatrix}}
+
+\newcommand{\sexj}[6]
+{ \begin{Bmatrix}
+  #1 & #2 & #3 \\
+  #4 & #5 & #6
+\end{Bmatrix}
+}
+
+\newcommand{\nioj}[9]{ \begin{Bmatrix}
+  #1 & #2 & #3 \\
+  #4 & #5 & #6 \\
+  #7 & #8 & #9
+\end{Bmatrix}}
+
+\author{Daniel Sääf}
+\title{Transition densities}
+\begin{document}
+\maketitle
+%In this paper I will deduce the expressions for one-body, two-body and eventually three-body transition densities. This is part in a code development project where we are going to develop a transition density code for eigenstates in a Slater Determinant (S.D) basis from No-Core Shell Model (NCSM). 
+%I will first of all derive the expressions for the reduce transition density and secondly I will present how we are able to calculate that from the S.D. states.  
+\section{One-body transition}
+From Wigner-Eckart:
+\begin{align}
+&\matrixel{A \lambda_fJ_fM_f}{[a^{\dagger}_{\alpha}\tilde{a}_{\beta}]_{J,M}}{A \lambda_i J_i M_i} =\hat{J}^{-1}_f(J_iM_i,JM|J_fM_f)(A\lambda_f J_f || [a^{\dagger}_a \tilde{a}_b]_J||A\lambda_i J_i)
+\label{eq:onewig}
+\end{align}
+where $\tilde{a}$ is an annihilation operator that behaves like a spherical tensor.The relation to the ordinary annihilation operator is: $\tilde{a}_{\alpha}=(-1)^{j_a+m_\alpha}a_{-\alpha}$. I am denoting single particle orbits(shells) with Roman letters and the z-projection of the spin with Greek letters. So for example a possible set of single particle quantum numbers is $a=n_a,l_a,j_a$ and $\alpha=a, m_\alpha$. 
+The last factor in eq. \ref{eq:onewig} is the reduced transition density that we finally want to compute.
+
+We will start by projecting the L.H.S of \eqref{eq:onewig} to an uncoupled basis,
+\begin{align}
+\begin{split}
+&\matrixel{A \lambda_fJ_fM_f}{[a^{\dagger}_{\alpha}\tilde{a}_{\beta}]_{J,M}}{A \lambda_i J_i M_i} \\
+&=\sum_{m_{\alpha}, m_{\beta}}(j_a m_{\alpha}, j_b m_{\alpha}|J M)\matrixel{A \lambda_fJ_fM_f}{a^{\dagger}_{\alpha}\tilde{a}_{\beta}}{A \lambda_i J_i M_i} \\
+&=\sum_{m_{\alpha}, m_{\beta}}(j_a m_{\alpha}, j_b m_{\alpha}|J M)(-1)^{j_b+m_{\beta}} \matrixel{A \lambda_fJ_fM_f}{a^{\dagger}_{\alpha}a_{-\beta}}{A \lambda_i J_i M_i} \\
+&=\sum_{m_{\alpha}, -m_{\beta}}(j_a m_{\alpha}, j_b -m_{\alpha}|J M)(-1)^{j_b-m_{\beta}}\matrixel{A \lambda_f J_fM_f}{a^{\dagger}_{\alpha}a_{\beta}}{A \lambda_i J_i M_i}. \\
+\label{eq:one1}
+\end{split}
+\end{align}
+We can now use the following relation, \begin{equation}
+(j_1m_1,j_2m_2|j_3 m_3)=(-1)^{j_1-m_1}\frac{\widehat{j}_3}{\widehat{j}_2} (j_3m_3 j_1-m_1|j_2 m_2)
+\end{equation}
+and apply it to \eqref{eq:one1}.
+\begin{align}
+\begin{split}
+&\hdots \\
+&=\sum_{m_{\alpha},m_{\beta}}(-1)^{j_b-m_{\beta}}(-1)^{-j_b+m_{\beta}}\frac{\widehat{J}}{\widehat{j}_a}(j_b m_{\beta},JM|j_a m_{\beta}) \matrixel{A \lambda_f J_fM_f}{a^{\dagger}_{\alpha}a_{\beta}}{A \lambda_i J_i M_i}\\
+&=\sum_{m_{\alpha},m_{\beta}}\frac{\widehat{J}}{\widehat{j}_a} (j_b m_{\beta},JM|j_a m_{\beta})\matrixel{A \lambda_f J_fM_f}{a^{\dagger}_{\alpha}a_{\beta}}{A \lambda_i J_i M_i}\\
+\label{eq:one2}
+\end{split}
+\end{align}
+
+We are now in the position that we can insert \eqref{eq:one2} in \eqref{eq:onewig} and write down the reduced transition density in an uncouple basis,
+\begin{align}
+\begin{split}
+&(A\lambda_f J_f || [a^{\dagger}_a \tilde{a}_b]_J||A\lambda_i J_i) \\
+&=\frac{\widehat{J}\widehat{J}_f}{(J_i M_i J M|J_fM_f)\widehat{j}_a}\sum_{m_{\alpha},m_{\beta}}(j_bm_{\beta},JM|j_a m_{\alpha}) \matrixel{A \lambda_f J_fM_f}{a^{\dagger}_{\alpha}a_{\beta}}{A \lambda_i J_i M_i}
+\label{eq:onefinal}
+\end{split}
+\end{align}
+By using the the relation between 3-J symbols and Clebsch-Gordan coefficients,  $(j_1m_1, j_2 m_2|j_3m_3)=(-1)^{j_1-j_2+m_3}\widehat{j}_3\trej{j_1}{j_2}{j_3}{m_1}{m_2}{m_3}$ we can express eq. \ref{eq:onefinal} in terms of 3-J symbols,
+\begin{align}
+\begin{split}
+&(A\lambda_f J_f || [a^{\dagger}_a \tilde{a}_b]_J||A\lambda_i J_i) \\
+&=\frac{\widehat{J}\widehat{J}_f}{(-1)^{J_i-J+M_{f}}\widehat{J}_f\trej{J_i}{J}{J_f}{M_i}{M}{-M_f} \widehat{j}_a}\sum_{m_{\alpha},m_{\beta}}(-1)^{j_b-J+m_{\alpha}}\widehat{j}_a\trej{j_b}{J}{j_a}{m_b}{M}{-m_{\alpha}}\\
+&\times \matrixel{A \lambda_f J_fM_f}{a^{\dagger}_{\alpha}a_{\beta}}{A \lambda_i J_i M_i}\\
+&=\frac{\widehat{J}(-1)^{-J_i-M_{f}}}{\trej{J_i}{J}{J_f}{M_i}{M}{-M_f}}\sum_{m_{\alpha},m_{\beta}}(-1)^{j_b+m_{\alpha}}\trej{j_b}{J}{j_a}{m_b}{M}{-m_{\alpha}} \matrixel{A \lambda_f J_fM_f}{a^{\dagger}_{\alpha}a_{\beta}}{A \lambda_i J_i M_i}.
+\label{eq:onefinal-3j}
+\end{split}
+\end{align}
+These uncoupled many-body states are we able to compute from many-body states in a Slater Determinant basis. %More info later on....
+
+
+\section{Two-body transition}
+The derivation of the two-body transition density will be done in a similar way to the one-body derivation. The main differences are that we need to do the uncoupling in two steps. First we need to project the expression to a uncoupled two-body basis and then uncouple to a single-body state that we are able to compute. We need to take into account the normalization of the two-body state that needs to be normalized due to the Pauli principle, this is done with the normalization factor $N_{ab}=\frac{\sqrt{1-\delta_{ab}(-1)^J}}{1+\delta_{ab}}$ where $\delta_{ab}=1$ if the two particles in the two-body state are of the same kind and in the same orbit.
+
+We can in the same way as in eq. \ref{eq:onewig} relate the transition density with a coupled matrix element by using the Wigner-Eckart theorem.
+\begin{align}
+\begin{split}
+&\matrixel{A\lambda_f J_f M_F}{\left[[a^\dagger_a a^\dagger_b]_{J_{12}}[\tilde{a}_c\tilde{a}_d]_{J_{34}}\right]_{J,M}}{A\lambda_i  J_i M_i}\\
+&=J_{f}^{-1}(J_iM_i, J M |J_fM_d)(A\lambda_f J_f||\left[[a^\dagger_a a^\dagger_b]_{J_{12}}[\tilde{a}_c\tilde{a}_d]_{J_{34}}\right]_{J}||A\lambda_i J_i )
+\label{eq:twowig}
+\end{split}
+\end{align}
+
+We can now focus on the matrix element in equation \ref{eq:twowig} and try to uncouple it to get an expression with uncoupled single-particle states, which we can compute.
+\begin{align}
+\begin{split}
+&\matrixel{A\lambda_f J_f M_F}{\left[[a^\dagger_a a^\dagger_b]_{J_{12}}[\tilde{a}_c\tilde{a}_d]_{J_{34}}\right]_{J,M}}{A\lambda_i  J_i M_i}\\
+&=\sum_{m_{12},m_{34}}(j_{12}m_{12}j_{34}m_{34}|J M)\matrixel{A\lambda_f J_f M_f}{[a^\dagger_a a^\dagger_b]_{J_{12}}[\tilde{a}_c\tilde{a}_d]_{J_{34}}}{A \lambda_i J_i Mi} \\
+&=\sum_{m_{\alpha},m_{\beta}} \sum_{\substack{m_{12}=m_{\alpha}+m_{\beta}\\m_{34}=m_{\delta}+m_{\gamma}}} N_{ab}(J_{12})^{-1}N_{cd}(J_{34})^{-1}(j_a m_{\alpha},j_bm_{\beta}|J_{12}M_{12})(j_cm_{\gamma}j_dm_{\delta}|J_{34}M_{34})\\
+&\times (J_{12}M_{12}J_{34}M_{34}|JM)\matrixel{A\lambda_f J_f M_f}{a^\dagger_\alpha a^\dagger_{\beta}\tilde{a}_\gamma \tilde{a}_\delta}{A \lambda_i J_i Mi}\\
+&=\sum_{m_{\alpha},m_{\beta}} N_{ab}(J_{12})^{-1}N_{cd}(J_{34})^{-1}(j_a m_{\alpha},j_bm_{\beta}|J_{12}M_{12})(j_cm_{\gamma}j_dm_{\delta}|J_{34}M_{34})\\
+&\times (J_{12}M_{12}J_{34}M_{34}|JM)(-1)^{j_c+m_{\gamma}}(-1)^{j_d+m_{\delta}}\matrixel{A\lambda_f J_f M_f}{a^\dagger_\alpha a^\dagger_{\beta}a_{-\gamma }a_{-\delta}}{A \lambda_i J_i Mi} \\
+&=\sum_{m_{\alpha},m_{\beta}} (-1)^{j_c+j_d-m_{\gamma}-m_{\delta} }N_{ab}(J_{12})^{-1}N_{cd}(J_{34})^{-1}(j_a m_{\alpha},j_bm_{\beta}|J_{12}M_{12})\\
+&\times(j_cm_{-\gamma}j_dm_{-\delta}|J_{34}M_{34}) (J_{12}M_{12}J_{34}M_{34}|JM)\matrixel{A\lambda_f J_f M_f}{a^\dagger_\alpha a^\dagger_{\beta}a_{\gamma }a_{\delta}}{A \lambda_i J_i Mi}= \\
+\end{split}
+\end{align}
+\begin{align}
+\begin{split}
+&=\sum_{m_{\alpha},m_{\beta}} (-1)^{j_c+j_d+M_{34}}N_{ab}(J_{12})^{-1}N_{cd}(J_{34})^{-1}(j_a m_{\alpha},j_bm_{\beta}|J_{12}M_{12})(-1)^{j_{34}-j_c-j_d}\\
+&\times(j_cm_{\gamma}j_dm_{\delta}|J_{34}{-M_{34}}) (J_{12}M_{12}J_{34}M_{34}|JM)\matrixel{A\lambda_f J_f M_f}{a^\dagger_\alpha a^\dagger_{\beta}a_{\gamma }a_{\delta}}{A \lambda_i J_i Mi}\\
+&=\sum_{m_{\alpha},m_{\beta}} (-1)^{J_{34}-M_{34}}N_{ab}(J_{12})^{-1}N_{cd}(J_{34})^{-1}(j_a m_{\alpha},j_bm_{\beta}|J_{12}M_{12})\\
+&\times(j_cm_{\gamma}j_dm_{\delta}|J_{34}{M_{34}}) (J_{12}M_{12}J_{34}-M_{34}|JM)\matrixel{A\lambda_f J_f M_f}{a^\dagger_\alpha a^\dagger_{\beta}a_{\gamma }a_{\delta}}{A \lambda_i J_i Mi}\\
+&=\sum_{m_{\alpha},m_{\beta}} (-1)^{J_{34}-M_{34}}N_{ab}(J_{12})^{-1}N_{cd}(J_{34})^{-1}(j_a m_{\alpha},j_bm_{\beta}|J_{12}M_{12})(j_cm_{\gamma}j_dm_{\delta}|J_{34}{M_{34}})\\
+&\times(-1)^{M_{34}-J_{34}}\frac{\widehat{J}}{\widehat{J}_{12}} (J_{34}M_{34}JM|J_{12}M_{12})\matrixel{A\lambda_f J_f M_f}{a^\dagger_\alpha a^\dagger_{\beta}a_{\gamma }a_{\delta}}{A \lambda_i J_i Mi}\\
+&=\sum_{m_{\alpha},m_{\beta}} N_{ab}(J_{12})^{-1}N_{cd}(J_{34})^{-1}\frac{\widehat{J}}{\widehat{J}_{12}} (j_a m_{\alpha},j_bm_{\beta}|J_{12}M_{12})(j_cm_{\gamma}j_dm_{\delta}|J_{34}{M_{34}})\\
+&\times(J_{34}M_{34}JM|J_{12}M_{12})\matrixel{A\lambda_f J_f M_f}{a^\dagger_\alpha a^\dagger_{\beta}a_{\gamma }a_{\delta}}{A \lambda_i J_i Mi}
+\end{split}
+\end{align}
+In the penultimate step I used the relation given in the derivation of the one-body transition density.
+
+We can now write down the expression for the two-body transition density in a form that we are able to compute.
+\begin{align}
+\begin{split}
+&(A\lambda_f J_f||\left[[a^\dagger_a a^\dagger_b][\tilde{a}_c\tilde{a}_d]\right]_{J}||A\lambda_i J_i)\\
+&=\frac{\widehat{J}_f\widehat{J}}{(J_iM_iJM|J_fMf)}\sum_{\substack{m_{\alpha},m_{\beta},J_{12} \\m_{\delta},m_{\gamma},J_{34}}}N_{ab}(J_{12})^{-1}N_{cd}(J_{34})^{-1}\frac{1}{\widehat{J}_{12}} (j_a m_{\alpha},j_bm_{\beta}|J_{12}M_{12})\\
+&(j_cm_{\gamma}j_dm_{\delta}|J_{34}{M_{34}})(J_{34}M_{34}JM|J_{12}M_{12})\matrixel{A\lambda_f J_f M_f}{a^\dagger_\alpha a^\dagger_{\beta}a_{\gamma }a_{\delta}}{A \lambda_i J_i Mi}=
+\end{split}
+\end{align}
+\begin{align}
+\begin{split}
+&=\frac{\widehat{J}_f\widehat{J}}{(-1)^{J_i-J+M_{f}}\widehat{J}_f\trej{J_i}{J}{J_f}{M_i}{M}{-M_f} }\sum_{\substack{m_{\alpha},m_{\beta},J_{12} \\m_{\delta},m_{\gamma},J_{34}}}N_{ab}(J_{12})^{-1}N_{cd}(J_{34})^{-1}\frac{1}{\widehat{J}_{12}} \\
+&(-1)^{j_a-j_b+M_{12}}\widehat{J}_{12}\trej{j_a}{j_b}{J_{12}}{m_{\alpha}}{m_{\beta}}{-M_{12}} (-1)^{j_c-j_d+M_{34}}\widehat{J}_{34}\trej{j_c}{j_d}{J_{34}}{m_{\alpha}}{m_{\beta}}{-M_{34}} \\
+&(-1)^{J_{34}-J+M_{12}}\widehat{J}_{12}\trej{J_{34}}{J}{J_{12}}{M_{34}}{M}{-M_{12}}\matrixel{A\lambda_f J_f M_f}{a^\dagger_\alpha a^\dagger_{\beta}a_{\gamma }a_{\delta}}{A \lambda_i J_i Mi} \\
+&=\frac{\widehat{J}}{(-1)^{J_i+M_{f}}\trej{J_i}{J}{J_f}{M_i}{M}{-M_f} }\sum_{\substack{m_{\alpha},m_{\beta},J_{12} \\m_{\delta},m_{\gamma},J_{34}}}N_{ab}(J_{12})^{-1}N_{cd}(J_{34})^{-1}\widehat{J}_{12}\widehat{J}_{34}\\
+&(-1)^{j_a-j_b+j_c-j_d+2M_{12}+J_{34}+M_{34}}\trej{j_a}{j_b}{J_{12}}{m_{\alpha}}{m_{\beta}}{-M_{12}} \trej{j_c}{j_d}{J_{34}}{m_{\alpha}}{m_{\beta}}{-M_{34}} \\
+&\trej{J_{34}}{J}{J_{12}}{M_{34}}{M}{-M_{12}}\matrixel{A\lambda_f J_f M_f}{a^\dagger_\alpha a^\dagger_{\beta}a_{\gamma }a_{\delta}}{A \lambda_i J_i Mi}
+\end{split}
+\end{align}
+\end{document}
