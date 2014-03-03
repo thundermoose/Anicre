@@ -94,16 +94,24 @@ void couple_accumulate()
 #if ANICR2
       double *final_1b = NULL;    
 
-      size_t n_final_1b = CFG_NUM_NLJ_STATES * CFG_NUM_NLJ_STATES * CFG_NUM_NLJ_STATES * CFG_NUM_NLJ_STATES * (END_J * END_J);
+      size_t n_final_1b = (CFG_NUM_NLJ_STATES * CFG_NUM_NLJ_STATES) * 
+	(size_t) (CFG_NUM_NLJ_STATES * CFG_NUM_NLJ_STATES) * (END_J * END_J);
 
       final_1b = (double *) malloc(sizeof (double) * n_final_1b);
+
+      if (!final_1b)
+	{
+	  fprintf (stderr, "Memory allocation error (%zd bytes).\n",
+		   sizeof (double) * n_final_1b);
+	  exit(1);
+ 	}
 
   int sp_anni1;
   int sp_anni2;
   int sp_crea1;
   int sp_crea2;
 
-  memset (final_1b, 0, sizeof (final_1b));
+  memset (final_1b, 0, sizeof (double) * n_final_1b);
 
   uint64_t checked = 0;
 
