@@ -710,7 +710,7 @@ void created_state(int *in_sp_other,
 
   int sign = 1 - 2 * (phase_i & 1);
 
-  _accumulate[acc_i] += 1 + 0 * val * _cur_val * sign;
+  _accumulate[acc_i] += val * _cur_val * sign;
 
   uint64_t key =
     (((uint64_t) sp_anni1) <<  0) |

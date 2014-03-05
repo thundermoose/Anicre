@@ -11,6 +11,7 @@
 #include "anicr_config.h"
 
 #include "create.h"
+#include "accumulate.h"
 
 #include "tmp_config.h"
 
@@ -139,6 +140,32 @@ void couple_accumulate()
 	    */
 
 	    checked++;
+
+	    {
+	      double value;
+	      
+	      uint64_t key =
+		(((uint64_t) sp_anni1) <<  0) |
+		(((uint64_t) sp_anni2) << 16) |
+		(((uint64_t) sp_crea1) << 32) |
+		(((uint64_t) sp_crea2) << 48);
+
+	      int has = accumulate_get(key, &value);
+
+	      if (!has)
+		value = 0;
+
+	      if (value != _accumulate[acc_i])
+		{
+		  fprintf (stderr,
+			   "Internal error: acc array vs hash table.\n"
+			   "%d %d %d %d  %10.5f %10.5f\n",
+			   sp_anni1, sp_anni2, sp_crea1, sp_crea2,
+			   value, _accumulate[acc_i]);
+		  exit(1);
+		}
+	    }
+
 
 	  if (_accumulate[acc_i])
 	    {

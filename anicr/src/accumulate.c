@@ -305,3 +305,27 @@ void accumulate_add(uint64_t key, double value)
   
   _acc_hash[j]._value += value;
 }
+
+int accumulate_get(uint64_t key, double *value)
+{
+  uint64_t x = acc_hash_key(key);
+  
+  x ^= x >> 32;
+  
+  uint64_t j = x & _acc_hash_mask;
+  
+  uint64_t coll = 0;
+  
+  while (_acc_hash[j]._key != key)
+    {
+      if (_acc_hash[j]._key == 0)
+	return 0;
+
+      j = (j + 1) & _acc_hash_mask;
+      coll++;
+    }
+  
+  *value = _acc_hash[j]._value;
+
+  return 1;
+}
