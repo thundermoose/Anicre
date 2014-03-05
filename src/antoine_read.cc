@@ -821,40 +821,6 @@ void mr_antoine_reader<header_version_t, fon_version_t>::find_used_states()
 	  num_jm_pairs,
 	  (uint64_t) _header.num_of_jm * (uint64_t) _header.num_of_jm);
 
-  /* Dump the pairs of sp-states in use. */
-
-  {
-    size_t sz_jm_pairs = sizeof (uint32_t) * num_jm_pairs;
-    
-    uint32_t *jm_pairs =
-      (uint32_t *) malloc (sz_jm_pairs);
-
-    if (!jm_pairs)
-      FATAL("jm_pairs");
-
-    uint32_t *p = jm_pairs;
-
-    for (unsigned int j1 = 0; j1 < _header.num_of_jm; j1++)
-      {
-	for (unsigned int j2 = 0; j2 < _header.num_of_jm; j2++)
-	  {
-	    if (jm_jm_used[j1 + j2 * _header.num_of_jm])
-	      {
-		*p = (j1 << 16) | j2;
-		p++;
-	      }
-	  }
-      }
-
-    #define FILENAME_JM_PAIRS "/jm_pairs.bin"
-
-    file_output out_jm_pairs(_config._td_dir, FILENAME_JM_PAIRS);
-
-    out_jm_pairs.fwrite (jm_pairs, sz_jm_pairs, 1);
-
-    free (jm_pairs);
-  }
-
   jm_u = _jm_used;
 
   int sp_used = -1;
@@ -1013,6 +979,43 @@ void mr_antoine_reader<header_version_t, fon_version_t>::find_used_states()
 	  off++;
 	}
     }
+
+  /* Dump the pairs of sp-states in use. */
+
+  {
+    size_t sz_jm_pairs = sizeof (uint32_t) * num_jm_pairs;
+    
+    uint32_t *jm_pairs =
+      (uint32_t *) malloc (sz_jm_pairs);
+
+    if (!jm_pairs)
+      FATAL("jm_pairs");
+
+    uint32_t *p = jm_pairs;
+
+    for (unsigned int j1 = 0; j1 < _header.num_of_jm; j1++)
+      {
+	for (unsigned int j2 = 0; j2 < _header.num_of_jm; j2++)
+	  {
+	    if (jm_jm_used[j1 + j2 * _header.num_of_jm])
+	      {
+		int mapped_j1 = sps_map[j1];
+		int mapped_j2 = sps_map[j2];
+
+		*p = (mapped_j2 << 16) | mapped_j1;
+		p++;
+	      }
+	  }
+      }
+
+    #define FILENAME_JM_PAIRS "/jm_pairs.bin"
+
+    file_output out_jm_pairs(_config._td_dir, FILENAME_JM_PAIRS);
+
+    out_jm_pairs.fwrite (jm_pairs, sz_jm_pairs, 1);
+
+    free (jm_pairs);
+  }
 
   /* */
 
@@ -1360,6 +1363,11 @@ void mr_antoine_reader<header_version_t, fon_version_t>::find_used_states()
 			 min_m);
       out_config.fprintf("#define CFG_2M_FINAL         %d\n",
 			 min_m);
+      out_config.fprintf("#define CFG_PARITY_INITIAL   %d\n",
+			 has_parity[1]);
+      out_config.fprintf("#define CFG_PARITY_FINAL     %d\n",
+			 has_parity[1]);
+      
       
       /* sum_i=0^(CFG_END_JM_FIRST-1) CFG_NUM_SP_STATES-i */
       /*
