@@ -112,7 +112,7 @@ int main(int argc, char *argv[])
 
   _hash_mask -= 1;
 
-  printf ("%"PRIu64" %zd\n",_hash_mask, hashed_mp_sz);
+  /* printf ("%"PRIu64" %zd\n",_hash_mask, hashed_mp_sz); */
 
   _hashed_mp = (uint64_t *) malloc (hashed_mp_sz);
 

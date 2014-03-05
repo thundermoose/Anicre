@@ -49,7 +49,44 @@ void prepare_accumulate()
   printf ("Read %zd jm pairs states.\n", (size_t) CFG_JM_PAIRS);
 }
 
+uint64_t acc_hash_key(uint64_t key)
+{
+  uint64_t x = 0, y = 0;
+
+  y = key;
+  x = key;
+
+#define _lcga 6364136223846793005ll
+#define _lcgc 1442695040888963407ll
+
+  x = x * _lcga + _lcgc;
+  
+  x = x ^ (x << 35);
+  x = x ^ (x >> 4);
+  x = x ^ (x << 17);
+  /*
+  x = x ^ (x >> 35);
+  x = x ^ (x << 4);
+  x = x ^ (x >> 17);
+  */
+  /*
+  printf ("%016"PRIx64":%016"PRIx64" -> %016"PRIx64"\n",
+          key[0], key[1], x);
+  */
+  return x ^ y;
+}
+
+
 double *_accumulate;
+
+typedef struct accumulate_hash_item_t
+{
+  uint64_t _key;
+  double   _value;
+} accumulate_hash_item;
+
+accumulate_hash_item *_acc_hash;
+uint64_t              _acc_hash_mask = 0;
 
 void alloc_accumulate()
 {
@@ -142,6 +179,108 @@ void alloc_accumulate()
     }
 
   printf ("%" PRIu64 " accumulate combinations.\n", num_accum_comb);
+
+  for (_acc_hash_mask = 1;
+       _acc_hash_mask < num_accum_comb * 2; _acc_hash_mask <<= 1)
+    ;
+
+  /* printf("%zd\n", _acc_hash_mask); */
+
+  size_t hashed_acc_sz = sizeof (accumulate_hash_item) * _acc_hash_mask;
+
+  _acc_hash_mask -= 1;
+
+  _acc_hash = (accumulate_hash_item *) malloc (hashed_acc_sz);
+
+  if (!_acc_hash)
+    {
+      fprintf (stderr,
+	       "Memory allocation error (%zd bytes).\n", hashed_acc_sz);
+      exit(1);
+    }
+
+  memset (_acc_hash, 0, hashed_acc_sz);
+
+  /* Fill the table. */
+
+  uint64_t max_coll = 0, sum_coll = 0;
+
+  for (a_i = 0; a_i < CFG_JM_PAIRS; a_i++)
+    {
+      uint32_t anni_pair = _jm_pairs[a_i];
+
+      uint32_t anni_1 = anni_pair & 0x0000ffff;
+      uint32_t anni_2 = anni_pair >> 16;
+
+      int anni_m =
+	_table_sp_states[anni_1]._m +
+	_table_sp_states[anni_2]._m;
+
+      int anni_l =
+	_table_sp_states[anni_1]._l +
+	_table_sp_states[anni_2]._l;
+
+      for (c_i = 0; c_i < CFG_JM_PAIRS; c_i++)
+	{
+	  uint32_t crea_pair = _jm_pairs[c_i];
+
+	  uint32_t crea_1 = crea_pair & 0x0000ffff;
+	  uint32_t crea_2 = crea_pair >> 16;
+	  /*
+	  printf ("%zd %zd  %d %d\n", a_i, c_i, crea_1, crea_2);
+	  fflush(stdout);
+	  */
+	  int crea_m =
+	    _table_sp_states[crea_1]._m +
+	    _table_sp_states[crea_2]._m;
+
+	  int crea_l =
+	    _table_sp_states[crea_1]._l +
+	    _table_sp_states[crea_2]._l;
+
+	  if (crea_m - anni_m != CFG_2M_FINAL - CFG_2M_INITIAL)
+	    continue;
+
+	  if (((anni_l - crea_l) ^ 
+	       (CFG_PARITY_FINAL - CFG_PARITY_INITIAL)) & 1)
+	    continue;
+	  
+	  uint64_t key =
+	    (((uint64_t) anni_1) <<  0) |
+	    (((uint64_t) anni_2) << 16) |
+	    (((uint64_t) crea_1) << 32) |
+	    (((uint64_t) crea_2) << 48);
+
+	  uint64_t x = acc_hash_key(key);
+
+	  x ^= x >> 32;
+
+	  uint64_t j = x & _acc_hash_mask;
+
+	  uint64_t coll = 0;
+
+	  while (_acc_hash[j]._key != 0)
+	    {
+	      j = (j + 1) & _acc_hash_mask;
+	      coll++;
+	    }
+
+	  if (coll > max_coll)
+	    max_coll = coll;
+	  sum_coll += coll;
+
+	  _acc_hash[j]._key = key;
+	}
+    }
+
+
+  printf ("Hash: %"PRIu64" entries (%.1f), "
+          "avg coll = %.2f, max coll = %"PRIu64"\n",
+          _acc_hash_mask + 1,
+          (double) num_accum_comb / ((double) (_acc_hash_mask + 1)),
+          (double) sum_coll / (double) num_accum_comb, max_coll);
+
+
 
 
 }
