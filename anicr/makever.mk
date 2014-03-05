@@ -6,7 +6,7 @@ endif
 all: anicr
 
 OBJS = anicr_main.o anicr_tables.o create.o couple.o packed_create.o \
-	accumulate.o
+	accumulate.o util.o
 
 ####################################################################
 

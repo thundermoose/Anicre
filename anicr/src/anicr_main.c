@@ -3,6 +3,7 @@
 #include "create.h"
 #include "packed_create.h"
 #include "accumulate.h"
+#include "util.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -131,33 +132,11 @@ int main(int argc, char *argv[])
       exit(1);
     }
 
-  size_t toread = mp_sz;
-  void *dest = _mp;
-
-  while (toread)
-    {
-      ssize_t n = read (fd, dest, toread);
-
-      if (n == -1)
-	{
-	  perror("read");
-	  exit(1);
-	}
-      if (n == 0)
-	{
-	  fprintf (stderr, "End-of-file reading %zd, missing %zd.\n",
-		   mp_sz, toread);
-	  exit(1);
-	}
-      toread -= (size_t) n;
-      dest += n;
-    }
+  full_read (fd, _mp, mp_sz);
 
   close (fd);
 
   printf ("Read %zd mp states.\n", num_mp);
-
-  prepare_accumulate();
 
   size_t i;
 
@@ -217,6 +196,8 @@ int main(int argc, char *argv[])
 #endif
 
   ammend_tables();
+
+  prepare_accumulate();
 
   alloc_accumulate();
 
