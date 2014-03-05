@@ -603,32 +603,7 @@ void create_states_1st(int *in_sp_other,
 
 }
 
-double *_accumulate;
-
-void alloc_accumulate()
-{
-  size_t num_accum;
-
-#if ANICR2
-  num_accum = CFG_TOT_FIRST_SCND * CFG_TOT_FIRST_SCND;
-#else
-  num_accum = CFG_NUM_SP_STATES * CFG_NUM_SP_STATES;
-#endif
-
-  size_t accum_sz = sizeof (double) * num_accum;
-
-  _accumulate = (double *) malloc (accum_sz);
-
-  if (!_accumulate)
-    {
-      fprintf (stderr, "Memory allocation error (%zd bytes).\n", accum_sz);
-      exit(1);
-    }
-
-  printf ("Allocated %zd items for accumulation.\n", num_accum);
-
-  memset (_accumulate, 0, accum_sz); 
-}
+extern double *_accumulate;
 
 extern double _cur_val;
 
