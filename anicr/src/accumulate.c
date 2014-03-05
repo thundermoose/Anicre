@@ -279,9 +279,29 @@ void alloc_accumulate()
           _acc_hash_mask + 1,
           (double) num_accum_comb / ((double) (_acc_hash_mask + 1)),
           (double) sum_coll / (double) num_accum_comb, max_coll);
-
-
-
-
 }
 
+void accumulate_add(uint64_t key, double value)
+{
+  uint64_t x = acc_hash_key(key);
+  
+  x ^= x >> 32;
+  
+  uint64_t j = x & _acc_hash_mask;
+  
+  uint64_t coll = 0;
+  
+  while (_acc_hash[j]._key != key)
+    {
+      if (_acc_hash[j]._key == 0)
+	{
+	  fprintf (stderr, "Internal error: accumulate item not found.\n");
+	  exit(1);
+	}
+
+      j = (j + 1) & _acc_hash_mask;
+      coll++;
+    }
+  
+  _acc_hash[j]._value += value;
+}

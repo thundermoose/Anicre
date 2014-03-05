@@ -10,6 +10,7 @@
 #include "anicr_config.h"
 
 #include "create.h"
+#include "accumulate.h"
 
 #include "code.h"
 
@@ -710,6 +711,14 @@ void created_state(int *in_sp_other,
   int sign = 1 - 2 * (phase_i & 1);
 
   _accumulate[acc_i] += 1 + 0 * val * _cur_val * sign;
+
+  uint64_t key =
+    (((uint64_t) sp_anni1) <<  0) |
+    (((uint64_t) sp_anni2) << 16) |
+    (((uint64_t) sp_crea1) << 32) |
+    (((uint64_t) sp_crea2) << 48);
+
+  accumulate_add(key, val * _cur_val * sign);
 
 #if DEBUG_ANICR
   printf ("%5d %15.10f\n", acc_i, val * _cur_val * sign);
