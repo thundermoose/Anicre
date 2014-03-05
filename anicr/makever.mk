@@ -5,11 +5,12 @@ endif
 
 all: anicr
 
-OBJS = anicr_main.o anicr_tables.o create.o couple.o packed_create.o
+OBJS = anicr_main.o anicr_tables.o create.o couple.o packed_create.o \
+	accumulate.o
 
 ####################################################################
 
-CFLAGS = -lm -O3 -g # -pg
+CFLAGS = -lm -O3 -g -std=c99 # -pg
 
 LINKFLAGS += -g # -pg
 

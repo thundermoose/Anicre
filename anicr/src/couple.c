@@ -106,6 +106,8 @@ void couple_accumulate()
 	  exit(1);
  	}
 
+      printf ("Allocated %zd nlj-items.\n", n_final_1b);
+
   int sp_anni1;
   int sp_anni2;
   int sp_crea1;
@@ -306,7 +308,7 @@ void couple_accumulate()
 		    sp_c1->_nlj * CFG_NUM_NLJ_STATES + 
 		    sp_c2->_nlj;
 
-		  final_1b[fin_i] += mult_anni * mult_crea *
+		  final_1b[fin_i] += 1 + 0 * mult_anni * mult_crea *
 		    result.val * _accumulate[acc_i] * sign;
 		  
 		}
@@ -322,6 +324,8 @@ void couple_accumulate()
 
   int nlj_a1, nlj_a2, nlj_c1, nlj_c2;
   int anni_j, crea_j;
+
+  size_t nz = 0;
 
   for (anni_j = 0; anni_j < END_J; anni_j++)
   for (crea_j = 0; crea_j < END_J; crea_j++)
@@ -343,10 +347,13 @@ void couple_accumulate()
 	  
 	  if (final_1b[fin_i])
 	    {
+	      /*
 	      printf ("Create %3d %3d : %2d | Annihilate %3d %3d : %2d = %11.6f\n",
 		      nlj_c1+1, nlj_c2+1, crea_j,
 		      nlj_a1+1, nlj_a2+1, anni_j,
 		      mult * final_1b[fin_i]);
+	      */
+	      nz++;
 	    }
 
 
@@ -355,6 +362,7 @@ void couple_accumulate()
     }
     }
 
+  printf ("nz nlj items: %zd\n", nz);
 
 #else
   double final_1b[CFG_NUM_NLJ_STATES * CFG_NUM_NLJ_STATES];
@@ -423,6 +431,8 @@ void couple_accumulate()
 
   int nlj_a, nlj_c;
 
+  size_t nz = 0;
+
   for (nlj_a = 0; nlj_a < CFG_NUM_NLJ_STATES; nlj_a++)
     {
       for (nlj_c = 0; nlj_c < CFG_NUM_NLJ_STATES; nlj_c++)
@@ -431,13 +441,18 @@ void couple_accumulate()
 	  
 	  if (final_1b[fin_i])
 	    {
+	      /*
 	      printf ("%3d %3d  %11.6f\n",
 		      nlj_a+1, nlj_c+1, mult * final_1b[fin_i]);
+	      */
+	      nz++;
 	    }
 
 
 	}
     }
+
+  printf ("nz nlj items: %zd\n", nz);
 
 #endif
     }

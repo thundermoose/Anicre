@@ -715,9 +715,15 @@ void mr_antoine_reader<header_version_t, fon_version_t>::find_used_states()
 
   uint32_t *_max_jm_for_jm = (uint32_t *) malloc (max_jm_for_jm_sz);
 
+  if (!_max_jm_for_jm)
+    FATAL("Memory allocation failure (_max_jm_for_jm).");
+
   memset(_max_jm_for_jm, 0, max_jm_for_jm_sz);
 
   char *jm_jm_used = (char *) malloc (_header.num_of_jm * _header.num_of_jm);
+
+  if (!jm_jm_used)
+    FATAL("Memory allocation failure (jm_jm_used).");
 
   memset (jm_jm_used, 0, _header.num_of_jm * _header.num_of_jm);
 
@@ -801,18 +807,53 @@ void mr_antoine_reader<header_version_t, fon_version_t>::find_used_states()
       */
     }
 
-  uint64_t combs = 0;
+  uint64_t num_jm_pairs = 0;
 
   for (unsigned int j1 = 0; j1 < _header.num_of_jm; j1++)
     {
       for (unsigned int j2 = 0; j2 < _header.num_of_jm; j2++)
 	{
-	  combs += jm_jm_used[j1 + j2 * _header.num_of_jm];
+	  num_jm_pairs += jm_jm_used[j1 + j2 * _header.num_of_jm];
 	}
     }
 
   printf ("jm x jm used: %"PRIu64" /  %"PRIu64"\n",
-	  combs, (uint64_t) _header.num_of_jm * (uint64_t) _header.num_of_jm);
+	  num_jm_pairs,
+	  (uint64_t) _header.num_of_jm * (uint64_t) _header.num_of_jm);
+
+  /* Dump the pairs of sp-states in use. */
+
+  {
+    size_t sz_jm_pairs = sizeof (uint32_t) * num_jm_pairs;
+    
+    uint32_t *jm_pairs =
+      (uint32_t *) malloc (sz_jm_pairs);
+
+    if (!jm_pairs)
+      FATAL("jm_pairs");
+
+    uint32_t *p = jm_pairs;
+
+    for (unsigned int j1 = 0; j1 < _header.num_of_jm; j1++)
+      {
+	for (unsigned int j2 = 0; j2 < _header.num_of_jm; j2++)
+	  {
+	    if (jm_jm_used[j1 + j2 * _header.num_of_jm])
+	      {
+		*p = (j1 << 16) | j2;
+		p++;
+	      }
+	  }
+      }
+
+    #define FILENAME_JM_PAIRS "/jm_pairs.bin"
+
+    file_output out_jm_pairs(_config._td_dir, FILENAME_JM_PAIRS);
+
+    out_jm_pairs.fwrite (jm_pairs, sz_jm_pairs, 1);
+
+    free (jm_pairs);
+  }
 
   jm_u = _jm_used;
 
@@ -1338,6 +1379,8 @@ void mr_antoine_reader<header_version_t, fon_version_t>::find_used_states()
 
       out_config.fprintf("#define CFG_TOT_FIRST_SCND    %"PRIu64"\n",
                          total2);
+      out_config.fprintf("#define CFG_JM_PAIRS          %"PRIu64"\n",
+			 num_jm_pairs);
 
     }
 

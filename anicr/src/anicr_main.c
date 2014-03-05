@@ -2,6 +2,7 @@
 #include "anicr_config.h"
 #include "create.h"
 #include "packed_create.h"
+#include "accumulate.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -156,6 +157,8 @@ int main(int argc, char *argv[])
 
   printf ("Read %zd mp states.\n", num_mp);
 
+  prepare_accumulate();
+
   size_t i;
 
   uint64_t *mp = _mp;
@@ -250,9 +253,9 @@ int main(int argc, char *argv[])
   printf ("Annihilated-created for %zd mp states.\n", num_mp);
 
   printf ("Found %"PRIu64"/%"PRIu64".\n", _found, _lookups);
-
+  
   couple_accumulate();
-
+  
   return 0;
 }
 

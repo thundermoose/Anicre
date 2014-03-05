@@ -734,7 +734,7 @@ void created_state(int *in_sp_other,
 
   int sign = 1 - 2 * (phase_i & 1);
 
-  _accumulate[acc_i] += val * _cur_val * sign;
+  _accumulate[acc_i] += 1 + 0 * val * _cur_val * sign;
 
 #if DEBUG_ANICR
   printf ("%5d %15.10f\n", acc_i, val * _cur_val * sign);
