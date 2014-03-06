@@ -34,35 +34,20 @@ typedef struct jm_pair_info_sort_t
 
   uint32_t _pair;
 } jm_pair_info_sort;
-/*
-typedef struct jm_pair_subgroup_t
-{
-  uint32_t *_pairs;
-  uint32_t  _num;
-} jm_pair_subgroup;
-*/
+
 typedef struct jm_pair_group_t
 {
   jm_pair_info _info;
 
-  uint32_t *_pairs;
-  uint32_t  _num;
+  uint32_t *_pairs[2];
+  uint32_t  _num[2];
 
 } jm_pair_group;
 
-typedef struct jm_pair_group2_t
-{
-  jm_pair_info _info;
-
-  uint32_t *_pairs;
-  uint32_t  _num[2];
-
-} jm_pair_group2;
-
 extern uint32_t *_jm_pairs_group2_list;
 
-extern jm_pair_group2 *_jm_pair_group2s;
-extern size_t      _num_jm_pair_group2s;
+extern jm_pair_group *_jm_pair_group2s;
+extern size_t     _num_jm_pair_group2s;
 
 extern uint32_t *_jm_pairs_group_list;
 

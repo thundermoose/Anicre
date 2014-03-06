@@ -559,7 +559,7 @@ void couple_accumulate_2()
 
   for (a_i = 0; a_i < _num_jm_pair_group2s; a_i++)
     {
-      jm_pair_group2 *apg = &_jm_pair_group2s[a_i];
+      jm_pair_group *apg = &_jm_pair_group2s[a_i];
 
       /* All sp pairs in the group have the same j,m j,m.
        * so we can precalculate the 3j symbols.
