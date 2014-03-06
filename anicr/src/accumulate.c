@@ -585,7 +585,7 @@ void prepare_nlj()
       exit(1);
     }
 
-  memset (_nlj_hash, 0, hashed_nlj_sz);
+  memset (_nlj_hash, -1, hashed_nlj_sz);
 
   /* Fill the table. */
 
@@ -643,7 +643,7 @@ void prepare_nlj()
 
 		  uint64_t coll = 0;
 
-		  while (_nlj_hash[j]._key != 0)
+		  while (_nlj_hash[j]._key != (uint64_t) -1)
 		    {
 		      j = (j + 1) & _nlj_hash_mask;
 		      coll++;
@@ -654,6 +654,7 @@ void prepare_nlj()
 		  sum_coll += coll;
 
 		  _nlj_hash[j]._key = key;
+		  _nlj_hash[j]._value = 0;
 		}
 	    }
 	}
@@ -681,7 +682,7 @@ void nlj_add(uint64_t key, double value)
   
   while (_nlj_hash[j]._key != key)
     {
-      if (_nlj_hash[j]._key == 0)
+      if (_nlj_hash[j]._key == (uint64_t) -1)
 	{
 	  fprintf (stderr, "Internal error: nlj item not found.\n");
 	  exit(1);
@@ -706,7 +707,7 @@ int nlj_get(uint64_t key, double *value)
   
   while (_nlj_hash[j]._key != key)
     {
-      if (_nlj_hash[j]._key == 0)
+      if (_nlj_hash[j]._key == (uint64_t) -1)
 	return 0;
 
       j = (j + 1) & _nlj_hash_mask;
@@ -718,3 +719,60 @@ int nlj_get(uint64_t key, double *value)
   return 1;
 }
 
+void write_nlj()
+{
+  /* Write the contents of the nlj hash table. */
+
+  /* We will not use it again, so begin by compacting the contents.
+   * Still unordered.
+   */
+
+  nlj_hash_item *src  = _nlj_hash;
+  nlj_hash_item *dest = _nlj_hash;
+
+  size_t i;
+
+  size_t nz = 0;
+
+  for (i = 0; i <= _nlj_hash_mask; i++)
+    {
+      uint64_t key = src->_key;
+
+      if (key != (uint64_t) -1)
+	{
+	  if (src->_value)
+	    nz++;
+
+	  *(dest++) = *src;
+	}
+
+      src++;
+    }
+
+  size_t num_nlj_comb = (size_t) (dest - _nlj_hash);
+
+  printf ("%zd nlj pair comb, %zd non-zero.\n", num_nlj_comb, nz);
+
+  int fd = open ("nlj_out.bin",
+		 O_WRONLY | O_CREAT | O_TRUNC
+#ifdef O_LARGEFILE
+		 | O_LARGEFILE
+#endif
+		 ,
+		 S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH);
+  
+  if (fd == -1)
+    {
+      perror("open");
+      exit(1);
+    }
+
+  full_write (fd, _nlj_hash, sizeof (nlj_hash_item) * num_nlj_comb);
+
+  close (fd);
+
+
+  
+
+
+}

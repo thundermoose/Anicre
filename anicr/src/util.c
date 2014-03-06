@@ -28,3 +28,28 @@ void full_read(int fd, void *buf, size_t count)
     }
 }
 
+
+void full_write(int fd, void *buf, size_t count)
+{
+  size_t total = count;
+
+  while (count)
+    {
+      ssize_t n = write (fd, buf, count);
+
+      if (n == -1)
+	{
+	  perror("write");
+	  exit(1);
+	}
+      if (n == 0)
+	{
+	  fprintf (stderr, "Failure writing %zd, missing %zd.\n",
+		   total, count);
+	  exit(1);
+	}
+      count -= (size_t) n;
+      buf += n;
+    }
+}
+
