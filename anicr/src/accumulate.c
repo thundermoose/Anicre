@@ -352,6 +352,44 @@ int compare_uint32_t(const void *p1, const void *p2)
 }
 
 
+typedef struct nlj_hash_item_t
+{
+  uint64_t _key;
+  double   _value;
+} nlj_hash_item;
+
+uint64_t nlj_hash_key(uint64_t key)
+{
+  uint64_t x = 0, y = 0;
+
+  y = key;
+  x = key;
+
+#define _lcga 6364136223846793005ll
+#define _lcgc 1442695040888963407ll
+
+  x = x * _lcga + _lcgc;
+  
+  x = x ^ (x << 35);
+  x = x ^ (x >> 4);
+  x = x ^ (x << 17);
+  /*
+  x = x ^ (x >> 35);
+  x = x ^ (x << 4);
+  x = x ^ (x >> 17);
+  */
+  /*
+  printf ("%016"PRIx64":%016"PRIx64" -> %016"PRIx64"\n",
+          key[0], key[1], x);
+  */
+  return x ^ y;
+}
+
+
+nlj_hash_item *_nlj_hash;
+uint64_t       _nlj_hash_mask = 0;
+
+
 void prepare_nlj()
 {
   /* Each nljm state implies an nlj state.
@@ -528,15 +566,103 @@ void prepare_nlj()
 
   printf ("%zd nlj pair combinations\n", num_nlj_comb);
 
+  for (_nlj_hash_mask = 1;
+       _nlj_hash_mask < num_nlj_comb * 2; _nlj_hash_mask <<= 1)
+    ;
 
+  /* printf("%zd\n", _nlj_hash_mask); */
 
+  size_t hashed_nlj_sz = sizeof (nlj_hash_item) * _nlj_hash_mask;
 
+  _nlj_hash_mask -= 1;
 
+  _nlj_hash = (nlj_hash_item *) malloc (hashed_nlj_sz);
 
+  if (!_nlj_hash)
+    {
+      fprintf (stderr,
+	       "Memory allocation error (%zd bytes).\n", hashed_nlj_sz);
+      exit(1);
+    }
 
+  memset (_nlj_hash, 0, hashed_nlj_sz);
 
+  /* Fill the table. */
 
+  uint64_t max_coll = 0, sum_coll = 0;
 
+  for (a_i = 0; a_i < _num_nlj_pairs; a_i++)
+    {
+      uint32_t anni_pair = _nlj_pairs[a_i];
 
+      uint32_t anni_1 = anni_pair         & 0xfff;
+      uint32_t anni_2 = (anni_pair >> 12) & 0xfff;
+
+      int      anni_j = (int) ((anni_pair >> 24) &  0x7f);
+      uint32_t anni_parity = anni_pair >> 31;
+
+      for (c_i = 0; c_i < _num_nlj_pairs; c_i++)
+	{
+	  uint32_t crea_pair = _nlj_pairs[c_i];
+
+	  uint32_t crea_1 = crea_pair         & 0xfff;
+	  uint32_t crea_2 = (crea_pair >> 12) & 0xfff;
+
+	  int      crea_j = (int) ((crea_pair >> 24) &  0x7f);
+	  uint32_t crea_parity = crea_pair >> 31;
+
+	  if (((anni_parity ^ crea_parity) ^
+	       (CFG_PARITY_FINAL - CFG_PARITY_INITIAL)) & 1)
+	    continue;
+
+	  int min_j = abs(anni_j - crea_j);
+	  int max_j = anni_j + crea_j;
+
+	  /* Now, can we couple to interesting jtrans? */
+
+	  for (jtrans = min_j; jtrans <= max_j; jtrans += 2)
+	    {
+	      if (jtrans >= jtrans_min && jtrans <= jtrans_max)
+		{
+		  num_nlj_comb++;
+
+		  uint64_t key =
+		    (((uint64_t) anni_1) <<  0) |
+		    (((uint64_t) anni_2) << 11) |
+		    (((uint64_t) crea_1) << 22) |
+		    (((uint64_t) crea_2) << 33) |
+		    (((uint64_t) anni_j) << 44) |
+		    (((uint64_t) crea_j) << 51) |
+		    (((uint64_t) jtrans) << 58);
+		  
+		  uint64_t x = nlj_hash_key(key);
+
+		  x ^= x >> 32;
+
+		  uint64_t j = x & _nlj_hash_mask;
+
+		  uint64_t coll = 0;
+
+		  while (_nlj_hash[j]._key != 0)
+		    {
+		      j = (j + 1) & _nlj_hash_mask;
+		      coll++;
+		    }
+
+		  if (coll > max_coll)
+		    max_coll = coll;
+		  sum_coll += coll;
+
+		  _nlj_hash[j]._key = key;
+		}
+	    }
+	}
+    }
+
+  printf ("Hash: %"PRIu64" entries (%.1f), "
+          "avg coll = %.2f, max coll = %"PRIu64"\n",
+          _nlj_hash_mask + 1,
+          (double) num_nlj_comb / ((double) (_nlj_hash_mask + 1)),
+          (double) sum_coll / (double) num_nlj_comb, max_coll);
 
 }
