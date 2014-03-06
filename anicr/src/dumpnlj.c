@@ -51,7 +51,7 @@ int compare_nlj_item(const void *p1, const void *p2)
   k2_crea_j = (key2 >> 51) &  0x7f;
   k2_jtrans = (int) (key2 >> 58);
 
-#define COMPARE_RET_DIFF(x,y) {if (x != y) return (x < y) ? -1 : 1; }
+#define COMPARE_RET_DIFF(x,y) {if ((x) != (y)) return ((x) < (y)) ? -1 : 1; }
 
   COMPARE_RET_DIFF(k1_jtrans, k2_jtrans);
   COMPARE_RET_DIFF(k1_nlj_c1, k2_nlj_c1);

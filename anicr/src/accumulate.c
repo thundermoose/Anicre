@@ -95,6 +95,58 @@ typedef struct accumulate_hash_item_t
 accumulate_hash_item *_acc_hash;
 uint64_t              _acc_hash_mask = 0;
 
+typedef struct jm_pair_info_t
+{
+  int _j1, _m1;
+  int _j2, _m2;
+} jm_pair_info;
+
+typedef struct jm_pair_info_sort_t
+{
+  jm_pair_info _info;
+
+  int _sum_m;
+  int _parity;
+
+  uint32_t _pair;
+} jm_pair_info_sort;
+
+#define COMPARE_RET_DIFF(x,y) {if ((x) != (y)) return ((x) < (y)) ? -1 : 1; }
+
+int compare_jm_pair_info_sort_jmjm(const void *p1, const void *p2)
+{
+  const jm_pair_info_sort *s1 = (const jm_pair_info_sort *) p1;
+  const jm_pair_info_sort *s2 = (const jm_pair_info_sort *) p2;
+
+  COMPARE_RET_DIFF(s1->_info._j1, s2->_info._j1);
+  COMPARE_RET_DIFF(s1->_info._m1, s2->_info._m1);
+  COMPARE_RET_DIFF(s1->_info._j2, s2->_info._j2);
+  COMPARE_RET_DIFF(s1->_info._m2, s2->_info._m2);
+
+  return 0;
+}
+    
+int compare_jm_pair_info_sort_summparity(const void *p1, const void *p2)
+{
+  const jm_pair_info_sort *s1 = (const jm_pair_info_sort *) p1;
+  const jm_pair_info_sort *s2 = (const jm_pair_info_sort *) p2;
+
+  COMPARE_RET_DIFF(s1->_sum_m,  s2->_sum_m);
+  COMPARE_RET_DIFF(s1->_parity, s2->_parity);
+
+  return 0;
+}
+
+int compare_jm_pair_info_sort(const void *p1, const void *p2)
+{
+  int ret;
+
+  if ((ret = compare_jm_pair_info_sort_jmjm(p1, p2)))
+    return ret;
+  
+  return compare_jm_pair_info_sort_summparity(p1, p2);
+}
+
 void alloc_accumulate()
 {
 #if ACC_TABLE
@@ -122,6 +174,81 @@ void alloc_accumulate()
 #endif
 
   /* The reduced version. */
+
+  /* List of the pairs sorted by j,m for the contained states. */
+
+  size_t sz_jmpis = sizeof (jm_pair_info_sort) * CFG_JM_PAIRS;
+
+  jm_pair_info_sort *jmpis = (jm_pair_info_sort *) malloc (sz_jmpis);
+
+  if (!jmpis)
+    {
+      fprintf (stderr, "Memory allocation error (%zd bytes).\n",
+	       sz_jmpis);
+      exit(1);
+    }
+
+  size_t i;
+
+  for (i = 0; i < CFG_JM_PAIRS; i++)
+    {
+      uint32_t pair = _jm_pairs[i];
+
+      uint32_t sp_1 = pair & 0x0000ffff;
+      uint32_t sp_2 = pair >> 16;
+
+      int l_1 = _table_sp_states[sp_1]._l;
+      int l_2 = _table_sp_states[sp_2]._l;
+
+      int j_1 = _table_sp_states[sp_1]._j;
+      int j_2 = _table_sp_states[sp_2]._j;
+
+      int m_1 = _table_sp_states[sp_1]._m;
+      int m_2 = _table_sp_states[sp_2]._m;
+
+      jmpis[i]._info._j1 = j_1;
+      jmpis[i]._info._j2 = j_2;
+      jmpis[i]._info._m1 = m_1;
+      jmpis[i]._info._m2 = m_2;
+
+      jmpis[i]._sum_m = m_1 + m_2;
+      jmpis[i]._parity = (l_1 + l_2) & 1;
+
+      jmpis[i]._pair = pair;
+    }
+
+  qsort (jmpis, CFG_JM_PAIRS, sizeof (jm_pair_info_sort),
+	 compare_jm_pair_info_sort);
+
+  /* Count number of unique jms. */
+
+  size_t num_jm_infos = 1;
+  size_t num_summparity_infos = 1;
+
+  for (i = 1; i < CFG_JM_PAIRS; i++)
+    {
+      int ret_jmjm = compare_jm_pair_info_sort_jmjm(&jmpis[i-1], &jmpis[i]);
+
+      if (ret_jmjm)
+	{
+	  num_jm_infos++;
+	  num_summparity_infos++;
+	}
+      else
+	{
+	  int ret_summparity =
+	    compare_jm_pair_info_sort_summparity(&jmpis[i-1], &jmpis[i]);
+
+	  if (ret_summparity)
+	    num_summparity_infos++;
+	}
+    }
+
+  printf ("%zd jm-jm combinations, %zd summ/parity subgroups.\n",
+	  num_jm_infos, num_summparity_infos);
+
+
+
 
   /* First find out how many items we really need. */
 
