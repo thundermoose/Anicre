@@ -323,7 +323,7 @@ void alloc_accumulate()
   _num_jm_pair_group2s = num_jm_infos;
 
   _jm_pairs_group2_list = (uint32_t *) 
-    malloc (sizeof (uint32_t) * CFG_JM_PAIRS);
+    malloc (2 * sizeof (uint32_t) * CFG_JM_PAIRS);
   /*
   _jm_pair_subgroups = (jm_pair_subgroup *) 
     malloc (sizeof (jm_pair_subgroup) * _num_jm_pair_subgroups);
@@ -343,12 +343,25 @@ void alloc_accumulate()
   jm_pair_info_sort prev_pair_info = { { -1, -1, -1, -1 }, -1, 0 };
   jm_pair_group2 *group = _jm_pair_group2s;
   jm_pair_group2 *curgroup = NULL;
+  uint32_t *list = _jm_pairs_group2_list;
 
   for (i = 0; i < CFG_JM_PAIRS; i++)
     {
       jm_pair_info_sort *jmpisi = &jmpis[i];
 
-      _jm_pairs_group2_list[i] = jmpisi->_pair;
+      uint32_t pair = jmpisi->_pair;
+
+      *(list++) = pair;
+
+      uint32_t sp_1 = pair & 0x0000ffff;
+      uint32_t sp_2 = pair >> 16;
+
+      int nlj_1 = _table_sp_states[sp_1]._nlj;
+      int nlj_2 = _table_sp_states[sp_2]._nlj;
+
+      uint32_t nlj = (uint32_t) ((nlj_1) | (nlj_2 << 11));
+
+      *(list++) = nlj;
 
       if (compare_jm_pair_info_sort_jmjm (&prev_pair_info, jmpisi))
 	{
@@ -357,7 +370,7 @@ void alloc_accumulate()
 	  curgroup = group;
 
 	  curgroup->_info = jmpisi->_info;
-	  curgroup->_pairs = &_jm_pairs_group2_list[i];
+	  curgroup->_pairs = list;
 	  curgroup->_num[0] = curgroup->_num[1];
 
 	  group++;
@@ -407,7 +420,7 @@ void alloc_accumulate()
   _num_jm_pair_groups = num_jm_infos;
 
   _jm_pairs_group_list = (uint32_t *) 
-    malloc (sizeof (uint32_t) * CFG_JM_PAIRS);
+    malloc (2 * sizeof (uint32_t) * CFG_JM_PAIRS);
   _jm_pair_groups = (jm_pair_group *) 
     malloc (sizeof (jm_pair_group) * _num_jm_pair_groups);
 
@@ -429,6 +442,7 @@ void alloc_accumulate()
   jm_pair_info_sort prev_pair_info = { { -1, -1, -1, -1 }, -1, 0 };
   jm_pair_group *group = _jm_pair_groups;
   jm_pair_group *curgroup = NULL;
+  uint32_t *list = _jm_pairs_group_list;
   int idx = 0;
 
   _summ_parity_jm_pair_groups[idx] = group;
@@ -437,7 +451,19 @@ void alloc_accumulate()
     {
       jm_pair_info_sort *jmpisi = &jmpis[i];
 
-      _jm_pairs_group_list[i] = jmpisi->_pair;
+      uint32_t pair = jmpisi->_pair;
+
+      *(list++) = pair;
+
+      uint32_t sp_1 = pair & 0x0000ffff;
+      uint32_t sp_2 = pair >> 16;
+
+      int nlj_1 = _table_sp_states[sp_1]._nlj;
+      int nlj_2 = _table_sp_states[sp_2]._nlj;
+
+      uint32_t nlj = (uint32_t) ((nlj_1) | (nlj_2 << 11));
+
+      *(list++) = nlj;
 
       if (compare_jm_pair_info_sort_summ_parity(&prev_pair_info, jmpisi))
 	{
@@ -460,7 +486,7 @@ void alloc_accumulate()
 	  curgroup = group;
 
 	  curgroup->_info = jmpisi->_info;
-	  curgroup->_pairs = &_jm_pairs_group_list[i];
+	  curgroup->_pairs = list;
 	  curgroup->_num = 0;
 
 	  group++;
