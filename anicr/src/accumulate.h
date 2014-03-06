@@ -59,4 +59,6 @@ extern int             _summ_parity_jm_pair_groups_min_sum_m;
 
 /*****************************************************************************/
 
+void alloc_couple_items(size_t max_anni, size_t max_crea);
+
 #endif/*__ACCUMULATE_H__*/

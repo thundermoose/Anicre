@@ -548,7 +548,27 @@ void couple_accumulate()
 
 
 
+typedef struct couple_item_t
+{
+  uint64_t _nlj_key;
+  double   _value;
 
+} couple_item;
+
+couple_item *_couple_items = NULL;
+
+void alloc_couple_items(size_t max_anni, size_t max_crea)
+{
+  size_t max = max_anni * max_crea;
+
+  _couple_items = (couple_item *) malloc (sizeof (couple_item) * max);
+
+  if (!_couple_items)
+    {
+      fprintf (stderr, "Memory allocation error (_couple_items).\n");
+      exit(1);
+    }
+}
 
 void couple_accumulate_2()
 {
@@ -557,9 +577,14 @@ void couple_accumulate_2()
 
   size_t a_i;
 
-  for (a_i = 0; a_i < _num_jm_pair_group2s; a_i++)
+  /* We use the list sorted by sum_m, since then we'll have a higher
+   * chance to close by reuse the lists for sum_m for the creation as
+   * well.
+   */
+
+  for (a_i = 0; a_i < _num_jm_pair_groups; a_i++)
     {
-      jm_pair_group *apg = &_jm_pair_group2s[a_i];
+      jm_pair_group *apg = &_jm_pair_groups[a_i];
 
       /* All sp pairs in the group have the same j,m j,m.
        * so we can precalculate the 3j symbols.
@@ -620,27 +645,98 @@ void couple_accumulate_2()
        * can come into account, those adding the appropriate m.
        */
 
-      size_t c_i;
+      int sum_m_want = CFG_2M_FINAL - CFG_2M_INITIAL + anni_m;
+      
+      int idx = (sum_m_want - _summ_parity_jm_pair_groups_min_sum_m) / 2;
 
-      for (c_i = 0; c_i < _num_jm_pair_group2s; c_i++)
+      jm_pair_group *begin = _summ_parity_jm_pair_groups[idx];
+      jm_pair_group *end   = _summ_parity_jm_pair_groups[idx+1];
+      jm_pair_group *cpg;
+
+      for (cpg = begin; cpg != end; cpg++)
 	{
-	  /*
-	  jm_pair_group2 *cpg = &_jm_pair_group2s[a_i];
-	  */
+	  /* We will always have at least one member?
+	   * For initial = final this is true, but not otherwise...
+	   * So perheps we should look for matching accumulation
+	   * items before we start to calculate the 3j symbol values.
+	   */
 
+	  couple_item *items = _couple_items;
+
+	  /* Loop over the annihilation items.  For each parity, as that
+	   * determines the possible parity of the creation items.
+	   */
+
+	  int anni_parity;
+
+	  for (anni_parity = 0; anni_parity < 2; anni_parity++)
+	    {
+	      int crea_parity =
+		CFG_PARITY_FINAL ^ CFG_PARITY_INITIAL ^ anni_parity;
+
+	      uint32_t *anni_list = apg->_pairs[anni_parity];
+	      uint32_t anni_num   = apg->_num[anni_parity];
+
+	      for ( ; anni_num; anni_num--)
+		{
+		  uint32_t *crea_list = cpg->_pairs[crea_parity];
+		  uint32_t crea_num   = cpg->_num[crea_parity];
+
+		  for ( ; crea_num; crea_num--)
+		    {
+		      uint32_t anni_pair = *(anni_list++);
+		      uint32_t crea_pair = *(crea_list++);
+
+		      uint32_t anni_nlj = *(anni_list++);
+		      uint32_t crea_nlj = *(crea_list++);
+
+		      uint64_t acc_key =
+			anni_pair | (((uint64_t) crea_pair) << 32);
+
+		      double value;
+
+		      int has = accumulate_get(acc_key, &value);
+
+		      if (!has)
+			{
+			  fprintf (stderr, "Internal error, "
+				   "missing anni-crea item.\n");
+			  exit(1);
+			}
+
+		      /* No need to work on zero items. */
+
+		      if (value)
+			{
+			  uint64_t nlj_key =
+			    anni_nlj | (((uint64_t) crea_nlj) << 22);
+
+			  items->_nlj_key = nlj_key;
+			  items->_value = value;
+
+			  items++;
+			}
+		    }
+		}
+
+
+
+	    }
+
+
+
+
+
+
+
+
+
+
+
+
+	  
 
 
 	}
-
-
-
-
-
-
-
-
-
-
-
     }
 }

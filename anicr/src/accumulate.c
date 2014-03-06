@@ -366,7 +366,7 @@ void alloc_accumulate()
   }
 
   /* Test dump. */
-  
+  /*  
   for (i = 0; i < _num_jm_pair_group2s; i++)
     {
       jm_pair_group *group = &_jm_pair_group2s[i];
@@ -376,7 +376,7 @@ void alloc_accumulate()
 	      group->_info._j2, group->_info._m2,
 	      group->_num[0], group->_num[1]);
     }
-  
+  */
   /* And then the list with major sorting on parity and sum_m */
 
   qsort (jmpis, CFG_JM_PAIRS, sizeof (jm_pair_info_sort),
@@ -418,6 +418,8 @@ void alloc_accumulate()
       fprintf (stderr, "Memory allocation error jm-jm groups.\n");
       exit(1);
     }
+
+  size_t max_jm_pairs_per_parity = 0;
 
   {
   jm_pair_info_sort prev_pair_info = { { -1, -1, -1, -1 }, -1, 0 };
@@ -491,11 +493,16 @@ void alloc_accumulate()
       curgroup = &_jm_pair_groups[i];
 
       curgroup->_pairs[1] = curgroup->_pairs[0] + curgroup->_num[0];
+
+      if (curgroup->_num[0] > max_jm_pairs_per_parity)
+	max_jm_pairs_per_parity = curgroup->_num[0];
+      if (curgroup->_num[1] > max_jm_pairs_per_parity)
+	max_jm_pairs_per_parity = curgroup->_num[1];
     }
   }
 
   /* Test dump. */
-  
+  /*
   int sum_m;
 
   for (sum_m = min_sum_m; sum_m <= max_sum_m; sum_m += 2)
@@ -517,10 +524,9 @@ void alloc_accumulate()
 		  group->_num[0], group->_num[1]);
 	}
     }
-  
+  */
 
-
-
+  alloc_couple_items(max_jm_pairs_per_parity, max_jm_pairs_per_parity);
 
   /* First find out how many items we really need. */
 
