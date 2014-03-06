@@ -13,6 +13,7 @@
 #include <string.h>
 #include <inttypes.h>
 #include <assert.h>
+#include <limits.h>
 
 #include "tmp_config.h"
 
@@ -97,19 +98,58 @@ uint64_t              _acc_hash_mask = 0;
 
 typedef struct jm_pair_info_t
 {
-  int _j1, _m1;
-  int _j2, _m2;
+  char _j1, _m1;
+  char _j2, _m2;
 } jm_pair_info;
 
 typedef struct jm_pair_info_sort_t
 {
   jm_pair_info _info;
 
-  int _sum_m;
   int _parity;
 
   uint32_t _pair;
 } jm_pair_info_sort;
+/*
+typedef struct jm_pair_subgroup_t
+{
+  uint32_t *_pairs;
+  uint32_t  _num;
+} jm_pair_subgroup;
+*/
+typedef struct jm_pair_group_t
+{
+  jm_pair_info _info;
+
+  uint32_t *_pairs;
+  uint32_t  _num;
+
+} jm_pair_group;
+
+typedef struct jm_pair_group2_t
+{
+  jm_pair_info _info;
+
+  uint32_t *_pairs;
+  uint32_t  _num[2];
+
+} jm_pair_group2;
+
+uint32_t *_jm_pairs_group2_list = NULL;
+  /*
+jm_pair_subgroup *_jm_pair_subgroups = NULL;
+size_t        _num_jm_pair_subgroups = 0;
+  */
+jm_pair_group2 *_jm_pair_group2s = NULL;
+size_t      _num_jm_pair_group2s = 0;
+
+uint32_t *_jm_pairs_group_list = NULL;
+
+jm_pair_group  *_jm_pair_groups = NULL;
+size_t      _num_jm_pair_groups = 0;
+
+jm_pair_group **_summ_parity_jm_pair_groups = NULL;
+int             _summ_parity_jm_pair_groups_min_sum_m;
 
 #define COMPARE_RET_DIFF(x,y) {if ((x) != (y)) return ((x) < (y)) ? -1 : 1; }
 
@@ -126,12 +166,23 @@ int compare_jm_pair_info_sort_jmjm(const void *p1, const void *p2)
   return 0;
 }
     
-int compare_jm_pair_info_sort_summparity(const void *p1, const void *p2)
+int compare_jm_pair_info_sort_parity(const void *p1, const void *p2)
 {
   const jm_pair_info_sort *s1 = (const jm_pair_info_sort *) p1;
   const jm_pair_info_sort *s2 = (const jm_pair_info_sort *) p2;
 
-  COMPARE_RET_DIFF(s1->_sum_m,  s2->_sum_m);
+  COMPARE_RET_DIFF(s1->_parity, s2->_parity);
+
+  return 0;
+}
+
+int compare_jm_pair_info_sort_summ_parity(const void *p1, const void *p2)
+{
+  const jm_pair_info_sort *s1 = (const jm_pair_info_sort *) p1;
+  const jm_pair_info_sort *s2 = (const jm_pair_info_sort *) p2;
+
+  COMPARE_RET_DIFF(s1->_info._m1 + s1->_info._m2,
+		   s2->_info._m1 + s2->_info._m2);
   COMPARE_RET_DIFF(s1->_parity, s2->_parity);
 
   return 0;
@@ -144,7 +195,17 @@ int compare_jm_pair_info_sort(const void *p1, const void *p2)
   if ((ret = compare_jm_pair_info_sort_jmjm(p1, p2)))
     return ret;
   
-  return compare_jm_pair_info_sort_summparity(p1, p2);
+  return compare_jm_pair_info_sort_parity(p1, p2);
+}
+
+int compare_jm_pair_info_sort_major_summ_parity(const void *p1, const void *p2)
+{
+  int ret;
+
+  if ((ret = compare_jm_pair_info_sort_summ_parity(p1, p2)))
+    return ret;
+  
+  return compare_jm_pair_info_sort_jmjm(p1, p2);
 }
 
 void alloc_accumulate()
@@ -190,6 +251,9 @@ void alloc_accumulate()
 
   size_t i;
 
+  int min_sum_m = INT_MAX;
+  int max_sum_m = INT_MIN;
+
   for (i = 0; i < CFG_JM_PAIRS; i++)
     {
       uint32_t pair = _jm_pairs[i];
@@ -206,15 +270,21 @@ void alloc_accumulate()
       int m_1 = _table_sp_states[sp_1]._m;
       int m_2 = _table_sp_states[sp_2]._m;
 
-      jmpis[i]._info._j1 = j_1;
-      jmpis[i]._info._j2 = j_2;
-      jmpis[i]._info._m1 = m_1;
-      jmpis[i]._info._m2 = m_2;
+      jmpis[i]._info._j1 = (char) j_1;
+      jmpis[i]._info._j2 = (char) j_2;
+      jmpis[i]._info._m1 = (char) m_1;
+      jmpis[i]._info._m2 = (char) m_2;
 
-      jmpis[i]._sum_m = m_1 + m_2;
       jmpis[i]._parity = (l_1 + l_2) & 1;
 
       jmpis[i]._pair = pair;
+
+      int sum_m = m_1 + m_2;
+
+      if (sum_m < min_sum_m)
+	min_sum_m = sum_m;
+      if (sum_m > max_sum_m)
+	max_sum_m = sum_m;
     }
 
   qsort (jmpis, CFG_JM_PAIRS, sizeof (jm_pair_info_sort),
@@ -223,7 +293,7 @@ void alloc_accumulate()
   /* Count number of unique jms. */
 
   size_t num_jm_infos = 1;
-  size_t num_summparity_infos = 1;
+  /*size_t num_parity_infos = 1;*/
 
   for (i = 1; i < CFG_JM_PAIRS; i++)
     {
@@ -232,20 +302,212 @@ void alloc_accumulate()
       if (ret_jmjm)
 	{
 	  num_jm_infos++;
-	  num_summparity_infos++;
+	  /*num_parity_infos++;*/
 	}
       else
 	{
-	  int ret_summparity =
-	    compare_jm_pair_info_sort_summparity(&jmpis[i-1], &jmpis[i]);
+	  /*
+	  int ret_parity =
+	    compare_jm_pair_info_sort_parity(&jmpis[i-1], &jmpis[i]);
 
-	  if (ret_summparity)
-	    num_summparity_infos++;
+	  if (ret_parity)
+	    num_parity_infos++;
+	  */
 	}
     }
 
-  printf ("%zd jm-jm combinations, %zd summ/parity subgroups.\n",
-	  num_jm_infos, num_summparity_infos);
+  printf ("%zd jm-jm combinations"/*", %zd parity subgroups"*/".\n",
+	  num_jm_infos/*, num_parity_infos*/);
+
+  /* _num_jm_pair_subgroups = num_parity_infos; */
+  _num_jm_pair_group2s = num_jm_infos;
+
+  _jm_pairs_group2_list = (uint32_t *) 
+    malloc (sizeof (uint32_t) * CFG_JM_PAIRS);
+  /*
+  _jm_pair_subgroups = (jm_pair_subgroup *) 
+    malloc (sizeof (jm_pair_subgroup) * _num_jm_pair_subgroups);
+  */
+  _jm_pair_group2s = (jm_pair_group2 *) 
+    malloc (sizeof (jm_pair_group2) * _num_jm_pair_group2s);
+
+  if (!_jm_pairs_group2_list ||
+      /*!_jm_pair_subgroups ||*/
+      !_jm_pair_group2s)
+    {
+      fprintf (stderr, "Memory allocation error jm-jm group2s.\n");
+      exit(1);
+    }
+
+  {
+  jm_pair_info_sort prev_pair_info = { { -1, -1, -1, -1 }, -1, 0 };
+  jm_pair_group2 *group = _jm_pair_group2s;
+  jm_pair_group2 *curgroup = NULL;
+
+  for (i = 0; i < CFG_JM_PAIRS; i++)
+    {
+      jm_pair_info_sort *jmpisi = &jmpis[i];
+
+      _jm_pairs_group2_list[i] = jmpisi->_pair;
+
+      if (compare_jm_pair_info_sort_jmjm (&prev_pair_info, jmpisi))
+	{
+	  /* We start a new group. */
+
+	  curgroup = group;
+
+	  curgroup->_info = jmpisi->_info;
+	  curgroup->_pairs = &_jm_pairs_group2_list[i];
+	  curgroup->_num[0] = curgroup->_num[1];
+
+	  group++;
+	}
+	
+      curgroup->_num[jmpisi->_parity]++;
+
+      prev_pair_info = *jmpisi;
+    }
+
+  assert(group - _jm_pair_group2s == (ssize_t) _num_jm_pair_group2s);
+  }
+
+  /* Test dump. */
+  /*
+  for (i = 0; i < _num_jm_pair_group2s; i++)
+    {
+      jm_pair_group2 *group = &_jm_pair_group2s[i];
+
+      printf ("%3d %3d %3d %3d (%2d %2d)\n",
+	      group->_info._j1, group->_info._m1,
+	      group->_info._j2, group->_info._m2,
+	      group->_num[0], group->_num[1]);
+    }
+  */
+  /* And then the list with major sorting on parity and sum_m */
+
+  qsort (jmpis, CFG_JM_PAIRS, sizeof (jm_pair_info_sort),
+	 compare_jm_pair_info_sort_major_summ_parity);
+
+  /* Count number of unique jms. */
+
+  num_jm_infos = 1;
+
+  for (i = 1; i < CFG_JM_PAIRS; i++)
+    {
+      int ret_jmjm =
+	compare_jm_pair_info_sort_major_summ_parity(&jmpis[i-1], &jmpis[i]);
+
+      if (ret_jmjm)
+	num_jm_infos++;
+    }
+
+  printf ("%zd jm-jm combinations per sum_m (%d .. %d), parity.\n",
+	  num_jm_infos, min_sum_m, max_sum_m);
+
+  _num_jm_pair_groups = num_jm_infos;
+
+  _jm_pairs_group_list = (uint32_t *) 
+    malloc (sizeof (uint32_t) * CFG_JM_PAIRS);
+  _jm_pair_groups = (jm_pair_group *) 
+    malloc (sizeof (jm_pair_group) * _num_jm_pair_groups);
+
+  size_t num_summ_parity_jm_pair_groups =
+    (size_t) (max_sum_m - min_sum_m) + 2;
+
+  _summ_parity_jm_pair_groups = (jm_pair_group **)
+    malloc (sizeof (jm_pair_group *) * (num_summ_parity_jm_pair_groups + 1));
+  _summ_parity_jm_pair_groups_min_sum_m = min_sum_m;
+
+  if (!_jm_pairs_group_list ||
+      !_jm_pair_groups)
+    {
+      fprintf (stderr, "Memory allocation error jm-jm groups.\n");
+      exit(1);
+    }
+
+  {
+  jm_pair_info_sort prev_pair_info = { { -1, -1, -1, -1 }, -1, 0 };
+  jm_pair_group *group = _jm_pair_groups;
+  jm_pair_group *curgroup = NULL;
+  int idx = 0;
+
+  _summ_parity_jm_pair_groups[idx] = group;
+
+  for (i = 0; i < CFG_JM_PAIRS; i++)
+    {
+      jm_pair_info_sort *jmpisi = &jmpis[i];
+
+      _jm_pairs_group_list[i] = jmpisi->_pair;
+
+      if (compare_jm_pair_info_sort_summ_parity(&prev_pair_info, jmpisi))
+	{
+	  int sum_m = jmpisi->_info._m1 + jmpisi->_info._m2;
+	  int parity = jmpisi->_parity;
+
+	  int nidx = sum_m - _summ_parity_jm_pair_groups_min_sum_m + parity;
+
+	  while (idx < nidx)
+	    {
+	      idx++;
+	      _summ_parity_jm_pair_groups[idx] = group;
+	    }
+	}
+
+      if (compare_jm_pair_info_sort_major_summ_parity (&prev_pair_info, jmpisi))
+	{
+	  /* We start a new group. */
+
+	  curgroup = group;
+
+	  curgroup->_info = jmpisi->_info;
+	  curgroup->_pairs = &_jm_pairs_group_list[i];
+	  curgroup->_num = 0;
+
+	  group++;
+	}
+	
+      curgroup->_num++;
+
+      prev_pair_info = *jmpisi;
+    }
+
+  assert(group - _jm_pair_groups == (ssize_t) _num_jm_pair_groups);
+
+  assert ((size_t) idx < num_summ_parity_jm_pair_groups);
+
+  while ((size_t) idx < num_summ_parity_jm_pair_groups)
+    {
+      idx++;
+      _summ_parity_jm_pair_groups[idx] = group;
+    }
+  }
+
+  /* Test dump. */
+  /*
+  int sum_m;
+  int parity;
+
+  for (sum_m = min_sum_m; sum_m <= max_sum_m; sum_m += 2)
+    for (parity = 0; parity < 2; parity++)
+      {
+	printf ("%-3d %d\n", sum_m, parity);
+
+	int idx = sum_m - _summ_parity_jm_pair_groups_min_sum_m + parity;
+
+	jm_pair_group *begin = _summ_parity_jm_pair_groups[idx];
+	jm_pair_group *end   = _summ_parity_jm_pair_groups[idx+1];
+
+	jm_pair_group *group;
+  
+	for (group = begin; group < end; group++)
+	  {
+	    printf ("%3d %3d %3d %3d (%2d)\n",
+		    group->_info._j1, group->_info._m1,
+		    group->_info._j2, group->_info._m2,
+		    group->_num);
+	  }
+      }
+  */
 
 
 
