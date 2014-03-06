@@ -239,6 +239,8 @@ int main(int argc, char *argv[])
   
   couple_accumulate();
 
+  couple_accumulate_2();
+
   write_nlj();
   
   return 0;

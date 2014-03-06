@@ -13,3 +13,5 @@ int find_mp_state(uint64_t *lookfor, double *val);
 void alloc_accumulate();
 
 void couple_accumulate();
+
+void couple_accumulate_2();

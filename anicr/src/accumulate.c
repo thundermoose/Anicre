@@ -17,6 +17,8 @@
 
 #include "tmp_config.h"
 
+#define DUMP_JM_PAIRS 0
+
 uint32_t *_jm_pairs = NULL;
 
 void prepare_accumulate()
@@ -323,20 +325,6 @@ void alloc_accumulate()
     {
       jm_pair_info_sort *jmpisi = &jmpis[i];
 
-      uint32_t pair = jmpisi->_pair;
-
-      *(list++) = pair;
-
-      uint32_t sp_1 = pair & 0x0000ffff;
-      uint32_t sp_2 = pair >> 16;
-
-      int nlj_1 = _table_sp_states[sp_1]._nlj;
-      int nlj_2 = _table_sp_states[sp_2]._nlj;
-
-      uint32_t nlj = (uint32_t) ((nlj_1) | (nlj_2 << 11));
-
-      *(list++) = nlj;
-
       if (compare_jm_pair_info_sort_jmjm (&prev_pair_info, jmpisi))
 	{
 	  /* We start a new group. */
@@ -352,6 +340,20 @@ void alloc_accumulate()
 	
       curgroup->_num[jmpisi->_parity]++;
 
+      uint32_t pair = jmpisi->_pair;
+
+      *(list++) = pair;
+
+      uint32_t sp_1 = pair & 0x0000ffff;
+      uint32_t sp_2 = pair >> 16;
+
+      int nlj_1 = _table_sp_states[sp_1]._nlj;
+      int nlj_2 = _table_sp_states[sp_2]._nlj;
+
+      uint32_t nlj = (uint32_t) ((nlj_1) | (nlj_2 << 11));
+
+      *(list++) = nlj;
+
       prev_pair_info = *jmpisi;
     }
 
@@ -361,12 +363,12 @@ void alloc_accumulate()
     {
       curgroup = &_jm_pair_group2s[i];
 
-      curgroup->_pairs[1] = curgroup->_pairs[0] + curgroup->_num[0];
+      curgroup->_pairs[1] = curgroup->_pairs[0] + curgroup->_num[0] * 2;
     }
   }
 
   /* Test dump. */
-  /*  
+#if DUMP_JM_PAIRS
   for (i = 0; i < _num_jm_pair_group2s; i++)
     {
       jm_pair_group *group = &_jm_pair_group2s[i];
@@ -376,7 +378,7 @@ void alloc_accumulate()
 	      group->_info._j2, group->_info._m2,
 	      group->_num[0], group->_num[1]);
     }
-  */
+#endif
   /* And then the list with major sorting on parity and sum_m */
 
   qsort (jmpis, CFG_JM_PAIRS, sizeof (jm_pair_info_sort),
@@ -434,20 +436,6 @@ void alloc_accumulate()
     {
       jm_pair_info_sort *jmpisi = &jmpis[i];
 
-      uint32_t pair = jmpisi->_pair;
-
-      *(list++) = pair;
-
-      uint32_t sp_1 = pair & 0x0000ffff;
-      uint32_t sp_2 = pair >> 16;
-
-      int nlj_1 = _table_sp_states[sp_1]._nlj;
-      int nlj_2 = _table_sp_states[sp_2]._nlj;
-
-      uint32_t nlj = (uint32_t) ((nlj_1) | (nlj_2 << 11));
-
-      *(list++) = nlj;
-
       if (compare_jm_pair_info_sort_summ(&prev_pair_info, jmpisi))
 	{
 	  int sum_m = jmpisi->_info._m1 + jmpisi->_info._m2;
@@ -475,6 +463,20 @@ void alloc_accumulate()
 	
       curgroup->_num[jmpisi->_parity]++;
 
+      uint32_t pair = jmpisi->_pair;
+
+      *(list++) = pair;
+
+      uint32_t sp_1 = pair & 0x0000ffff;
+      uint32_t sp_2 = pair >> 16;
+
+      int nlj_1 = _table_sp_states[sp_1]._nlj;
+      int nlj_2 = _table_sp_states[sp_2]._nlj;
+
+      uint32_t nlj = (uint32_t) ((nlj_1) | (nlj_2 << 11));
+
+      *(list++) = nlj;
+
       prev_pair_info = *jmpisi;
     }
 
@@ -492,7 +494,7 @@ void alloc_accumulate()
     {
       curgroup = &_jm_pair_groups[i];
 
-      curgroup->_pairs[1] = curgroup->_pairs[0] + curgroup->_num[0];
+      curgroup->_pairs[1] = curgroup->_pairs[0] + curgroup->_num[0] * 2;
 
       if (curgroup->_num[0] > max_jm_pairs_per_parity)
 	max_jm_pairs_per_parity = curgroup->_num[0];
@@ -502,7 +504,7 @@ void alloc_accumulate()
   }
 
   /* Test dump. */
-  /*
+#if DUMP_JM_PAIRS
   int sum_m;
 
   for (sum_m = min_sum_m; sum_m <= max_sum_m; sum_m += 2)
@@ -522,9 +524,28 @@ void alloc_accumulate()
 		  group->_info._j1, group->_info._m1,
 		  group->_info._j2, group->_info._m2,
 		  group->_num[0], group->_num[1]);
+
+	  int parity;
+
+	  for (parity = 0; parity < 2; parity++)
+	    {
+	      uint32_t *list = group->_pairs[parity];
+	      uint32_t n = group->_num[parity];
+
+	      printf ("  ");
+
+	      for ( ; n; n--)
+		{
+		  uint32_t pair = *(list++);
+		  uint32_t nlj = *(list++);
+
+		  printf (" %08" PRIx32 ":%08" PRIx32 "", pair, nlj);
+		}
+	      printf ("\n");
+	    }
 	}
     }
-  */
+#endif
 
   alloc_couple_items(max_jm_pairs_per_parity, max_jm_pairs_per_parity);
 
@@ -650,14 +671,20 @@ void alloc_accumulate()
 	  int crea_l =
 	    _table_sp_states[crea_1]._l +
 	    _table_sp_states[crea_2]._l;
-
+	  /*
+	  printf ("%3d %3d %3d %3d (%2d %2d %2d %2d)\n",
+		  anni_1, anni_2, crea_1, crea_2,
+		  anni_m, anni_l, crea_m, crea_l);
+	  */
 	  if (crea_m - anni_m != CFG_2M_FINAL - CFG_2M_INITIAL)
 	    continue;
 
 	  if (((anni_l - crea_l) ^ 
 	       (CFG_PARITY_FINAL - CFG_PARITY_INITIAL)) & 1)
 	    continue;
-	  
+	  /*
+	  printf ("%3d %3d %3d %3d *\n", anni_1, anni_2, crea_1, crea_2);
+	  */
 	  uint64_t key =
 	    (((uint64_t) anni_1) <<  0) |
 	    (((uint64_t) anni_2) << 16) |

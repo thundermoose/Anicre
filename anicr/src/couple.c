@@ -123,6 +123,7 @@ void couple_accumulate()
   int sp_crea2;
 
   uint64_t checked = 0;
+  uint64_t had = 0;
 
   for (sp_anni1 = 0; sp_anni1 < CFG_END_JM_FIRST; sp_anni1++)
     for (sp_anni2 = sp_anni1+1; sp_anni2 < CFG_NUM_SP_STATES; sp_anni2++)
@@ -162,6 +163,13 @@ void couple_accumulate()
 
 	      if (!has)
 		acc_value = 0;
+	      else
+		{
+		  had++;
+		  /*
+		  printf("Has: %016"PRIx64".\n", key);
+		  */
+		}
 
 #if ACC_TABLE
 	      if (acc_value != _accumulate[acc_i])
@@ -373,7 +381,7 @@ void couple_accumulate()
 	    }	  
     }
 
-  printf ("%" PRIu64 " checked\n", checked);
+  printf ("%" PRIu64 " checked, %" PRIu64 " had\n", checked, had);
 
 #if NLJ_TABLE
   int nlj_a1, nlj_a2, nlj_c1, nlj_c2;
@@ -572,6 +580,8 @@ void alloc_couple_items(size_t max_anni, size_t max_crea)
 
 void couple_accumulate_2()
 {
+  uint64_t had = 0;
+
   /* Loop over all combinations of annihilation j,m j,m
    */
 
@@ -655,6 +665,9 @@ void couple_accumulate_2()
 
       for (cpg = begin; cpg != end; cpg++)
 	{
+	  /*
+	  printf ("a_i: %zd  c_i: %zd\n", a_i, cpg - _jm_pair_groups);
+	  */
 	  /* We will always have at least one member?
 	   * For initial = final this is true, but not otherwise...
 	   * So perheps we should look for matching accumulation
@@ -673,21 +686,23 @@ void couple_accumulate_2()
 	    {
 	      int crea_parity =
 		CFG_PARITY_FINAL ^ CFG_PARITY_INITIAL ^ anni_parity;
-
+	      /*
+	      printf ("  a_p: %d  c_p: %d\n", anni_parity, crea_parity);
+	      */
 	      uint32_t *anni_list = apg->_pairs[anni_parity];
 	      uint32_t anni_num   = apg->_num[anni_parity];
 
 	      for ( ; anni_num; anni_num--)
 		{
+		  uint32_t anni_pair = *(anni_list++);
+		  uint32_t anni_nlj = *(anni_list++);
+
 		  uint32_t *crea_list = cpg->_pairs[crea_parity];
 		  uint32_t crea_num   = cpg->_num[crea_parity];
 
 		  for ( ; crea_num; crea_num--)
 		    {
-		      uint32_t anni_pair = *(anni_list++);
 		      uint32_t crea_pair = *(crea_list++);
-
-		      uint32_t anni_nlj = *(anni_list++);
 		      uint32_t crea_nlj = *(crea_list++);
 
 		      uint64_t acc_key =
@@ -700,10 +715,15 @@ void couple_accumulate_2()
 		      if (!has)
 			{
 			  fprintf (stderr, "Internal error, "
-				   "missing anni-crea item.\n");
+				   "missing anni-crea item %016"PRIx64".\n",
+				   acc_key);
 			  exit(1);
 			}
 
+		      had++;
+		      /*
+		      printf ("%016"PRIx64"\n", acc_key);
+		      */
 		      /* No need to work on zero items. */
 
 		      if (value)
@@ -739,4 +759,6 @@ void couple_accumulate_2()
 
 	}
     }
+
+  printf ("%" PRIu64 " had\n", had);
 }
