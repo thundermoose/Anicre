@@ -18,10 +18,13 @@
 #include <gsl/gsl_errno.h>
 #include "gsl/gsl_sf_coupling.h"
 
+#if ACC_TABLE
 extern double *_accumulate;
+#endif
 
 void couple_accumulate()
 {
+#if ACC_TABLE
   size_t num_accum;
   size_t non_zero = 0;
   size_t i;
@@ -45,6 +48,7 @@ void couple_accumulate()
     }
   */
   printf ("%zd non-0 accumulate items.\n", non_zero);
+#endif
 
   /* double mult = sqrt(CFG_2J_FINAL + 1); */
 
@@ -125,6 +129,7 @@ void couple_accumulate()
       for (sp_crea1 = 0; sp_crea1 < CFG_END_JM_FIRST; sp_crea1++)
 	for (sp_crea2 = sp_crea1+1; sp_crea2 < CFG_NUM_SP_STATES; sp_crea2++)
 	  {
+#if ACC_TABLE
 	    int sp_a = sp_anni1 * (2 * CFG_NUM_SP_STATES - sp_anni1 - 3) / 2 + sp_anni2 - 1;
 	    int sp_c = sp_crea1 * (2 * CFG_NUM_SP_STATES - sp_crea1 - 3) / 2 + sp_crea2 - 1;
 
@@ -136,6 +141,7 @@ void couple_accumulate()
 		    sp_a, sp_c);
 	    */
 	    int acc_i = sp_a * CFG_TOT_FIRST_SCND + sp_c;
+#endif
 
 	    /*
 	  int acc_i = sp_anni * CFG_NUM_SP_STATES + sp_crea;
@@ -143,21 +149,22 @@ void couple_accumulate()
 
 	    checked++;
 
-	    {
-	      double value;
+	    double acc_value;
 	      
+	    {
 	      uint64_t key =
 		(((uint64_t) sp_anni1) <<  0) |
 		(((uint64_t) sp_anni2) << 16) |
 		(((uint64_t) sp_crea1) << 32) |
 		(((uint64_t) sp_crea2) << 48);
 
-	      int has = accumulate_get(key, &value);
+	      int has = accumulate_get(key, &acc_value);
 
 	      if (!has)
-		value = 0;
+		acc_value = 0;
 
-	      if (value != _accumulate[acc_i])
+#if ACC_TABLE
+	      if (acc_value != _accumulate[acc_i])
 		{
 		  fprintf (stderr,
 			   "Internal error: acc array vs hash table.\n"
@@ -166,10 +173,10 @@ void couple_accumulate()
 			   value, _accumulate[acc_i]);
 		  exit(1);
 		}
+#endif
 	    }
 
-
-	  if (_accumulate[acc_i])
+	  if (acc_value)
 	    {
 	      sp_state_info *sp_a1 = &_table_sp_states[sp_anni1];
 	      sp_state_info *sp_a2 = &_table_sp_states[sp_anni2];
@@ -340,7 +347,7 @@ void couple_accumulate()
 #endif
 
 		  double value = mult_anni * mult_crea *
-                    result.val * _accumulate[acc_i] * sign;
+                    result.val * acc_value * sign;
 
 #if NLJ_TABLE
 		  final_1b[fin_i] += value;

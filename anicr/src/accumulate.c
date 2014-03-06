@@ -82,8 +82,9 @@ uint64_t acc_hash_key(uint64_t key)
   return x ^ y;
 }
 
-
+#if ACC_TABLE
 double *_accumulate;
+#endif
 
 typedef struct accumulate_hash_item_t
 {
@@ -96,6 +97,7 @@ uint64_t              _acc_hash_mask = 0;
 
 void alloc_accumulate()
 {
+#if ACC_TABLE
   size_t num_accum;
 
 #if ANICR2
@@ -117,7 +119,7 @@ void alloc_accumulate()
   printf ("Allocated %zd items for accumulation.\n", num_accum);
 
   memset (_accumulate, 0, accum_sz); 
-
+#endif
 
   /* The reduced version. */
 

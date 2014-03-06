@@ -658,6 +658,7 @@ void created_state(int *in_sp_other,
 #endif
 
 #if ANICR2
+#if ACC_TABLE
   int sp_a = sp_anni1 * (2 * CFG_NUM_SP_STATES - sp_anni1 - 3) / 2 + sp_anni2-1;
   int sp_c = sp_crea1 * (2 * CFG_NUM_SP_STATES - sp_crea1 - 3) / 2 + sp_crea2-1;
   /*
@@ -672,6 +673,7 @@ void created_state(int *in_sp_other,
   int acc_i = sp_a * CFG_TOT_FIRST_SCND + sp_c;
 
   (void) acc_i;
+#endif
 #else
   int acc_i = sp_anni * CFG_NUM_SP_STATES + sp_crea;
 #endif
@@ -710,7 +712,9 @@ void created_state(int *in_sp_other,
 
   int sign = 1 - 2 * (phase_i & 1);
 
+#if ACC_TABLE
   _accumulate[acc_i] += val * _cur_val * sign;
+#endif
 
   uint64_t key =
     (((uint64_t) sp_anni1) <<  0) |

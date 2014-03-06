@@ -7,6 +7,6 @@
 
 #define ANICR2            1
 
-/* #define ACC_TABLE         0 */
+#define ACC_TABLE         0
 #define NLJ_TABLE         0
 
