@@ -93,6 +93,7 @@ void couple_accumulate()
 #define J_STRIDE (CFG_NUM_NLJ_STATES * CFG_NUM_NLJ_STATES * CFG_NUM_NLJ_STATES * CFG_NUM_NLJ_STATES)
 
 #if ANICR2
+#if NLJ_TABLE
       double *final_1b = NULL;    
 
       size_t n_final_1b = (CFG_NUM_NLJ_STATES * CFG_NUM_NLJ_STATES) * 
@@ -109,12 +110,13 @@ void couple_accumulate()
 
       printf ("Allocated %zd nlj-items.\n", n_final_1b);
 
+      memset (final_1b, 0, sizeof (double) * n_final_1b);
+#endif
+
   int sp_anni1;
   int sp_anni2;
   int sp_crea1;
   int sp_crea2;
-
-  memset (final_1b, 0, sizeof (double) * n_final_1b);
 
   uint64_t checked = 0;
 
@@ -328,17 +330,21 @@ void couple_accumulate()
 			  sp_c1->_nlj+1, sp_c2->_nlj+1);
 #endif
 
+#if NLJ_TABLE
 		  int fin_i = 
 		    J_STRIDE * ((anni_j/2) * END_J + (crea_j/2)) +
 		    sp_a1->_nlj * CFG_NUM_NLJ_STATES * CFG_NUM_NLJ_STATES * CFG_NUM_NLJ_STATES + 
 		    sp_a2->_nlj * CFG_NUM_NLJ_STATES * CFG_NUM_NLJ_STATES + 
 		    sp_c1->_nlj * CFG_NUM_NLJ_STATES + 
 		    sp_c2->_nlj;
+#endif
 
 		  double value = mult_anni * mult_crea *
                     result.val * _accumulate[acc_i] * sign;
 
+#if NLJ_TABLE
 		  final_1b[fin_i] += value;
+#endif
 
 		  uint64_t key =
 		    (((uint64_t) sp_a1->_nlj) <<  0) |
@@ -362,6 +368,7 @@ void couple_accumulate()
 
   printf ("%" PRIu64 " checked\n", checked);
 
+#if NLJ_TABLE
   int nlj_a1, nlj_a2, nlj_c1, nlj_c2;
   int anni_j, crea_j;
 
@@ -435,6 +442,7 @@ void couple_accumulate()
     }
 
   printf ("nz nlj items: %zd\n", nz);
+#endif
 
 #else
   double final_1b[CFG_NUM_NLJ_STATES * CFG_NUM_NLJ_STATES];

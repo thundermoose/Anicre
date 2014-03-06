@@ -624,8 +624,6 @@ void prepare_nlj()
 	    {
 	      if (jtrans >= jtrans_min && jtrans <= jtrans_max)
 		{
-		  num_nlj_comb++;
-
 		  uint64_t key =
 		    (((uint64_t) anni_1) <<  0) |
 		    (((uint64_t) anni_2) << 11) |
