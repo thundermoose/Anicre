@@ -765,6 +765,11 @@ void write_nlj()
       exit(1);
     }
 
+  /* Storing this item here in the file is bad, as it misaligns
+   * everything that follows.
+   */
+  full_write (fd, &num_nlj_comb, sizeof (num_nlj_comb));
+
   full_write (fd, _nlj_hash, sizeof (nlj_hash_item) * num_nlj_comb);
 
   close (fd);

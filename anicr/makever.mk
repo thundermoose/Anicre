@@ -3,10 +3,12 @@ ifndef QUIET
 QUIET=@
 endif
 
-all: anicr
+all: anicr dumpnlj
 
 OBJS = anicr_main.o anicr_tables.o create.o couple.o packed_create.o \
 	accumulate.o util.o
+
+NLJ_OBJS = anicr_tables.o util.o dumpnlj.o
 
 ####################################################################
 
@@ -32,9 +34,15 @@ ANICR_OBJS = $(addprefix build_anicr/,$(OBJS))
 
 ANICR_AUTO_DEPS = $(ANICR_OBJS:%.o=%.d)
 
+DUMPNLJ_OBJS = $(addprefix build_anicr/,$(NLJ_OBJS))
+
+DUMPNLJ_AUTO_DEPS = $(DUMPNLJ_OBJS:%.o=%.d)
+
 ####################################################################
 
 -include $(ANICR_AUTO_DEPS)
+
+-include $(DUMPNLJ_AUTO_DEPS)
 
 ####################################################################
 
@@ -61,6 +69,10 @@ $(foreach dir,$(SRC_DIRS),$(eval $(call COMPILE_FROM_DIR_template,$(dir),)))
 anicr: $(ANICR_OBJS)
 	@echo "   LD    $@"
 	$(QUIET)$(CC) -o $@ $(ANICR_OBJS) $(LINKFLAGS) $(LIBS)
+
+dumpnlj: $(DUMPNLJ_OBJS)
+	@echo "   LD    $@"
+	$(QUIET)$(CC) -o $@ $(DUMPNLJ_OBJS) $(LINKFLAGS) $(LIBS)
 
 ####################################################################
 
