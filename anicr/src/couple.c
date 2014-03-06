@@ -545,3 +545,102 @@ void couple_accumulate()
 
 
 }
+
+
+
+
+
+void couple_accumulate_2()
+{
+  /* Loop over all combinations of annihilation j,m j,m
+   */
+
+  size_t a_i;
+
+  for (a_i = 0; a_i < _num_jm_pair_group2s; a_i++)
+    {
+      jm_pair_group2 *apg = &_jm_pair_group2s[a_i];
+
+      /* All sp pairs in the group have the same j,m j,m.
+       * so we can precalculate the 3j symbols.
+       */
+
+      int diff_anni_j = abs(apg->_info._j1 - apg->_info._j2);
+      int sum_anni_j  = apg->_info._j1 + apg->_info._j2;
+      int anni_m      = apg->_info._m1 + apg->_info._m2;
+      int anni_j;
+
+      for (anni_j = diff_anni_j; anni_j <= sum_anni_j; anni_j += 2)
+	{
+	  double mult_anni/*, val_anni*/;
+	  /* int sign_anni; */
+
+	  gsl_sf_result result;
+        
+	  int ret =
+	    gsl_sf_coupling_3j_e(apg->_info._j1, apg->_info._j2,  anni_j,
+				 apg->_info._m1, apg->_info._m2, -anni_m,
+				 &result);
+	  
+	  if (ret != GSL_SUCCESS)
+	    {
+	      fprintf (stderr,"ERR! %d\n", ret);
+	      exit(1);
+	    }
+
+	  int sign =
+	    1 - ((apg->_info._j1 - apg->_info._j2 + anni_m + anni_j) & 2);
+
+	  mult_anni = result.val * sign;
+	  /*
+	  if (mult_anni > 10000. || mult_anni < -10000.0)
+	    {
+#if DEBUG_ACCUMULATE
+	      printf ("\n=== {%d %d %d, %d %d %d} [%11.6f %d] ===\n",
+		      sp_a1->_j, sp_a2->_j,  anni_j,
+		      sp_a1->_m, sp_a2->_m, -anni_m,
+		      result.val, sign);
+#endif
+	    }
+	  */
+	  /*
+	  val_anni = result.val;
+	  sign_anni = sign;
+	  */
+	  /*
+	  if (sp_a1->_nlj == sp_a2->_nlj)
+	    mult_anni *= M_SQRT2;
+	  */
+
+	  mult_anni *= sqrt(anni_j + 1); /* sqrt(2*j+1) */
+	}
+
+      /* Then, loop over the possible combinations of creation j,m j,m
+       * Since we have removed a certain sum_m, only some groups
+       * can come into account, those adding the appropriate m.
+       */
+
+      size_t c_i;
+
+      for (c_i = 0; c_i < _num_jm_pair_group2s; c_i++)
+	{
+	  /*
+	  jm_pair_group2 *cpg = &_jm_pair_group2s[a_i];
+	  */
+
+
+
+	}
+
+
+
+
+
+
+
+
+
+
+
+    }
+}

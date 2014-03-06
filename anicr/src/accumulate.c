@@ -96,44 +96,7 @@ typedef struct accumulate_hash_item_t
 accumulate_hash_item *_acc_hash;
 uint64_t              _acc_hash_mask = 0;
 
-typedef struct jm_pair_info_t
-{
-  char _j1, _m1;
-  char _j2, _m2;
-} jm_pair_info;
-
-typedef struct jm_pair_info_sort_t
-{
-  jm_pair_info _info;
-
-  int _parity;
-
-  uint32_t _pair;
-} jm_pair_info_sort;
-/*
-typedef struct jm_pair_subgroup_t
-{
-  uint32_t *_pairs;
-  uint32_t  _num;
-} jm_pair_subgroup;
-*/
-typedef struct jm_pair_group_t
-{
-  jm_pair_info _info;
-
-  uint32_t *_pairs;
-  uint32_t  _num;
-
-} jm_pair_group;
-
-typedef struct jm_pair_group2_t
-{
-  jm_pair_info _info;
-
-  uint32_t *_pairs;
-  uint32_t  _num[2];
-
-} jm_pair_group2;
+/*****************************************************************************/
 
 uint32_t *_jm_pairs_group2_list = NULL;
   /*
@@ -150,6 +113,8 @@ size_t      _num_jm_pair_groups = 0;
 
 jm_pair_group **_summ_parity_jm_pair_groups = NULL;
 int             _summ_parity_jm_pair_groups_min_sum_m;
+
+/*****************************************************************************/
 
 #define COMPARE_RET_DIFF(x,y) {if ((x) != (y)) return ((x) < (y)) ? -1 : 1; }
 
