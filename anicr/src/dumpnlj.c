@@ -157,11 +157,12 @@ int main()
 	  if (key_jtrans == jtrans)
 	    {	  
 	      double value = _nlj_items[i]._value;
-	      
-	      printf ("Create %3d %3d : %2d | Annihilate %3d %3d : %2d = %11.6f\n",
-		      nlj_c1+1, nlj_c2+1, crea_j,
-		      nlj_a1+1, nlj_a2+1, anni_j,
-		      mult * value);
+
+	      if (value)
+		printf ("Create %3d %3d : %2d | Annihilate %3d %3d : %2d = %11.6f\n",
+			nlj_c1+1, nlj_c2+1, crea_j,
+			nlj_a1+1, nlj_a2+1, anni_j,
+			mult * value);
 	    }
 	  
 	}
