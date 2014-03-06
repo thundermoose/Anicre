@@ -666,3 +666,55 @@ void prepare_nlj()
           (double) sum_coll / (double) num_nlj_comb, max_coll);
 
 }
+
+
+
+void nlj_add(uint64_t key, double value)
+{
+  uint64_t x = nlj_hash_key(key);
+  
+  x ^= x >> 32;
+  
+  uint64_t j = x & _nlj_hash_mask;
+  
+  uint64_t coll = 0;
+  
+  while (_nlj_hash[j]._key != key)
+    {
+      if (_nlj_hash[j]._key == 0)
+	{
+	  fprintf (stderr, "Internal error: nlj item not found.\n");
+	  exit(1);
+	}
+
+      j = (j + 1) & _nlj_hash_mask;
+      coll++;
+    }
+  
+  _nlj_hash[j]._value += value;
+}
+
+int nlj_get(uint64_t key, double *value)
+{
+  uint64_t x = nlj_hash_key(key);
+  
+  x ^= x >> 32;
+  
+  uint64_t j = x & _nlj_hash_mask;
+  
+  uint64_t coll = 0;
+  
+  while (_nlj_hash[j]._key != key)
+    {
+      if (_nlj_hash[j]._key == 0)
+	return 0;
+
+      j = (j + 1) & _nlj_hash_mask;
+      coll++;
+    }
+  
+  *value = _nlj_hash[j]._value;
+
+  return 1;
+}
+

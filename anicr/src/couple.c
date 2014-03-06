@@ -335,8 +335,21 @@ void couple_accumulate()
 		    sp_c1->_nlj * CFG_NUM_NLJ_STATES + 
 		    sp_c2->_nlj;
 
-		  final_1b[fin_i] += 1 + 0 * mult_anni * mult_crea *
-		    result.val * _accumulate[acc_i] * sign;
+		  double value = mult_anni * mult_crea *
+                    result.val * _accumulate[acc_i] * sign;
+
+		  final_1b[fin_i] += value;
+
+		  uint64_t key =
+		    (((uint64_t) sp_a1->_nlj) <<  0) |
+		    (((uint64_t) sp_a2->_nlj) << 11) |
+		    (((uint64_t) sp_c1->_nlj) << 22) |
+		    (((uint64_t) sp_c2->_nlj) << 33) |
+		    (((uint64_t) anni_j) << 44) |
+		    (((uint64_t) crea_j) << 51) |
+		    (((uint64_t) jtrans) << 58);
+		  
+		  nlj_add(key, value);
 		  
 		}
 #if DEBUG_ACCUMULATE
@@ -371,7 +384,39 @@ void couple_accumulate()
 	    nlj_a2 * CFG_NUM_NLJ_STATES * CFG_NUM_NLJ_STATES + 
 	    nlj_c1 * CFG_NUM_NLJ_STATES + 
 	    nlj_c2;
+
+	  {
+	    double value;
 	  
+	    uint64_t key =
+	      (((uint64_t) nlj_a1) <<  0) |
+	      (((uint64_t) nlj_a2) << 11) |
+	      (((uint64_t) nlj_c1) << 22) |
+	      (((uint64_t) nlj_c2) << 33) |
+	      (((uint64_t) anni_j * 2) << 44) |
+	      (((uint64_t) crea_j * 2) << 51) |
+	      (((uint64_t) jtrans) << 58);
+
+	    int has = nlj_get(key, &value);
+
+	    if (!has)
+	      value = 0;
+
+	    if (value != final_1b[fin_i])
+	      {
+		fprintf (stderr,
+			 "Internal error: nlj array vs hash table.\n"
+			 "%d %d %d %d  %d %d %d %10.5f %10.5f\n",
+			 nlj_a1, nlj_a2, nlj_c1, nlj_c2,
+			 anni_j, crea_j, jtrans,
+			 value, final_1b[fin_i]);
+		exit(1);
+	      }
+
+
+
+	  }
+		  
 	  if (final_1b[fin_i])
 	    {
 	      /*
