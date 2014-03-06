@@ -26,6 +26,12 @@ void prepare_accumulate()
 
   _jm_pairs = (uint32_t*) malloc (sz_jm_pairs);
 
+  if (!_jm_pairs)
+    {
+      fprintf (stderr, "Memory allocation error (%zd bytes).\n", sz_jm_pairs);
+      exit(1);
+    }
+
   int fd = open ("jm_pairs.bin", O_RDONLY);
 
   if (fd == -1)
@@ -328,4 +334,209 @@ int accumulate_get(uint64_t key, double *value)
   *value = _acc_hash[j]._value;
 
   return 1;
+}
+
+
+
+uint32_t    *_nlj_pairs = NULL;
+size_t   _num_nlj_pairs = 0;
+
+int compare_uint32_t(const void *p1, const void *p2)
+{
+  uint32_t v1 = *((const uint32_t *) p1);
+  uint32_t v2 = *((const uint32_t *) p2);
+
+  if (v1 < v2)
+    return -1;
+  return v1 > v2;
+}
+
+
+void prepare_nlj()
+{
+  /* Each nljm state implies an nlj state.
+   * Each jm pair thus implies an nlj state.
+   *
+   * The possible couplings in j also tell how far it can couple.
+   */
+
+  /* We first just enumerate them, and then sort and pick the unique
+   * items.  During first enumeration, we may find at most
+   * CFG_JM_PAIRS * (CFG_MAX_J+1) configurations.
+   */
+
+  size_t max_nlj_pairs = CFG_JM_PAIRS * (CFG_MAX_J+1);
+
+  size_t sz_nlj_pairs = sizeof (uint32_t) * max_nlj_pairs;
+
+  _nlj_pairs = (uint32_t *) malloc (sz_nlj_pairs);
+
+  if (!_nlj_pairs)
+    {
+      fprintf (stderr, "Memory allocation error (%zd bytes).\n", sz_nlj_pairs);
+      exit(1);
+    }
+
+  uint32_t *nlj_pair = _nlj_pairs;
+
+  size_t i;
+
+  for (i = 0; i < CFG_JM_PAIRS; i++)
+    {
+      uint32_t sp_pair = _jm_pairs[i];
+
+      uint32_t sp_1 = sp_pair & 0x0000ffff;
+      uint32_t sp_2 = sp_pair >> 16;
+
+      int nlj_1 = _table_sp_states[sp_1]._nlj;
+      int nlj_2 = _table_sp_states[sp_2]._nlj;
+
+      int sum_m =
+        _table_sp_states[sp_1]._m +
+        _table_sp_states[sp_2]._m;
+
+      int parity =
+        (_table_sp_states[sp_1]._l +
+	 _table_sp_states[sp_2]._l) & 1;
+
+      int j_1 = _table_sp_states[sp_1]._j;
+      int j_2 = _table_sp_states[sp_2]._j;
+
+      int min_j = abs(j_1 - j_2);
+      int max_j = j_1 + j_2;
+
+      int j12;
+
+      if (min_j < abs(sum_m))
+	min_j = abs(sum_m);
+      
+      for (j12 = min_j; j12 <= max_j; j12 += 2)
+	{
+	  /*
+	  printf ("PAIR: %4d %4d : %3d , %3d ,  %3d , %3d , %d\n",
+		  sp_1, sp_2, nlj_1, nlj_2, j12, sum_m, parity);
+	  */
+
+	  uint32_t nlj_key =
+	    (uint32_t) (nlj_1 | (nlj_2 << 12) | (j12 << 24) | (parity << 31));
+	  
+	  *(nlj_pair++) = nlj_key;
+	}
+    }
+
+  size_t num_nlj_pairs = (size_t) (nlj_pair - _nlj_pairs);
+
+  qsort (_nlj_pairs, num_nlj_pairs, sizeof (uint32_t), compare_uint32_t);
+
+  /* Squeeze out the duplicates. */
+
+  uint32_t prev = (uint32_t) -1; /* will not match first item */
+
+  uint32_t *src  = _nlj_pairs;
+  uint32_t *dest = _nlj_pairs;
+
+  for (i = 0; i < num_nlj_pairs; i++)
+    {
+      uint32_t val = *(src++);
+
+      if (val != prev)
+	*(dest++) = val;
+
+      prev = val;
+    }
+
+  _num_nlj_pairs = (size_t) (dest - _nlj_pairs);  
+
+  printf ("%zd nlj pairs -> %zd\n", num_nlj_pairs, _num_nlj_pairs);
+
+  /* And reallocate. */
+
+  sz_nlj_pairs = sizeof (uint32_t) * _num_nlj_pairs;
+
+  _nlj_pairs = (uint32_t *) realloc (_nlj_pairs, sz_nlj_pairs);
+
+  if (!_nlj_pairs)
+    {
+      fprintf (stderr,
+	       "Memory reallocation error (%zd bytes).\n", sz_nlj_pairs);
+      exit(1);
+    }
+
+  /* Possible range of jtrans? */
+
+  int jtrans_min = abs(CFG_2J_INITIAL - CFG_2J_FINAL);
+  int jtrans_max = CFG_2J_INITIAL + CFG_2J_FINAL;
+
+  int jtrans;
+
+  int mtrans = CFG_2M_INITIAL - CFG_2M_FINAL;
+
+  if (abs(mtrans) > jtrans_max)
+    {
+      fprintf (stderr, "FIXME: abs(mtrans) > jtrans_max.\n");
+      exit(1);
+    }
+
+  /* The nlj collection table is then between pairs of (nlj,nlj,J)
+   * and (nlj,nlj,J) such that the total coupled J becomes Jtrans.
+   */
+
+  /* How many can there be? */
+
+  size_t a_i, c_i;
+
+  size_t num_nlj_comb = 0;
+
+  for (a_i = 0; a_i < _num_nlj_pairs; a_i++)
+    {
+      uint32_t anni_pair = _nlj_pairs[a_i];
+      /*
+      uint32_t anni_1 = anni_pair         & 0xfff;
+      uint32_t anni_2 = (anni_pair >> 12) & 0xfff;
+      */
+      int      anni_j = (int) ((anni_pair >> 24) &  0x7f);
+      uint32_t anni_parity = anni_pair >> 31;
+
+      for (c_i = 0; c_i < _num_nlj_pairs; c_i++)
+	{
+	  uint32_t crea_pair = _nlj_pairs[c_i];
+	  /*  
+	  uint32_t crea_1 = crea_pair         & 0xfff;
+	  uint32_t crea_2 = (crea_pair >> 12) & 0xfff;
+	  */
+	  int      crea_j = (int) ((crea_pair >> 24) &  0x7f);
+	  uint32_t crea_parity = crea_pair >> 31;
+
+	  if (((anni_parity ^ crea_parity) ^
+	       (CFG_PARITY_FINAL - CFG_PARITY_INITIAL)) & 1)
+	    continue;
+
+	  int min_j = abs(anni_j - crea_j);
+	  int max_j = anni_j + crea_j;
+
+	  /* Now, can we couple to interesting jtrans? */
+
+	  for (jtrans = min_j; jtrans <= max_j; jtrans += 2)
+	    {
+	      if (jtrans >= jtrans_min && jtrans <= jtrans_max)
+		{
+		  num_nlj_comb++;
+		}
+	    }
+	}
+    }
+
+  printf ("%zd nlj pair combinations\n", num_nlj_comb);
+
+
+
+
+
+
+
+
+
+
+
+
 }

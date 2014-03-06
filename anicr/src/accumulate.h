@@ -9,4 +9,6 @@ void accumulate_add(uint64_t key, double value);
 
 int accumulate_get(uint64_t key, double *value);
 
+void prepare_nlj();
+
 #endif/*__ACCUMULATE_H__*/

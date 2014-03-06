@@ -199,6 +199,8 @@ int main(int argc, char *argv[])
 
   prepare_accumulate();
 
+  prepare_nlj();
+
   alloc_accumulate();
 
   mp = _mp;
