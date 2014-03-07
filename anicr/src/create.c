@@ -685,10 +685,10 @@ void created_state(int *in_sp_other,
     (((uint64_t) sp_crea1) << 32) |
     (((uint64_t) sp_crea2) << 48);
 
-  uint64_t x;
+  uint64_t acc_x;
 
-  accumulate_pre(key, &x);
-  accumulate_prefetch_rw(x);
+  accumulate_pre(key, &acc_x);
+  accumulate_prefetch_rw(acc_x);
 
   /*
   int lookfor[CFG_NUM_SP_STATES0 + CFG_NUM_SP_STATES1];
@@ -718,6 +718,8 @@ void created_state(int *in_sp_other,
   find_mp_state_pre(lookfor_packed, &lookfor_x);
   find_mp_state_prefetch(lookfor_x);
 
+  /* accumulate_advance(key, &acc_x); */
+
   double val;
 
   if (!find_mp_state_post(lookfor_packed, lookfor_x, &val))
@@ -733,7 +735,7 @@ void created_state(int *in_sp_other,
   _accumulate[acc_i] += val * _cur_val * sign;
 #endif
 
-  accumulate_post_add(key, x, val * _cur_val * sign);
+  accumulate_post_add(key, acc_x, val * _cur_val * sign);
 
 #if DEBUG_ANICR
   printf ("%5d %15.10f\n", acc_i, val * _cur_val * sign);
