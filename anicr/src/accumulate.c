@@ -350,7 +350,9 @@ void alloc_accumulate()
       int nlj_1 = _table_sp_states[sp_1]._nlj;
       int nlj_2 = _table_sp_states[sp_2]._nlj;
 
-      uint32_t nlj = (uint32_t) ((nlj_1) | (nlj_2 << 11));
+      int same = (nlj_1 == nlj_2);
+
+      uint32_t nlj = (uint32_t) ((nlj_1) | (nlj_2 << 11) | (same << 22));
 
       *(list++) = nlj;
 
@@ -473,7 +475,9 @@ void alloc_accumulate()
       int nlj_1 = _table_sp_states[sp_1]._nlj;
       int nlj_2 = _table_sp_states[sp_2]._nlj;
 
-      uint32_t nlj = (uint32_t) ((nlj_1) | (nlj_2 << 11));
+      int same = (nlj_1 == nlj_2);
+
+      uint32_t nlj = (uint32_t) ((nlj_1) | (nlj_2 << 11) | (same << 22));
 
       *(list++) = nlj;
 

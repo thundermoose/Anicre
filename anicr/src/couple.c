@@ -559,6 +559,7 @@ void couple_accumulate()
 typedef struct couple_item_t
 {
   uint64_t _nlj_key;
+  int      _fact_anni_crea; /* x1: anni_nlj_same, x2: crea_nlj_same */
   double   _value;
 
 } couple_item;
@@ -578,8 +579,29 @@ void alloc_couple_items(size_t max_anni, size_t max_crea)
     }
 }
 
+typedef struct couple_j_item_t
+{
+  int _j;
+  double _val;
+} couple_j_item;
+
 void couple_accumulate_2()
 {
+  /* Figure out jtrans limits. */
+
+  int jtrans_min = abs(CFG_2J_INITIAL - CFG_2J_FINAL);
+  int jtrans_max = CFG_2J_INITIAL + CFG_2J_FINAL;
+
+  int mtrans = CFG_2M_INITIAL - CFG_2M_FINAL;
+
+  if (abs(mtrans) > jtrans_max)
+    {
+      fprintf (stderr, "FIXME: abs(mtrans) > jtrans_max.\n");
+      exit(1);
+    }
+
+  /* */ 
+
   uint64_t had = 0;
 
   /* Loop over all combinations of annihilation j,m j,m
@@ -592,6 +614,9 @@ void couple_accumulate_2()
    * well.
    */
 
+  couple_j_item anni_items[(CFG_MAX_J+1)];
+  couple_j_item crea_items[(CFG_MAX_J+1)];
+
   for (a_i = 0; a_i < _num_jm_pair_groups; a_i++)
     {
       jm_pair_group *apg = &_jm_pair_groups[a_i];
@@ -603,8 +628,11 @@ void couple_accumulate_2()
       int diff_anni_j = abs(apg->_info._j1 - apg->_info._j2);
       int sum_anni_j  = apg->_info._j1 + apg->_info._j2;
       int anni_m      = apg->_info._m1 + apg->_info._m2;
-      int anni_j;
 
+      couple_j_item *end_anni = anni_items;
+
+      {
+      int anni_j;
       for (anni_j = diff_anni_j; anni_j <= sum_anni_j; anni_j += 2)
 	{
 	  double mult_anni/*, val_anni*/;
@@ -648,7 +676,15 @@ void couple_accumulate_2()
 	  */
 
 	  mult_anni *= sqrt(anni_j + 1); /* sqrt(2*j+1) */
+
+	  end_anni->_j   = anni_j;
+	  end_anni->_val = mult_anni;
+	  end_anni++;
+
+	  assert ((size_t) (end_anni - anni_items) <=
+		  sizeof(anni_items) / sizeof(anni_items[0]));
 	}
+      }
 
       /* Then, loop over the possible combinations of creation j,m j,m
        * Since we have removed a certain sum_m, only some groups
@@ -674,7 +710,7 @@ void couple_accumulate_2()
 	   * items before we start to calculate the 3j symbol values.
 	   */
 
-	  couple_item *items = _couple_items;
+	  couple_item *end_items = _couple_items;
 
 	  /* Loop over the annihilation items.  For each parity, as that
 	   * determines the possible parity of the creation items.
@@ -729,34 +765,173 @@ void couple_accumulate_2()
 		      if (value)
 			{
 			  uint64_t nlj_key =
-			    anni_nlj | (((uint64_t) crea_nlj) << 22);
+			    (anni_nlj & ((1 << 22) - 1)) |
+			    (((uint64_t) (crea_nlj & ((1 << 22) - 1))) << 22);
 
-			  items->_nlj_key = nlj_key;
-			  items->_value = value;
+			  end_items->_nlj_key = nlj_key;
+			  end_items->_value = value;
 
-			  items++;
+			  int fact_anni_crea =
+			    (int) (((anni_nlj >> 22) & 1) |
+				   ((crea_nlj >> 21) & 2));
+
+			  end_items->_fact_anni_crea = fact_anni_crea;
+
+			  end_items++;
 			}
 		    }
 		}
-
-
-
 	    }
 
+	  if (end_items == _couple_items)
+	    continue;
 
+	  /* We have items.  Find the 3j's that can come into play. */
 
+	  int diff_crea_j = abs(cpg->_info._j1 - cpg->_info._j2);
+	  int sum_crea_j  = cpg->_info._j1 + cpg->_info._j2;
+	  int crea_m      = cpg->_info._m1 + cpg->_info._m2;
 
+	  couple_j_item *end_crea = crea_items;
 
+	  {
+	  int crea_j;
+	  for (crea_j = diff_crea_j; crea_j <= sum_crea_j; crea_j += 2)
+	    {
+	      double mult_crea/*, val_crea*/;
+	      /* int sign_crea; */
 
-
-
-
-
-
-
+	      gsl_sf_result result;
+        
+	      int ret =
+		gsl_sf_coupling_3j_e(cpg->_info._j1, cpg->_info._j2,  crea_j,
+				     cpg->_info._m1, cpg->_info._m2, -crea_m,
+				     &result);
 	  
+	      if (ret != GSL_SUCCESS)
+		{
+		  fprintf (stderr,"ERR! %d\n", ret);
+		  exit(1);
+		}
 
+	      int sign =
+		1 - ((cpg->_info._j1 - cpg->_info._j2 + 2 * crea_m) & 2);
 
+	      mult_crea = result.val * sign;
+	  /*
+	  if (mult_crea > 10000. || mult_crea < -10000.0)
+	    {
+#if DEBUG_ACCUMULATE
+	      printf ("\n=== {%d %d %d, %d %d %d} [%11.6f %d] ===\n",
+		      sp_a1->_j, sp_a2->_j,  crea_j,
+		      sp_a1->_m, sp_a2->_m, -crea_m,
+		      result.val, sign);
+#endif
+	    }
+	  */
+	  /*
+	  val_crea = result.val;
+	  sign_crea = sign;
+	  */
+	  /*
+	  if (sp_c1->_nlj == sp_c2->_nlj)
+	    mult_crea *= M_SQRT2;
+	  */
+
+	      mult_crea *= sqrt(crea_j + 1); /* sqrt(2*j+1) */
+
+	      end_crea->_j   = crea_j;
+	      end_crea->_val = mult_crea;
+	      end_crea++;
+
+	      assert ((size_t) (end_crea - crea_items) <=
+		      sizeof(crea_items) / sizeof(crea_items[0]));
+	    }
+	  }
+
+	  /* Now we are ready to do the double-loop over the anni-crea.
+	   * And for each, we have a loop over the possible jtrans...
+	   */
+
+	  couple_j_item *anni_item;
+	  couple_j_item *crea_item;
+
+	  for (anni_item = anni_items; anni_item < end_anni; anni_item++)
+	    for (crea_item = crea_items; crea_item < end_crea; crea_item++)
+	      {
+		/* searching for jtrans */
+		
+		int diff_j = abs(anni_item->_j - crea_item->_j);
+		int sum_j  = anni_item->_j + crea_item->_j;
+		int sum_m  = anni_m - crea_m;
+
+		int min_j = abs(sum_m);
+		int max_j = sum_j;
+
+		if (min_j < diff_j)
+		  min_j = diff_j;
+		
+		if (min_j < jtrans_min)
+		  min_j = jtrans_min;
+		if (max_j > jtrans_max)
+		  max_j = jtrans_max;
+
+		double anni_crea_factor[4];
+
+		double anni_factor = (anni_item->_j & 2) ? 0 : M_SQRT2;
+		double crea_factor = (crea_item->_j & 2) ? 0 : M_SQRT2;
+
+		anni_crea_factor[0] = 1;
+		anni_crea_factor[1] = anni_factor;
+		anni_crea_factor[2] = crea_factor;
+		anni_crea_factor[3] = anni_factor * crea_factor;
+		
+		int jtrans;
+
+		for (jtrans = min_j; jtrans <= max_j; jtrans += 2)
+		  {
+		    /* Get the coupling. */
+
+		    gsl_sf_result result;
+		    
+		    int ret =
+		      gsl_sf_coupling_3j_e(anni_item->_j,jtrans,crea_item->_j,
+					   anni_m,       -sum_m,-crea_m,
+					   &result);
+
+		    if (ret != GSL_SUCCESS)
+		      {
+			fprintf (stderr,"ERR! %d\n", ret);
+			exit(1);
+		      }
+
+		    int sign = 1/* - ((crea_j - jtrans + anni_m) & 2)*/;
+		    (void) sign;
+
+		    double coupling =
+		      result.val * anni_item->_val * crea_item->_val;
+
+		    uint64_t key_jjj =
+		      (((uint64_t) anni_item->_j) << 44) |
+		      (((uint64_t) crea_item->_j) << 51) |
+		      (((uint64_t) jtrans) << 58);
+ 
+		    /* And now, apply this to all items in the list! */
+
+		    couple_item *items;
+
+		    for (items = _couple_items; items != end_items; items++)
+		      {
+			uint64_t key =
+			  items->_nlj_key | key_jjj;
+
+			double factor =
+			  anni_crea_factor[items->_fact_anni_crea];
+
+			nlj_add(key, items->_value * coupling * factor);
+		      }
+		  }
+	      }
 	}
     }
 
