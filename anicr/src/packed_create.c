@@ -4,12 +4,14 @@
 #include <assert.h>
 #include <limits.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "anicr_tables.h"
 #include "anicr_config.h"
 
 #include "create.h"
 #include "packed_create.h"
+#include "mp_states.h"
 
 /* #include "code.h" */
 
@@ -328,11 +330,17 @@ void packed_created_state(uint64_t *packed,
   packed_dump(packed);
 #endif
 
+  uint64_t lookfor_x;
+
+  find_mp_state_pre(packed, &lookfor_x);
+  find_mp_state_prefetch(lookfor_x);
+
   double val;
 
-  if (!find_mp_state(packed, &val))
+  if (!find_mp_state_post(packed, lookfor_x, &val))
     {
-      printf ("NOT FOUND!\n");
-
+      fprintf (stderr, "NOT FOUND!\n");
+      exit (1);
     }
+
 }

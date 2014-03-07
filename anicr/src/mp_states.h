@@ -44,47 +44,55 @@ inline uint64_t packed_hash_key(uint64_t *key)
   return x ^ y;
 }
 
+inline void find_mp_state_pre(uint64_t *lookfor, uint64_t *rx)
+{
+  uint64_t x = packed_hash_key(lookfor);
+  
+  x ^= x >> 32;
+  
+  x = (x << _hash_stride_shift) & _hash_mask;
 
+  *rx = x;
+}
 
-inline int find_mp_state(uint64_t *lookfor, double *val)
+inline void find_mp_state_prefetch(uint64_t x)
+{
+  uint64_t *p = &_hashed_mp[x];
+
+  __builtin_prefetch(p, 0, 0);
+}
+
+inline int find_mp_state_post(uint64_t *lookfor, uint64_t x, double *val)
 {
   _lookups++;
 
-  {
-    uint64_t x = packed_hash_key(lookfor);
-    
-    x ^= x >> 32;
-    
-    uint64_t j = (x << _hash_stride_shift) & _hash_mask;
-
-    for ( ; ; )
-      {
-	uint64_t *p = &_hashed_mp[j];
-	
-	int k;
-	
-	for (k = 0; k < CFG_PACK_WORDS; k++)
-	  {
-	    if (p[k] != lookfor[k])
-	      goto not_found;
-	  }
-
+  for ( ; ; )
+    {
+      uint64_t *p = &_hashed_mp[x];
+      
+      int k;
+      
+      for (k = 0; k < CFG_PACK_WORDS; k++)
 	{
-	  _found++;
-	  *val = *(((double *) p) + CFG_PACK_WORDS);
-	  
-	  return 1;
+	  if (p[k] != lookfor[k])
+	    goto not_found;
 	}
+      
+      {
+	_found++;
+	*val = *(((double *) p) + CFG_PACK_WORDS);
 	
-      not_found:
-	if (!*p)
-	  {
-	    return 0;
-	  }
-	
-	j = (j + _hash_stride) & _hash_mask;
+	return 1;
       }
-  }
+      
+    not_found:
+      if (!*p)
+	{
+	  return 0;
+	}
+      
+      x = (x + _hash_stride) & _hash_mask;
+    }
 }
 
 

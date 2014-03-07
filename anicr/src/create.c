@@ -11,6 +11,7 @@
 
 #include "create.h"
 #include "accumulate.h"
+#include "mp_states.h"
 
 #include "code.h"
 
@@ -712,12 +713,17 @@ void created_state(int *in_sp_other,
 #endif
   */
 
+  uint64_t lookfor_x;
+
+  find_mp_state_pre(lookfor_packed, &lookfor_x);
+  find_mp_state_prefetch(lookfor_x);
+
   double val;
 
-  if (!find_mp_state(lookfor_packed, &val))
+  if (!find_mp_state_post(lookfor_packed, lookfor_x, &val))
     {
-      printf ("NOT FOUND!\n");
-
+      fprintf (stderr, "NOT FOUND!\n");
+      exit (1);
     }
   /* printf ("%4d %4d\n", sp_anni, sp_crea); */
 
