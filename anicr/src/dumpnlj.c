@@ -39,6 +39,14 @@ int compare_nlj_item(const void *p1, const void *p2)
   k1_crea_j = (key1 >> 51) &  0x7f;
   k1_jtrans = (int) (key1 >> 58);
 
+  int k1_a1_l = _table_nlj_states[k1_nlj_a1]._l;
+  int k1_a2_l = _table_nlj_states[k1_nlj_a2]._l;
+  int k1_c1_l = _table_nlj_states[k1_nlj_c1]._l;
+  int k1_c2_l = _table_nlj_states[k1_nlj_c2]._l;
+
+  int k1_a_parity = (k1_a1_l ^ k1_a2_l) & 1;
+  int k1_c_parity = (k1_c1_l ^ k1_c2_l) & 1;
+
   int k2_nlj_a1, k2_nlj_a2, k2_nlj_c1, k2_nlj_c2;
   int k2_anni_j, k2_crea_j;
   int k2_jtrans;
@@ -51,15 +59,25 @@ int compare_nlj_item(const void *p1, const void *p2)
   k2_crea_j = (key2 >> 51) &  0x7f;
   k2_jtrans = (int) (key2 >> 58);
 
+  int k2_a1_l = _table_nlj_states[k2_nlj_a1]._l;
+  int k2_a2_l = _table_nlj_states[k2_nlj_a2]._l;
+  int k2_c1_l = _table_nlj_states[k2_nlj_c1]._l;
+  int k2_c2_l = _table_nlj_states[k2_nlj_c2]._l;
+
+  int k2_a_parity = (k2_a1_l ^ k2_a2_l) & 1;
+  int k2_c_parity = (k2_c1_l ^ k2_c2_l) & 1;
+
 #define COMPARE_RET_DIFF(x,y) {if ((x) != (y)) return ((x) < (y)) ? -1 : 1; }
 
   COMPARE_RET_DIFF(k1_jtrans, k2_jtrans);
+  COMPARE_RET_DIFF(k1_c_parity, k2_c_parity);
+  COMPARE_RET_DIFF(k1_crea_j, k2_crea_j);
   COMPARE_RET_DIFF(k1_nlj_c1, k2_nlj_c1);
   COMPARE_RET_DIFF(k1_nlj_c2, k2_nlj_c2);
-  COMPARE_RET_DIFF(k1_crea_j, k2_crea_j);
+  COMPARE_RET_DIFF(k1_a_parity, k2_a_parity);
+  COMPARE_RET_DIFF(k1_anni_j, k2_anni_j);
   COMPARE_RET_DIFF(k1_nlj_a1, k2_nlj_a1);
   COMPARE_RET_DIFF(k1_nlj_a2, k2_nlj_a2);
-  COMPARE_RET_DIFF(k1_anni_j, k2_anni_j);
 
   return 0;
 }
