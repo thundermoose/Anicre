@@ -4,6 +4,7 @@
 #include "packed_create.h"
 #include "accumulate.h"
 #include "util.h"
+#include "mp_states.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -49,36 +50,6 @@ uint64_t _lookups = 0;
 uint64_t _found = 0;
 
 double   _cur_val;
-
-uint64_t packed_hash_key(uint64_t *key)
-{
-  uint64_t x = 0, y = 0;
-  int i;
-
-  for (i = 0; i < CFG_PACK_WORDS; i++)
-    {
-      y ^= key[i];
-      x ^= key[i];
-
-#define _lcga 6364136223846793005ll
-#define _lcgc 1442695040888963407ll
-
-      y = y * _lcga + _lcgc;
-
-      x = x ^ (x << 35);
-      x = x ^ (x >> 4);
-      x = x ^ (x << 17);
-    }
-
-  x = x ^ (x >> 35);
-  x = x ^ (x << 4);
-  x = x ^ (x >> 17);
-  /*
-  printf ("%016"PRIx64":%016"PRIx64" -> %016"PRIx64"\n",
-	  key[0], key[1], x);
-  */
-  return x ^ y;
-}
 
 int main(int argc, char *argv[])
 {
@@ -246,61 +217,3 @@ int main(int argc, char *argv[])
   return 0;
 }
 
-int find_mp_state(uint64_t *lookfor, double *val)
-{
-  /* size_t num_sp = CFG_NUM_SP_STATES0 + CFG_NUM_SP_STATES1; */
-
-#if 0
-  size_t num_mp = CFG_NUM_MP_STATES;
-
-  void *found =
-    bsearch (lookfor,
-	     _mp, num_mp, sizeof (uint64_t) * (CFG_PACK_WORDS + CFG_WAVEFCNS),
-	     compare_packed_mp_state);
-#endif
-
-  void *found;
-
-  {
-    uint64_t x = packed_hash_key(lookfor);
-    
-    x ^= x >> 32;
-    
-    uint64_t j = (x << _hash_stride_shift) & _hash_mask;
-
-    for ( ; ; )
-      {
-	uint64_t *p = &_hashed_mp[j];
-	
-	int k;
-	
-	for (k = 0; k < CFG_PACK_WORDS; k++)
-	  {
-	    if (p[k] != lookfor[k])
-	      goto not_found;
-	  }
-	
-	found = p;
-	break;
-	
-      not_found:
-	if (!*p)
-	  {
-	    found = NULL;
-	    break;
-	  }
-	
-	j = (j + _hash_stride) & _hash_mask;
-      }
-  }
-
-
-  if (found)
-    {
-      _found++;
-      *val = *(((double *) found) + CFG_PACK_WORDS);
-    }
-  _lookups++;
-
-  return found != NULL;
-}
