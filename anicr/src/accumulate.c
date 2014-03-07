@@ -692,36 +692,6 @@ void alloc_accumulate()
           (double) sum_coll / (double) num_accum_comb, max_coll);
 }
 
-void accumulate_post_add(uint64_t key, uint64_t x, double value)
-{
-  while (_acc_hash[x]._key != key)
-    {
-      if (_acc_hash[x]._key == 0)
-	{
-	  fprintf (stderr, "Internal error: accumulate item not found.\n");
-	  exit(1);
-	}
-
-      x = (x + 1) & _acc_hash_mask;
-    }
-  
-  _acc_hash[x]._value += value;
-}
-
-int accumulate_post_get(uint64_t key, uint64_t x, double *value)
-{
-  while (_acc_hash[x]._key != key)
-    {
-      if (_acc_hash[x]._key == 0)
-	return 0;
-
-      x = (x + 1) & _acc_hash_mask;
-    }
-  
-  *value = _acc_hash[x]._value;
-
-  return 1;
-}
 
 
 

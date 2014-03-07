@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 void prepare_accumulate();
 
@@ -65,9 +66,36 @@ inline void accumulate_prefetch_rw(uint64_t x)
   __builtin_prefetch(&_acc_hash[x]._key, 1, 0);
 }
 
-void accumulate_post_add(uint64_t key, uint64_t x, double value);
+inline void accumulate_post_add(uint64_t key, uint64_t x, double value)
+{
+  while (_acc_hash[x]._key != key)
+    {
+      if (_acc_hash[x]._key == 0)
+	{
+	  fprintf (stderr, "Internal error: accumulate item not found.\n");
+	  exit(1);
+	}
 
-int accumulate_post_get(uint64_t key, uint64_t x, double *value);
+      x = (x + 1) & _acc_hash_mask;
+    }
+  
+  _acc_hash[x]._value += value;
+}
+
+inline int accumulate_post_get(uint64_t key, uint64_t x, double *value)
+{
+  while (_acc_hash[x]._key != key)
+    {
+      if (_acc_hash[x]._key == 0)
+	return 0;
+
+      x = (x + 1) & _acc_hash_mask;
+    }
+  
+  *value = _acc_hash[x]._value;
+
+  return 1;
+}
 
 /*****************************************************************************/
 
