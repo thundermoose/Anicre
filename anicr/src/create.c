@@ -678,6 +678,17 @@ void created_state(int *in_sp_other,
   int acc_i = sp_anni * CFG_NUM_SP_STATES + sp_crea;
 #endif
 
+  uint64_t key =
+    (((uint64_t) sp_anni1) <<  0) |
+    (((uint64_t) sp_anni2) << 16) |
+    (((uint64_t) sp_crea1) << 32) |
+    (((uint64_t) sp_crea2) << 48);
+
+  uint64_t x;
+
+  accumulate_pre(key, &x);
+  accumulate_prefetch_rw(x);
+
   /*
   int lookfor[CFG_NUM_SP_STATES0 + CFG_NUM_SP_STATES1];
 
@@ -716,13 +727,7 @@ void created_state(int *in_sp_other,
   _accumulate[acc_i] += val * _cur_val * sign;
 #endif
 
-  uint64_t key =
-    (((uint64_t) sp_anni1) <<  0) |
-    (((uint64_t) sp_anni2) << 16) |
-    (((uint64_t) sp_crea1) << 32) |
-    (((uint64_t) sp_crea2) << 48);
-
-  accumulate_add(key, val * _cur_val * sign);
+  accumulate_post_add(key, x, val * _cur_val * sign);
 
 #if DEBUG_ANICR
   printf ("%5d %15.10f\n", acc_i, val * _cur_val * sign);

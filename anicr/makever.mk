@@ -16,7 +16,7 @@ CFLAGS = -lm -O3 -g -std=c99 # -pg
 
 LINKFLAGS += -g # -pg
 
-CFLAGS += -ansi -Wall -Wno-unused-function -Wno-unused-label \
+CFLAGS += -Wall -Wno-unused-function -Wno-unused-label \
 	-W -Wshadow -Wwrite-strings -Wconversion \
 	-Werror 
 

@@ -159,7 +159,11 @@ void couple_accumulate()
 		(((uint64_t) sp_crea1) << 32) |
 		(((uint64_t) sp_crea2) << 48);
 
-	      int has = accumulate_get(key, &acc_value);
+	      uint64_t x;
+
+	      accumulate_pre(key, &x);
+	      accumulate_prefetch_r(x);
+	      int has = accumulate_post_get(key, x, &acc_value);
 
 	      if (!has)
 		acc_value = 0;
@@ -746,7 +750,11 @@ void couple_accumulate_2()
 
 		      double value;
 
-		      int has = accumulate_get(acc_key, &value);
+		      uint64_t x;
+
+		      accumulate_pre(acc_key, &x);
+		      accumulate_prefetch_r(x);
+		      int has = accumulate_post_get(acc_key, x, &value);
 
 		      if (!has)
 			{

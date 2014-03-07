@@ -58,44 +58,11 @@ void prepare_accumulate()
   printf ("Read %zd jm pairs states.\n", (size_t) CFG_JM_PAIRS);
 }
 
-uint64_t acc_hash_key(uint64_t key)
-{
-  uint64_t x = 0, y = 0;
-
-  y = key;
-  x = key;
-
-#define _lcga 6364136223846793005ll
-#define _lcgc 1442695040888963407ll
-
-  x = x * _lcga + _lcgc;
-  
-  x = x ^ (x << 35);
-  x = x ^ (x >> 4);
-  x = x ^ (x << 17);
-  /*
-  x = x ^ (x >> 35);
-  x = x ^ (x << 4);
-  x = x ^ (x >> 17);
-  */
-  /*
-  printf ("%016"PRIx64":%016"PRIx64" -> %016"PRIx64"\n",
-          key[0], key[1], x);
-  */
-  return x ^ y;
-}
-
 #if ACC_TABLE
 double *_accumulate;
 #endif
 
-typedef struct accumulate_hash_item_t
-{
-  uint64_t _key;
-  double   _value;
-} accumulate_hash_item;
-
-accumulate_hash_item *_acc_hash;
+accumulate_hash_item *_acc_hash = NULL;
 uint64_t              _acc_hash_mask = 0;
 
 /*****************************************************************************/
@@ -725,51 +692,33 @@ void alloc_accumulate()
           (double) sum_coll / (double) num_accum_comb, max_coll);
 }
 
-void accumulate_add(uint64_t key, double value)
+void accumulate_post_add(uint64_t key, uint64_t x, double value)
 {
-  uint64_t x = acc_hash_key(key);
-  
-  x ^= x >> 32;
-  
-  uint64_t j = x & _acc_hash_mask;
-  
-  uint64_t coll = 0;
-  
-  while (_acc_hash[j]._key != key)
+  while (_acc_hash[x]._key != key)
     {
-      if (_acc_hash[j]._key == 0)
+      if (_acc_hash[x]._key == 0)
 	{
 	  fprintf (stderr, "Internal error: accumulate item not found.\n");
 	  exit(1);
 	}
 
-      j = (j + 1) & _acc_hash_mask;
-      coll++;
+      x = (x + 1) & _acc_hash_mask;
     }
   
-  _acc_hash[j]._value += value;
+  _acc_hash[x]._value += value;
 }
 
-int accumulate_get(uint64_t key, double *value)
+int accumulate_post_get(uint64_t key, uint64_t x, double *value)
 {
-  uint64_t x = acc_hash_key(key);
-  
-  x ^= x >> 32;
-  
-  uint64_t j = x & _acc_hash_mask;
-  
-  uint64_t coll = 0;
-  
-  while (_acc_hash[j]._key != key)
+  while (_acc_hash[x]._key != key)
     {
-      if (_acc_hash[j]._key == 0)
+      if (_acc_hash[x]._key == 0)
 	return 0;
 
-      j = (j + 1) & _acc_hash_mask;
-      coll++;
+      x = (x + 1) & _acc_hash_mask;
     }
   
-  *value = _acc_hash[j]._value;
+  *value = _acc_hash[x]._value;
 
   return 1;
 }

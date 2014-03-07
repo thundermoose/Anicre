@@ -6,9 +6,70 @@
 
 void prepare_accumulate();
 
-void accumulate_add(uint64_t key, double value);
+/*****************************************************************************/
 
-int accumulate_get(uint64_t key, double *value);
+typedef struct accumulate_hash_item_t
+{
+  uint64_t _key;
+  double   _value;
+} accumulate_hash_item;
+
+extern accumulate_hash_item *_acc_hash;
+extern uint64_t              _acc_hash_mask;
+
+inline uint64_t acc_hash_key(uint64_t key)
+{
+  uint64_t x = 0, y = 0;
+
+  y = key;
+  x = key;
+
+#define _lcga 6364136223846793005ll
+#define _lcgc 1442695040888963407ll
+
+  x = x * _lcga + _lcgc;
+  
+  x = x ^ (x << 35);
+  x = x ^ (x >> 4);
+  x = x ^ (x << 17);
+  /*
+  x = x ^ (x >> 35);
+  x = x ^ (x << 4);
+  x = x ^ (x >> 17);
+  */
+  /*
+  printf ("%016"PRIx64":%016"PRIx64" -> %016"PRIx64"\n",
+          key[0], key[1], x);
+  */
+  return x ^ y;
+}
+
+inline void accumulate_pre(uint64_t key, uint64_t *rx)
+{
+  uint64_t x = acc_hash_key(key);
+  
+  x ^= x >> 32;
+  
+  x = x & _acc_hash_mask;
+
+  *rx = x;
+}
+
+inline void accumulate_prefetch_r(uint64_t x)
+{
+  __builtin_prefetch(&_acc_hash[x]._key, 0, 0);
+}
+
+inline void accumulate_prefetch_rw(uint64_t x)
+{
+  __builtin_prefetch(&_acc_hash[x]._key, 1, 0);
+}
+
+void accumulate_post_add(uint64_t key, uint64_t x, double value);
+
+int accumulate_post_get(uint64_t key, uint64_t x, double *value);
+
+/*****************************************************************************/
 
 void prepare_nlj();
 
