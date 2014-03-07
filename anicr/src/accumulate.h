@@ -66,8 +66,10 @@ inline void accumulate_prefetch_rw(uint64_t x)
   __builtin_prefetch(&_acc_hash[x]._key, 1, 0);
 }
 
-inline void accumulate_post_add(uint64_t key, uint64_t x, double value)
+inline void accumulate_advance_add(uint64_t key, uint64_t *rx)
 {
+  uint64_t x = *rx;
+
   while (_acc_hash[x]._key != key)
     {
       if (_acc_hash[x]._key == 0)
@@ -78,7 +80,12 @@ inline void accumulate_post_add(uint64_t key, uint64_t x, double value)
 
       x = (x + 1) & _acc_hash_mask;
     }
-  
+
+  *rx = x;
+}
+
+inline void accumulate_post_add(uint64_t x, double value)
+{
   _acc_hash[x]._value += value;
 }
 

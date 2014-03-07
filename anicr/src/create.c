@@ -718,8 +718,6 @@ void created_state(int *in_sp_other,
   find_mp_state_pre(lookfor_packed, &lookfor_x);
   find_mp_state_prefetch(lookfor_x);
 
-  /* accumulate_advance(key, &acc_x); */
-
   double val;
 
   if (!find_mp_state_post(lookfor_packed, lookfor_x, &val))
@@ -735,7 +733,8 @@ void created_state(int *in_sp_other,
   _accumulate[acc_i] += val * _cur_val * sign;
 #endif
 
-  accumulate_post_add(key, acc_x, val * _cur_val * sign);
+  accumulate_advance_add(key, &acc_x);
+  accumulate_post_add(acc_x, val * _cur_val * sign);
 
 #if DEBUG_ANICR
   printf ("%5d %15.10f\n", acc_i, val * _cur_val * sign);
