@@ -32,6 +32,10 @@ mr_antoine_reader(mr_file_reader *file_reader)
   for (int i = 0; i < 2; i++)
     _occ_used[i] = NULL;
   _jm_used = NULL;
+  _jm_jm_used = NULL;
+  _nlj_used = NULL;
+  _nljs_map = NULL;
+  _sps_map = NULL;
 }
 
 template<class header_version_t, class fon_version_t>
@@ -934,46 +938,21 @@ void mr_antoine_reader<header_version_t, fon_version_t>::make_nlj_map()
 }
 
 template<class header_version_t, class fon_version_t>
-void mr_antoine_reader<header_version_t, fon_version_t>::find_used_states()
-{
-  find_occ_used();
-
-  find_jm_used();
-
-  find_nlj_used();
-
-  make_nlj_map();
-
-
-
-  
-  find_jm_pairs();
-
-}
-
-template<class header_version_t, class fon_version_t>
-void mr_antoine_reader<header_version_t, fon_version_t>::find_jm_pairs()
-{
-}
-
-template<class header_version_t, class fon_version_t>
-void mr_antoine_reader<header_version_t, fon_version_t>::create_code_tables()
+void mr_antoine_reader<header_version_t, fon_version_t>::make_sps_map()
 {
   /* Fetch all the sp states that actually are in use.
    * No need to included unused ones in tables.
    */
 
-  vect_sp_state sps;
-
   /* Mapping. */
 
-  int *sps_map = (int *) malloc (sizeof (int) * _header.num_of_jm);
+  _sps_map = (int *) malloc (sizeof (int) * _header.num_of_jm);
 
-  if (!sps_map)
+  if (!_sps_map)
     FATAL("Memory allocation failure (sps_map).");
 
   for (uint32_t i = 0; i < _header.num_of_jm; i++)
-    sps_map[i] = -1;
+    _sps_map[i] = -1;
 
   BITSONE_CONTAINER_TYPE *jm_u = _jm_used;
 
@@ -993,17 +972,40 @@ void mr_antoine_reader<header_version_t, fon_version_t>::create_code_tables()
 	      uint32_t sh = mpr.num - 1;
 	      mr_antoine_nr_ll_jj_item_t &shell = _nr_ll_jj[sh];
 
-	      sps_map[i] = (int) sps.size();
+	      _sps_map[i] = (int) _sps.size();
 
-	      sps.push_back(sp_state(shell.nr, shell.ll, shell.jj, mpr.mpr,
-				     _nljs_map[sh]));
+	      _sps.push_back(sp_state(shell.nr, shell.ll, shell.jj, mpr.mpr,
+				      _nljs_map[sh]));
 	    }
 
 	  used >>= 1;
 	  off++;
 	}
     }
+}
 
+
+
+template<class header_version_t, class fon_version_t>
+void mr_antoine_reader<header_version_t, fon_version_t>::find_used_states()
+{
+  find_occ_used();
+  find_jm_used();
+  find_nlj_used();
+  make_nlj_map();
+  make_sps_map();
+  
+  find_jm_pairs();
+}
+
+template<class header_version_t, class fon_version_t>
+void mr_antoine_reader<header_version_t, fon_version_t>::find_jm_pairs()
+{
+}
+
+template<class header_version_t, class fon_version_t>
+void mr_antoine_reader<header_version_t, fon_version_t>::create_code_tables()
+{
   /* Find the pairs of sp-states in use. */
 
   uint64_t num_jm_pairs = 0;
@@ -1039,8 +1041,8 @@ void mr_antoine_reader<header_version_t, fon_version_t>::create_code_tables()
 	  {
 	    if (_jm_jm_used[j1 + j2 * _header.num_of_jm])
 	      {
-		int mapped_j1 = sps_map[j1];
-		int mapped_j2 = sps_map[j2];
+		int mapped_j1 = _sps_map[j1];
+		int mapped_j2 = _sps_map[j2];
 
 		*p = (mapped_j2 << 16) | mapped_j1;
 		p++;
@@ -1064,7 +1066,7 @@ void mr_antoine_reader<header_version_t, fon_version_t>::create_code_tables()
   for (unsigned int i = 0; i < _header.num_of_jm; i++)
     {
       if (_max_jm_for_jm[i] || _max_jm_for_jm[i + _header.num_of_jm])
-	max_jm_first = sps_map[i];
+	max_jm_first = _sps_map[i];
     }
 
   /* Now that we know who are used, we can for each sp location in the
@@ -1073,6 +1075,8 @@ void mr_antoine_reader<header_version_t, fon_version_t>::create_code_tables()
 
   int *_jm_max_spi =
     (int *) malloc (sizeof (int) * _jm_used_slots);
+
+  BITSONE_CONTAINER_TYPE *jm_u = _jm_used;
 
   for (size_t i = 0; i < _jm_used_slots; i++)
     {
@@ -1090,7 +1094,7 @@ void mr_antoine_reader<header_version_t, fon_version_t>::create_code_tables()
 	      if (used & 1)
 		{
 		  int orig_sp = (int) (j * sizeof (used) * 8 + off);
-		  int map_sp = sps_map[orig_sp];
+		  int map_sp = _sps_map[orig_sp];
 
 		  if (map_sp > _jm_max_spi[i])
 		    _jm_max_spi[i] = map_sp;
@@ -1256,7 +1260,7 @@ void mr_antoine_reader<header_version_t, fon_version_t>::create_code_tables()
 				sum_neg_m += mpr;
 
 			      bit_packing.insert_packed(mp_ptr_this, kk++,
-							sps_map[jm]);
+							_sps_map[jm]);
 			    }
 			}
 		      /*
@@ -1354,9 +1358,9 @@ void mr_antoine_reader<header_version_t, fon_version_t>::create_code_tables()
 
       nlj_states_table(out_table, _nljs);
 
-      sp_states_table(out_table, sps);
+      sp_states_table(out_table, _sps);
 
-      missing_mpr_tables(out_table, M, parity, sps);
+      missing_mpr_tables(out_table, M, parity, _sps);
     }
 
   if (_config._td_dir)
@@ -1374,7 +1378,7 @@ void mr_antoine_reader<header_version_t, fon_version_t>::create_code_tables()
       out_config.fprintf("#define CFG_NUM_NLJ_STATES  %zd\n",
 			 _nljs.size());
       out_config.fprintf("#define CFG_NUM_SP_STATES   %zd\n",
-			 sps.size());
+			 _sps.size());
       out_config.fprintf("#define CFG_NUM_SP_STATES0  %d\n",
 			 _header.A[0]);
       out_config.fprintf("#define CFG_NUM_SP_STATES1  %d\n",
@@ -1423,7 +1427,7 @@ void mr_antoine_reader<header_version_t, fon_version_t>::create_code_tables()
       */
 
       uint64_t end_first = max_jm_first + 1;
-      uint64_t total2 = end_first * (2 * sps.size() - end_first - 1)/2;
+      uint64_t total2 = end_first * (2 * _sps.size() - end_first - 1)/2;
 
       out_config.fprintf("#define CFG_TOT_FIRST_SCND    %"PRIu64"\n",
                          total2);

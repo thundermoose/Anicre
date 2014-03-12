@@ -93,13 +93,16 @@ public:
   uint32_t *_max_jm_for_jm;  // TO BE REMOVED
   unsigned int _max_jm_first;  // TO BE REMOVED
 
+  BITSONE_CONTAINER_TYPE     *_nlj_used;
+  size_t                      _nlj_used_items_per_slot;
+
   vect_nlj_state              _nljs;
   int                        *_nljs_map;
 
   uint32_t                    _max_j;
 
-  BITSONE_CONTAINER_TYPE     *_nlj_used;
-  size_t                      _nlj_used_items_per_slot;
+  vect_sp_state               _sps;
+  int                        *_sps_map;
 
 public:
   bool level1_read_wavefcn(wavefcn_t *wavefcn,
@@ -126,6 +129,7 @@ protected:
   void info_jm_used();
   void find_nlj_used();
   void make_nlj_map();
+  void make_sps_map();
 
   void find_jm_pairs();
 
