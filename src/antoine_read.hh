@@ -86,6 +86,11 @@ public:
   size_t                      _jm_used_items_per_slot;
   size_t                      _jm_used_slots;
 
+  char                       *_jm_jm_used;
+
+  uint32_t *_max_jm_for_jm;  // TO BE REMOVED
+  unsigned int _max_jm_first;  // TO BE REMOVED
+
   BITSONE_CONTAINER_TYPE     *_nlj_used;
   size_t                      _nlj_used_items_per_slot;
 
@@ -110,6 +115,7 @@ public:
 
 protected:
   void find_occ_used();
+  void find_jm_used();
 
 protected:
   void dump_occ_chunk(int k,uint32_t start,uint32_t num);

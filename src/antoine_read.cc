@@ -624,6 +624,8 @@ dump_istate_chunk(mr_file_chunk<mr_antoine_istate_item_t> &chunk)
 template<class header_version_t, class fon_version_t>
 void mr_antoine_reader<header_version_t, fon_version_t>::find_occ_used()
 {
+  /* Find out which occ states are used by the istates. */
+
   for (int i = 0; i < 2; i++)
     {
       size_t n = _header.nslt[i];
@@ -682,10 +684,12 @@ void mr_antoine_reader<header_version_t, fon_version_t>::find_occ_used()
 
       printf ("OCC %d used: %ld (%zd)\n", i, occ_used, _occ_used_items[i]);
     }
+}
 
-  /* And then find out which single-particle states are used
-   * by the occs.
-   */
+template<class header_version_t, class fon_version_t>
+void mr_antoine_reader<header_version_t, fon_version_t>::find_jm_used()
+{
+  /* Find out which single-particle states are used by the occs. */
 
   _jm_used_slots = _header.A[0] + _header.A[1] + 1;
   _jm_used_items_per_slot =
@@ -701,38 +705,25 @@ void mr_antoine_reader<header_version_t, fon_version_t>::find_occ_used()
   memset(_jm_used, 0,
 	 _jm_used_slots * _jm_used_items_per_slot *
 	 sizeof (BITSONE_CONTAINER_TYPE));
-}
 
-template<class header_version_t, class fon_version_t>
-void mr_antoine_reader<header_version_t, fon_version_t>::find_used_states()
-{
-  /* First find out which occ states are used by the istates. */
-
-  find_occ_used();
-
-}
-
-template<class header_version_t, class fon_version_t>
-void mr_antoine_reader<header_version_t, fon_version_t>::create_code_tables()
-{
   BITSONE_CONTAINER_TYPE *jm_u_all = _jm_used;
   BITSONE_CONTAINER_TYPE *jm_u = _jm_used + _jm_used_items_per_slot;
 
   size_t max_jm_for_jm_sz = 2 * sizeof (uint32_t) * _header.num_of_jm;
 
-  uint32_t *_max_jm_for_jm = (uint32_t *) malloc (max_jm_for_jm_sz);
+  _max_jm_for_jm = (uint32_t *) malloc (max_jm_for_jm_sz);
 
   if (!_max_jm_for_jm)
     FATAL("Memory allocation failure (_max_jm_for_jm).");
 
   memset(_max_jm_for_jm, 0, max_jm_for_jm_sz);
 
-  char *jm_jm_used = (char *) malloc (_header.num_of_jm * _header.num_of_jm);
+  _jm_jm_used = (char *) malloc (_header.num_of_jm * _header.num_of_jm);
 
-  if (!jm_jm_used)
+  if (!_jm_jm_used)
     FATAL("Memory allocation failure (jm_jm_used).");
 
-  memset (jm_jm_used, 0, _header.num_of_jm * _header.num_of_jm);
+  memset (_jm_jm_used, 0, _header.num_of_jm * _header.num_of_jm);
 
   for (int i = 0; i < 2; i++)
     {
@@ -790,8 +781,8 @@ void mr_antoine_reader<header_version_t, fon_version_t>::create_code_tables()
 		{
 		  for (unsigned int j2 = j1 + 1; j2 < _header.A[i]; j2++)
 		    {
-		      jm_jm_used[jm_array[j1] +
-				 jm_array[j2] * _header.num_of_jm] = 1;
+		      _jm_jm_used[jm_array[j1] +
+				  jm_array[j2] * _header.num_of_jm] = 1;
 		    }
 		}
 	      /*
@@ -813,6 +804,20 @@ void mr_antoine_reader<header_version_t, fon_version_t>::create_code_tables()
 	      _max_jm_for_jm[i + _header.num_of_jm]);
       */
     }
+}
+
+template<class header_version_t, class fon_version_t>
+void mr_antoine_reader<header_version_t, fon_version_t>::find_used_states()
+{
+  find_occ_used();
+
+  find_jm_used();
+
+}
+
+template<class header_version_t, class fon_version_t>
+void mr_antoine_reader<header_version_t, fon_version_t>::create_code_tables()
+{
 
   uint64_t num_jm_pairs = 0;
 
@@ -820,7 +825,7 @@ void mr_antoine_reader<header_version_t, fon_version_t>::create_code_tables()
     {
       for (unsigned int j2 = 0; j2 < _header.num_of_jm; j2++)
 	{
-	  num_jm_pairs += jm_jm_used[j1 + j2 * _header.num_of_jm];
+	  num_jm_pairs += _jm_jm_used[j1 + j2 * _header.num_of_jm];
 	}
     }
 
@@ -828,7 +833,7 @@ void mr_antoine_reader<header_version_t, fon_version_t>::create_code_tables()
 	  num_jm_pairs,
 	  (uint64_t) _header.num_of_jm * (uint64_t) _header.num_of_jm);
 
-  jm_u = _jm_used;
+  BITSONE_CONTAINER_TYPE *jm_u = _jm_used;
 
   int sp_used = -1;
 
@@ -1004,7 +1009,7 @@ void mr_antoine_reader<header_version_t, fon_version_t>::create_code_tables()
       {
 	for (unsigned int j2 = 0; j2 < _header.num_of_jm; j2++)
 	  {
-	    if (jm_jm_used[j1 + j2 * _header.num_of_jm])
+	    if (_jm_jm_used[j1 + j2 * _header.num_of_jm])
 	      {
 		int mapped_j1 = sps_map[j1];
 		int mapped_j2 = sps_map[j2];
