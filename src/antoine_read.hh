@@ -104,6 +104,8 @@ public:
   vect_sp_state               _sps;
   int                        *_sps_map;
 
+  uint64_t                    _num_jm_pairs;
+
 public:
   bool level1_read_wavefcn(wavefcn_t *wavefcn,
 			   uint64_t &cur_offset, uint32_t nsd);

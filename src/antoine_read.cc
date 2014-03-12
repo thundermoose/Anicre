@@ -984,48 +984,29 @@ void mr_antoine_reader<header_version_t, fon_version_t>::make_sps_map()
     }
 }
 
-
-
-template<class header_version_t, class fon_version_t>
-void mr_antoine_reader<header_version_t, fon_version_t>::find_used_states()
-{
-  find_occ_used();
-  find_jm_used();
-  find_nlj_used();
-  make_nlj_map();
-  make_sps_map();
-  
-  find_jm_pairs();
-}
-
 template<class header_version_t, class fon_version_t>
 void mr_antoine_reader<header_version_t, fon_version_t>::find_jm_pairs()
 {
-}
-
-template<class header_version_t, class fon_version_t>
-void mr_antoine_reader<header_version_t, fon_version_t>::create_code_tables()
-{
   /* Find the pairs of sp-states in use. */
 
-  uint64_t num_jm_pairs = 0;
+  _num_jm_pairs = 0;
 
   for (unsigned int j1 = 0; j1 < _header.num_of_jm; j1++)
     {
       for (unsigned int j2 = 0; j2 < _header.num_of_jm; j2++)
 	{
-	  num_jm_pairs += _jm_jm_used[j1 + j2 * _header.num_of_jm];
+	  _num_jm_pairs += _jm_jm_used[j1 + j2 * _header.num_of_jm];
 	}
     }
 
   printf ("jm x jm used: %"PRIu64" /  %"PRIu64"\n",
-	  num_jm_pairs,
+	  _num_jm_pairs,
 	  (uint64_t) _header.num_of_jm * (uint64_t) _header.num_of_jm);
 
   /* Dump the pairs of sp-states in use. */
 
   {
-    size_t sz_jm_pairs = sizeof (uint32_t) * num_jm_pairs;
+    size_t sz_jm_pairs = sizeof (uint32_t) * _num_jm_pairs;
     
     uint32_t *jm_pairs =
       (uint32_t *) malloc (sz_jm_pairs);
@@ -1058,7 +1039,22 @@ void mr_antoine_reader<header_version_t, fon_version_t>::create_code_tables()
 
     free (jm_pairs);
   }
+}
 
+template<class header_version_t, class fon_version_t>
+void mr_antoine_reader<header_version_t, fon_version_t>::find_used_states()
+{
+  find_occ_used();
+  find_jm_used();
+  find_nlj_used();
+  make_nlj_map();
+  make_sps_map();
+  find_jm_pairs();
+}
+
+template<class header_version_t, class fon_version_t>
+void mr_antoine_reader<header_version_t, fon_version_t>::create_code_tables()
+{
   /* */
 
   unsigned int max_jm_first = -1;
@@ -1432,7 +1428,7 @@ void mr_antoine_reader<header_version_t, fon_version_t>::create_code_tables()
       out_config.fprintf("#define CFG_TOT_FIRST_SCND    %"PRIu64"\n",
                          total2);
       out_config.fprintf("#define CFG_JM_PAIRS          %"PRIu64"\n",
-			 num_jm_pairs);
+			 _num_jm_pairs);
 
     }
 
