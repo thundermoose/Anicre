@@ -117,6 +117,8 @@ protected:
   void find_occ_used();
   void find_jm_used();
   void info_jm_used();
+  void find_nlj_used();
+
   void find_jm_pairs();
 
 protected:

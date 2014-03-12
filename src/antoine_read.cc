@@ -834,29 +834,8 @@ void mr_antoine_reader<header_version_t, fon_version_t>::info_jm_used()
 }
 
 template<class header_version_t, class fon_version_t>
-void mr_antoine_reader<header_version_t, fon_version_t>::find_jm_pairs()
+void mr_antoine_reader<header_version_t, fon_version_t>::find_nlj_used()
 {
-}
-
-template<class header_version_t, class fon_version_t>
-void mr_antoine_reader<header_version_t, fon_version_t>::find_used_states()
-{
-  find_occ_used();
-
-  find_jm_used();
-
-
-
-
-  
-  find_jm_pairs();
-
-}
-
-template<class header_version_t, class fon_version_t>
-void mr_antoine_reader<header_version_t, fon_version_t>::create_code_tables()
-{
-
   /* Find out which nlj indices are in use. */
 
   _nlj_used_items_per_slot =
@@ -902,7 +881,31 @@ void mr_antoine_reader<header_version_t, fon_version_t>::create_code_tables()
 	  off++;
 	}
     }
+}
 
+template<class header_version_t, class fon_version_t>
+void mr_antoine_reader<header_version_t, fon_version_t>::find_used_states()
+{
+  find_occ_used();
+
+  find_jm_used();
+
+  find_nlj_used();
+
+
+  
+  find_jm_pairs();
+
+}
+
+template<class header_version_t, class fon_version_t>
+void mr_antoine_reader<header_version_t, fon_version_t>::find_jm_pairs()
+{
+}
+
+template<class header_version_t, class fon_version_t>
+void mr_antoine_reader<header_version_t, fon_version_t>::create_code_tables()
+{
   /* */
 
   int nlj_used = 0;
@@ -967,6 +970,8 @@ void mr_antoine_reader<header_version_t, fon_version_t>::create_code_tables()
 
   for (uint32_t i = 0; i < _header.num_of_jm; i++)
     sps_map[i] = -1;
+
+  BITSONE_CONTAINER_TYPE *jm_u = _jm_used;
 
   for (size_t j = 0; j < _jm_used_items_per_slot; j++)
     {
