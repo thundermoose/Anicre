@@ -111,6 +111,12 @@ public:
 
   pack_mp_state<BIT_PACK_T>   _bit_packing;
 
+  int                         _max_N;
+  int                         _n_wavefcns;
+
+  int                         _sum_m;
+  int                         _parity;
+
 
 public:
   bool level1_read_wavefcn(wavefcn_t *wavefcn,
@@ -140,6 +146,7 @@ protected:
   void make_sps_map();
   void find_jm_pairs();
   void find_mp_bit_packing();
+  void find_energy_dump_states();
 
 protected:
   void dump_occ_chunk(int k,uint32_t start,uint32_t num);
