@@ -30,9 +30,12 @@ public:
   virtual void dump_info() = 0;
 
 public:
-  // Figure out which sp and mp (partial) states are actually used
+  // Figure out which sp and mp (partial) states are actually used.
   virtual void find_used_states() = 0;
 
+public:
+  // Generate the tables and code.
+  virtual void create_code_tables() = 0;
 };
 
 ////////////////////////////////////////////////////////////////////////

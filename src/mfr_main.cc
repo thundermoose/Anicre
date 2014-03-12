@@ -229,6 +229,8 @@ int main(int argc,char *argv[])
 
   reader->find_used_states();
 
+  reader->create_code_tables();
+
   // antoine.
 
   delete reader;

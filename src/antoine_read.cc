@@ -707,7 +707,11 @@ void mr_antoine_reader<header_version_t, fon_version_t>::find_used_states()
   memset(_jm_used, 0,
 	 _jm_used_slots * _jm_used_items_per_slot *
 	 sizeof (BITSONE_CONTAINER_TYPE));
+}
 
+template<class header_version_t, class fon_version_t>
+void mr_antoine_reader<header_version_t, fon_version_t>::create_code_tables()
+{
   BITSONE_CONTAINER_TYPE *jm_u_all = _jm_used;
   BITSONE_CONTAINER_TYPE *jm_u = _jm_used + _jm_used_items_per_slot;
 
