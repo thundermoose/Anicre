@@ -8,8 +8,6 @@
 
 #include "missing_mpr.hh"
 
-#include "pack_mp_state.hh"
-
 #include "file_output.hh"
 
 #include <string.h>
@@ -1042,18 +1040,7 @@ void mr_antoine_reader<header_version_t, fon_version_t>::find_jm_pairs()
 }
 
 template<class header_version_t, class fon_version_t>
-void mr_antoine_reader<header_version_t, fon_version_t>::find_used_states()
-{
-  find_occ_used();
-  find_jm_used();
-  find_nlj_used();
-  make_nlj_map();
-  make_sps_map();
-  find_jm_pairs();
-}
-
-template<class header_version_t, class fon_version_t>
-void mr_antoine_reader<header_version_t, fon_version_t>::create_code_tables()
+void mr_antoine_reader<header_version_t, fon_version_t>::find_mp_bit_packing()
 {
   /* */
 
@@ -1101,22 +1088,34 @@ void mr_antoine_reader<header_version_t, fon_version_t>::create_code_tables()
 	}
     }
 
-#define BIT_PACK_T uint64_t
-
-  pack_mp_state<BIT_PACK_T> bit_packing;
-
-  bit_packing.setup_pack(_header.A[0], _header.A[1],
-			 &_jm_max_spi[1], &_jm_max_spi[1 + _header.A[0]]);
+  _bit_packing.setup_pack(_header.A[0], _header.A[1],
+			  &_jm_max_spi[1], &_jm_max_spi[1 + _header.A[0]]);
 
   for (size_t i = 1; i < _jm_used_slots; i++)
     {
       printf ("JM %2zd max sp %4d, %2d bits @ %2d in word %d\n",
 	      i, _jm_max_spi[i],
-	      bit_packing._items[i-1]._bits,
-	      bit_packing._items[i-1]._shift,
-	      bit_packing._items[i-1]._word);
+	      _bit_packing._items[i-1]._bits,
+	      _bit_packing._items[i-1]._shift,
+	      _bit_packing._items[i-1]._word);
     }
+}
 
+template<class header_version_t, class fon_version_t>
+void mr_antoine_reader<header_version_t, fon_version_t>::find_used_states()
+{
+  find_occ_used();
+  find_jm_used();
+  find_nlj_used();
+  make_nlj_map();
+  make_sps_map();
+  find_jm_pairs();
+  find_mp_bit_packing();
+}
+
+template<class header_version_t, class fon_version_t>
+void mr_antoine_reader<header_version_t, fon_version_t>::create_code_tables()
+{
   /* To calculate the maximum energy, we must map the istate in chunks,
    * and for each chunk, we must map the occ states for both particle
    * kinds in chunks too...
@@ -1148,7 +1147,7 @@ void mr_antoine_reader<header_version_t, fon_version_t>::create_code_tables()
 
   int n_wavefcns = _wavefcns.size() > 0 ? 1 : 0;
 
-  size_t mp_states_stride = bit_packing._words + n_wavefcns;
+  size_t mp_states_stride = _bit_packing._words + n_wavefcns;
 
   size_t mp_states_sz =
     sizeof (BIT_PACK_T) * istate_chunk_sz * mp_states_stride;
@@ -1218,7 +1217,7 @@ void mr_antoine_reader<header_version_t, fon_version_t>::create_code_tables()
 
 		      BIT_PACK_T *mp_ptr_this = mp_ptr;
 
-		      bit_packing.clear_packed(mp_ptr_this);
+		      _bit_packing.clear_packed(mp_ptr_this);
 
 		      int kk = 0;
 
@@ -1255,8 +1254,8 @@ void mr_antoine_reader<header_version_t, fon_version_t>::create_code_tables()
 			      else
 				sum_neg_m += mpr;
 
-			      bit_packing.insert_packed(mp_ptr_this, kk++,
-							_sps_map[jm]);
+			      _bit_packing.insert_packed(mp_ptr_this, kk++,
+							 _sps_map[jm]);
 			    }
 			}
 		      /*
@@ -1303,7 +1302,7 @@ void mr_antoine_reader<header_version_t, fon_version_t>::create_code_tables()
 				       _file_reader,
 				       cm_istate.start(), cm_istate.num(),
 				       mp_states_stride,
-				       bit_packing._words + i);
+				       _bit_packing._words + i);
 	    }
 
 	  size_t mp_used_sz =
@@ -1350,7 +1349,7 @@ void mr_antoine_reader<header_version_t, fon_version_t>::create_code_tables()
       out_table.fprintf("/* Editing is useless.                   */\n");
       out_table.fprintf("\n");
 
-      bit_packing.generate_tables(out_table);
+      _bit_packing.generate_tables(out_table);
 
       nlj_states_table(out_table, _nljs);
 
@@ -1386,11 +1385,11 @@ void mr_antoine_reader<header_version_t, fon_version_t>::create_code_tables()
       out_config.fprintf("#define CFG_SUM_M           %d\n",
 			 max_m); /* = min_m */
       out_config.fprintf("#define CFG_PACK_WORDS      %d\n",
-			 bit_packing._words);
+			 _bit_packing._words);
       out_config.fprintf("#define CFG_WAVEFCNS        %d\n",
 			 n_wavefcns);
       out_config.fprintf("#define CFG_END_JM_FIRST    %d\n",
-			 max_jm_first + 1);
+			 _max_jm_first + 1);
       if (n_wavefcns)
 	{
 	  out_config.fprintf("#define CFG_2J_INITIAL       %d\n",
@@ -1422,7 +1421,7 @@ void mr_antoine_reader<header_version_t, fon_version_t>::create_code_tables()
       total = end * (2 * CFG_NUM_SP_STATES - end - 1)/2;
       */
 
-      uint64_t end_first = max_jm_first + 1;
+      uint64_t end_first = _max_jm_first + 1;
       uint64_t total2 = end_first * (2 * _sps.size() - end_first - 1)/2;
 
       out_config.fprintf("#define CFG_TOT_FIRST_SCND    %"PRIu64"\n",
@@ -1442,7 +1441,7 @@ void mr_antoine_reader<header_version_t, fon_version_t>::create_code_tables()
       out_code.fprintf("/* Editing is useless.                   */\n");
       out_code.fprintf("\n");
 
-      bit_packing.generate_code(out_code);
+      _bit_packing.generate_code(out_code);
 
     }
 }

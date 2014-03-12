@@ -7,6 +7,7 @@
 #include "antoine_struct.hh"
 
 #include "sp_states.hh"
+#include "pack_mp_state.hh"
 
 #include <set>
 #include <vector>
@@ -106,6 +107,11 @@ public:
 
   uint64_t                    _num_jm_pairs;
 
+#define BIT_PACK_T uint64_t
+
+  pack_mp_state<BIT_PACK_T>   _bit_packing;
+
+
 public:
   bool level1_read_wavefcn(wavefcn_t *wavefcn,
 			   uint64_t &cur_offset, uint32_t nsd);
@@ -132,8 +138,8 @@ protected:
   void find_nlj_used();
   void make_nlj_map();
   void make_sps_map();
-
   void find_jm_pairs();
+  void find_mp_bit_packing();
 
 protected:
   void dump_occ_chunk(int k,uint32_t start,uint32_t num);
