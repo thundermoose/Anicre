@@ -6,6 +6,8 @@
 #include "mr_file_chunk.hh"
 #include "antoine_struct.hh"
 
+#include "sp_states.hh"
+
 #include <set>
 #include <vector>
 
@@ -91,6 +93,11 @@ public:
   uint32_t *_max_jm_for_jm;  // TO BE REMOVED
   unsigned int _max_jm_first;  // TO BE REMOVED
 
+  vect_nlj_state              _nljs;
+  int                        *_nljs_map;
+
+  uint32_t                    _max_j;
+
   BITSONE_CONTAINER_TYPE     *_nlj_used;
   size_t                      _nlj_used_items_per_slot;
 
@@ -118,6 +125,7 @@ protected:
   void find_jm_used();
   void info_jm_used();
   void find_nlj_used();
+  void make_nlj_map();
 
   void find_jm_pairs();
 

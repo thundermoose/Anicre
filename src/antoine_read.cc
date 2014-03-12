@@ -6,7 +6,6 @@
 
 #include "mr_file_chunk.hh"
 
-#include "sp_states.hh"
 #include "missing_mpr.hh"
 
 #include "pack_mp_state.hh"
@@ -884,45 +883,23 @@ void mr_antoine_reader<header_version_t, fon_version_t>::find_nlj_used()
 }
 
 template<class header_version_t, class fon_version_t>
-void mr_antoine_reader<header_version_t, fon_version_t>::find_used_states()
-{
-  find_occ_used();
-
-  find_jm_used();
-
-  find_nlj_used();
-
-
-  
-  find_jm_pairs();
-
-}
-
-template<class header_version_t, class fon_version_t>
-void mr_antoine_reader<header_version_t, fon_version_t>::find_jm_pairs()
-{
-}
-
-template<class header_version_t, class fon_version_t>
-void mr_antoine_reader<header_version_t, fon_version_t>::create_code_tables()
+void mr_antoine_reader<header_version_t, fon_version_t>::make_nlj_map()
 {
   /* */
 
   int nlj_used = 0;
   
-  vect_nlj_state nljs;
-
   /* Mapping. */
 
-  int *nljs_map = (int *) malloc (sizeof (int) * _header.num_of_shell);
+  _nljs_map = (int *) malloc (sizeof (int) * _header.num_of_shell);
 
-  if (!nljs_map)
+  if (!_nljs_map)
     FATAL("Memory allocation failure (nljs_map).");
 
   for (uint32_t i = 0; i < _header.num_of_shell; i++)
-    nljs_map[i] = -1;
+    _nljs_map[i] = -1;
 
-  uint32_t max_j = 0;
+  _max_j = 0;
 
   for (size_t j = 0; j < _nlj_used_items_per_slot; j++)
     {
@@ -940,12 +917,12 @@ void mr_antoine_reader<header_version_t, fon_version_t>::create_code_tables()
 
 	      mr_antoine_nr_ll_jj_item_t &shell = _nr_ll_jj[i];
 
-	      nljs_map[i] = (int) nljs.size();
+	      _nljs_map[i] = (int) _nljs.size();
 
-	      nljs.push_back(nlj_state(shell.nr, shell.ll, shell.jj));
+	      _nljs.push_back(nlj_state(shell.nr, shell.ll, shell.jj));
 
-	      if (shell.jj > max_j)
-		max_j = shell.jj;
+	      if (shell.jj > _max_j)
+		_max_j = shell.jj;
 	    }
 	  used >>= 1;
 	  off++;
@@ -953,8 +930,35 @@ void mr_antoine_reader<header_version_t, fon_version_t>::create_code_tables()
     }
 
   printf ("NLJ used: %4d\n", nlj_used);
-  printf ("max j used: %4d\n", max_j);
+  printf ("max j used: %4d\n", _max_j);
+}
 
+template<class header_version_t, class fon_version_t>
+void mr_antoine_reader<header_version_t, fon_version_t>::find_used_states()
+{
+  find_occ_used();
+
+  find_jm_used();
+
+  find_nlj_used();
+
+  make_nlj_map();
+
+
+
+  
+  find_jm_pairs();
+
+}
+
+template<class header_version_t, class fon_version_t>
+void mr_antoine_reader<header_version_t, fon_version_t>::find_jm_pairs()
+{
+}
+
+template<class header_version_t, class fon_version_t>
+void mr_antoine_reader<header_version_t, fon_version_t>::create_code_tables()
+{
   /* Fetch all the sp states that actually are in use.
    * No need to included unused ones in tables.
    */
@@ -992,7 +996,7 @@ void mr_antoine_reader<header_version_t, fon_version_t>::create_code_tables()
 	      sps_map[i] = (int) sps.size();
 
 	      sps.push_back(sp_state(shell.nr, shell.ll, shell.jj, mpr.mpr,
-				     nljs_map[sh]));
+				     _nljs_map[sh]));
 	    }
 
 	  used >>= 1;
@@ -1348,7 +1352,7 @@ void mr_antoine_reader<header_version_t, fon_version_t>::create_code_tables()
 
       bit_packing.generate_tables(out_table);
 
-      nlj_states_table(out_table, nljs);
+      nlj_states_table(out_table, _nljs);
 
       sp_states_table(out_table, sps);
 
@@ -1368,7 +1372,7 @@ void mr_antoine_reader<header_version_t, fon_version_t>::create_code_tables()
       out_config.fprintf("#define CFG_NUM_MP_STATES   %d\n",
 			 _header.nsd);
       out_config.fprintf("#define CFG_NUM_NLJ_STATES  %zd\n",
-			 nljs.size());
+			 _nljs.size());
       out_config.fprintf("#define CFG_NUM_SP_STATES   %zd\n",
 			 sps.size());
       out_config.fprintf("#define CFG_NUM_SP_STATES0  %d\n",
@@ -1378,7 +1382,7 @@ void mr_antoine_reader<header_version_t, fon_version_t>::create_code_tables()
       out_config.fprintf("#define CFG_MAX_SUM_E       %d\n",
 			 max_N);
       out_config.fprintf("#define CFG_MAX_J           %d\n",
-			 max_j);
+			 _max_j);
       out_config.fprintf("#define CFG_SUM_M           %d\n",
 			 max_m); /* = min_m */
       out_config.fprintf("#define CFG_PACK_WORDS      %d\n",
