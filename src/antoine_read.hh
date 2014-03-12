@@ -116,6 +116,8 @@ public:
 protected:
   void find_occ_used();
   void find_jm_used();
+  void info_jm_used();
+  void find_jm_pairs();
 
 protected:
   void dump_occ_chunk(int k,uint32_t start,uint32_t num);

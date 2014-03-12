@@ -807,32 +807,8 @@ void mr_antoine_reader<header_version_t, fon_version_t>::find_jm_used()
 }
 
 template<class header_version_t, class fon_version_t>
-void mr_antoine_reader<header_version_t, fon_version_t>::find_used_states()
+void mr_antoine_reader<header_version_t, fon_version_t>::info_jm_used()
 {
-  find_occ_used();
-
-  find_jm_used();
-
-}
-
-template<class header_version_t, class fon_version_t>
-void mr_antoine_reader<header_version_t, fon_version_t>::create_code_tables()
-{
-
-  uint64_t num_jm_pairs = 0;
-
-  for (unsigned int j1 = 0; j1 < _header.num_of_jm; j1++)
-    {
-      for (unsigned int j2 = 0; j2 < _header.num_of_jm; j2++)
-	{
-	  num_jm_pairs += _jm_jm_used[j1 + j2 * _header.num_of_jm];
-	}
-    }
-
-  printf ("jm x jm used: %"PRIu64" /  %"PRIu64"\n",
-	  num_jm_pairs,
-	  (uint64_t) _header.num_of_jm * (uint64_t) _header.num_of_jm);
-
   BITSONE_CONTAINER_TYPE *jm_u = _jm_used;
 
   int sp_used = -1;
@@ -855,6 +831,31 @@ void mr_antoine_reader<header_version_t, fon_version_t>::create_code_tables()
     }
 
   (void) sp_used;
+}
+
+template<class header_version_t, class fon_version_t>
+void mr_antoine_reader<header_version_t, fon_version_t>::find_jm_pairs()
+{
+}
+
+template<class header_version_t, class fon_version_t>
+void mr_antoine_reader<header_version_t, fon_version_t>::find_used_states()
+{
+  find_occ_used();
+
+  find_jm_used();
+
+
+
+
+  
+  find_jm_pairs();
+
+}
+
+template<class header_version_t, class fon_version_t>
+void mr_antoine_reader<header_version_t, fon_version_t>::create_code_tables()
+{
 
   /* Find out which nlj indices are in use. */
 
@@ -871,6 +872,8 @@ void mr_antoine_reader<header_version_t, fon_version_t>::create_code_tables()
   memset(_nlj_used, 0,
 	 _nlj_used_items_per_slot *
 	    sizeof (BITSONE_CONTAINER_TYPE));
+
+  BITSONE_CONTAINER_TYPE *jm_u = _jm_used;
 
   for (size_t j = 0; j < _jm_used_items_per_slot; j++)
     {
@@ -991,6 +994,22 @@ void mr_antoine_reader<header_version_t, fon_version_t>::create_code_tables()
 	  off++;
 	}
     }
+
+  /* Find the pairs of sp-states in use. */
+
+  uint64_t num_jm_pairs = 0;
+
+  for (unsigned int j1 = 0; j1 < _header.num_of_jm; j1++)
+    {
+      for (unsigned int j2 = 0; j2 < _header.num_of_jm; j2++)
+	{
+	  num_jm_pairs += _jm_jm_used[j1 + j2 * _header.num_of_jm];
+	}
+    }
+
+  printf ("jm x jm used: %"PRIu64" /  %"PRIu64"\n",
+	  num_jm_pairs,
+	  (uint64_t) _header.num_of_jm * (uint64_t) _header.num_of_jm);
 
   /* Dump the pairs of sp-states in use. */
 
