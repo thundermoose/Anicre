@@ -109,6 +109,9 @@ public:
   virtual void create_code_tables();
 
 protected:
+  void find_occ_used();
+
+protected:
   void dump_occ_chunk(int k,uint32_t start,uint32_t num);
   void dump_istate_chunk(mr_file_chunk<mr_antoine_istate_item_t> &chunk);
 };

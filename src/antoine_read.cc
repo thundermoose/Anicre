@@ -622,14 +622,8 @@ dump_istate_chunk(mr_file_chunk<mr_antoine_istate_item_t> &chunk)
 
 
 template<class header_version_t, class fon_version_t>
-void mr_antoine_reader<header_version_t, fon_version_t>::find_used_states()
+void mr_antoine_reader<header_version_t, fon_version_t>::find_occ_used()
 {
-  /* First find out which occ states are used by the istates. */
-  /*
-  BITSONE_CONTAINER_TYPE      _occ_used[2];
-#define BITSONE_CONTAINER_BITS    (sizeof(BITSONE_CONTAINER_TYPE)*8)
-  */
-
   for (int i = 0; i < 2; i++)
     {
       size_t n = _header.nslt[i];
@@ -707,6 +701,15 @@ void mr_antoine_reader<header_version_t, fon_version_t>::find_used_states()
   memset(_jm_used, 0,
 	 _jm_used_slots * _jm_used_items_per_slot *
 	 sizeof (BITSONE_CONTAINER_TYPE));
+}
+
+template<class header_version_t, class fon_version_t>
+void mr_antoine_reader<header_version_t, fon_version_t>::find_used_states()
+{
+  /* First find out which occ states are used by the istates. */
+
+  find_occ_used();
+
 }
 
 template<class header_version_t, class fon_version_t>
