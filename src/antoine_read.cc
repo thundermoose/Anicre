@@ -1103,7 +1103,7 @@ void mr_antoine_reader<header_version_t, fon_version_t>::find_mp_bit_packing()
 
 template<class header_version_t, class fon_version_t>
 void mr_antoine_reader<header_version_t, fon_version_t>::
-  find_energy_dump_states()
+  find_energy_dump_states(mp_state_info &mp_info)
 {
   /* To calculate the maximum energy, we must map the istate in chunks,
    * and for each chunk, we must map the occ states for both particle
@@ -1319,10 +1319,10 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
   if (has_parity[0] && has_parity[1])
     FATAL("parity is not the same for all states (both even and odd).");
 
-  _max_N = max_N;
+  mp_info._max_N = max_N;
 
-  _sum_m = min_m;
-  _parity = has_parity[1];
+  mp_info._sum_m = min_m;
+  mp_info._parity = has_parity[1];
 }
 
 template<class header_version_t, class fon_version_t>
@@ -1334,13 +1334,20 @@ void mr_antoine_reader<header_version_t, fon_version_t>::find_used_states()
   find_nlj_used();
   make_nlj_map();
   make_sps_map();
-  find_jm_pairs();
-  find_mp_bit_packing();
-  find_energy_dump_states();
 }
 
 template<class header_version_t, class fon_version_t>
-void mr_antoine_reader<header_version_t, fon_version_t>::create_code_tables()
+void mr_antoine_reader<header_version_t, fon_version_t>::
+  find_inifin_states(mp_state_info &mp_info)
+{
+  find_jm_pairs();
+  find_mp_bit_packing();
+  find_energy_dump_states(mp_info);
+}
+
+template<class header_version_t, class fon_version_t>
+void mr_antoine_reader<header_version_t, fon_version_t>::
+  create_code_tables(mp_state_info &mp_info)
 {
   ///////////////////////////////////////////////////////////////////////
   //
@@ -1364,7 +1371,7 @@ void mr_antoine_reader<header_version_t, fon_version_t>::create_code_tables()
 
       sp_states_table(out_table, _sps);
 
-      missing_mpr_tables(out_table, _sum_m, _parity, _sps);
+      missing_mpr_tables(out_table, mp_info._sum_m, mp_info._parity, _sps);
     }
 
   if (_config._td_dir)
@@ -1388,11 +1395,11 @@ void mr_antoine_reader<header_version_t, fon_version_t>::create_code_tables()
       out_config.fprintf("#define CFG_NUM_SP_STATES1  %d\n",
 			 _header.A[1]);
       out_config.fprintf("#define CFG_MAX_SUM_E       %d\n",
-			 _max_N);
+			 mp_info._max_N);
       out_config.fprintf("#define CFG_MAX_J           %d\n",
 			 _max_j);
       out_config.fprintf("#define CFG_SUM_M           %d\n",
-			 _sum_m);
+			 mp_info._sum_m);
       out_config.fprintf("#define CFG_PACK_WORDS      %d\n",
 			 _bit_packing._words);
       out_config.fprintf("#define CFG_WAVEFCNS        %d\n",
@@ -1408,13 +1415,13 @@ void mr_antoine_reader<header_version_t, fon_version_t>::create_code_tables()
 	}
 
       out_config.fprintf("#define CFG_2M_INITIAL       %d\n",
-			 _sum_m);
+			 mp_info._sum_m);
       out_config.fprintf("#define CFG_2M_FINAL         %d\n",
-			 _sum_m);
+			 mp_info._sum_m);
       out_config.fprintf("#define CFG_PARITY_INITIAL   %d\n",
-			 _parity);
+			 mp_info._parity);
       out_config.fprintf("#define CFG_PARITY_FINAL     %d\n",
-			 _parity);
+			 mp_info._parity);
       
       
       /* sum_i=0^(CFG_END_JM_FIRST-1) CFG_NUM_SP_STATES-i */
@@ -1469,6 +1476,8 @@ void mr_antoine_reader<header_version_t, fon_version_t>::create_code_tables()
   dump_istate_chunk(mr_file_chunk<mr_antoine_istate_item_t> &chunk);	\
   template void mr_antoine_reader<header_t,fon_t>::			\
   find_used_states();							\
+  template void mr_antoine_reader<header_t,fon_t>::			\
+  find_inifin_states(mp_state_info &mp_info)				\
   ;
 
 INSTANTIATE_ANTOINE(mr_antoine_header_old_t,mr_antoine_fon_old_t);

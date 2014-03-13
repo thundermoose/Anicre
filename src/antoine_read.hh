@@ -9,6 +9,8 @@
 #include "sp_states.hh"
 #include "pack_mp_state.hh"
 
+#include "mp_state_info.hh"
+
 #include <set>
 #include <vector>
 
@@ -111,12 +113,7 @@ public:
 
   pack_mp_state<BIT_PACK_T>   _bit_packing;
 
-  int                         _max_N;
   int                         _n_wavefcns;
-
-  int                         _sum_m;
-  int                         _parity;
-
 
 public:
   bool level1_read_wavefcn(wavefcn_t *wavefcn,
@@ -135,7 +132,9 @@ public:
 public:
   virtual void find_used_states();
 
-  virtual void create_code_tables();
+  virtual void find_inifin_states(mp_state_info &mp_info);
+
+  virtual void create_code_tables(mp_state_info &mp_info);
 
 protected:
   void find_occ_used();
@@ -146,7 +145,7 @@ protected:
   void make_sps_map();
   void find_jm_pairs();
   void find_mp_bit_packing();
-  void find_energy_dump_states();
+  void find_energy_dump_states(mp_state_info &mp_info);
 
 protected:
   void dump_occ_chunk(int k,uint32_t start,uint32_t num);

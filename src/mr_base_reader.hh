@@ -4,6 +4,8 @@
 #include "error.hh"
 #include "mr_file_reader.hh"
 
+class mp_state_info;
+
 class mr_base_reader
 {
 public:
@@ -34,8 +36,12 @@ public:
   virtual void find_used_states() = 0;
 
 public:
+  // Info in mp state actually to be used, as initial or final.
+  virtual void find_inifin_states(mp_state_info &mp_info) = 0;
+
+public:
   // Generate the tables and code.
-  virtual void create_code_tables() = 0;
+  virtual void create_code_tables(mp_state_info &mp_info) = 0;
 };
 
 ////////////////////////////////////////////////////////////////////////
