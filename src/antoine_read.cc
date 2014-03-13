@@ -1330,6 +1330,7 @@ void mr_antoine_reader<header_version_t, fon_version_t>::find_used_states()
 {
   find_occ_used();
   find_jm_used();
+  info_jm_used();
   find_nlj_used();
   make_nlj_map();
   make_sps_map();
@@ -1450,7 +1451,6 @@ void mr_antoine_reader<header_version_t, fon_version_t>::create_code_tables()
       out_code.fprintf("\n");
 
       _bit_packing.generate_code(out_code);
-
     }
 }
 
