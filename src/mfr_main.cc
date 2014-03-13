@@ -7,6 +7,7 @@
 #include "mr_file_reader.hh"
 #include "mr_base_reader.hh"
 #include "antoine_read.hh"
+#include "prepare_anicr.hh"
 
 #include "mr_config.hh"
 
@@ -227,9 +228,11 @@ int main(int argc,char *argv[])
 
   reader->dump_info();
 
-  reader->find_used_states();
+  prepare_anicr prep_anicr;
 
-  reader->create_code_tables();
+  prep_anicr.set(reader);
+
+  prep_anicr.create();
 
   // antoine.
 
