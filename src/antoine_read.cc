@@ -983,6 +983,17 @@ void mr_antoine_reader<header_version_t, fon_version_t>::make_sps_map()
 }
 
 template<class header_version_t, class fon_version_t>
+void mr_antoine_reader<header_version_t, fon_version_t>::find_used_states()
+{
+  find_occ_used();
+  find_jm_used();
+  info_jm_used();
+  find_nlj_used();
+  make_nlj_map();
+  make_sps_map();
+}
+
+template<class header_version_t, class fon_version_t>
 void mr_antoine_reader<header_version_t, fon_version_t>::find_jm_pairs()
 {
   /* Find the pairs of sp-states in use. */
@@ -1323,17 +1334,6 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
 
   mp_info._sum_m = min_m;
   mp_info._parity = has_parity[1];
-}
-
-template<class header_version_t, class fon_version_t>
-void mr_antoine_reader<header_version_t, fon_version_t>::find_used_states()
-{
-  find_occ_used();
-  find_jm_used();
-  info_jm_used();
-  find_nlj_used();
-  make_nlj_map();
-  make_sps_map();
 }
 
 template<class header_version_t, class fon_version_t>
