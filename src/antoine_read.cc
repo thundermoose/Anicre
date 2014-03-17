@@ -1014,6 +1014,7 @@ void mr_antoine_reader<header_version_t, fon_version_t>::find_jm_pairs()
 
   /* Dump the pairs of sp-states in use. */
 
+  if (_config._td_dir)
   {
     size_t sz_jm_pairs = sizeof (uint32_t) * _num_jm_pairs;
     
