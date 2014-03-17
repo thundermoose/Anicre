@@ -146,6 +146,7 @@ protected:
   void find_jm_pairs();
   void find_mp_bit_packing();
   void find_energy_dump_states(mp_state_info &mp_info);
+  void dump_wavefcn();
 
 protected:
   void dump_occ_chunk(int k,uint32_t start,uint32_t num);

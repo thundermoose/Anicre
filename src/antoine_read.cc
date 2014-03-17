@@ -1338,12 +1338,72 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
 }
 
 template<class header_version_t, class fon_version_t>
+void mr_antoine_reader<header_version_t, fon_version_t>::dump_wavefcn()
+{
+  size_t iwavefcns_chunk_sz = _header.nsd;
+  if (iwavefcns_chunk_sz > CHUNK_SZ)
+    iwavefcns_chunk_sz = CHUNK_SZ;
+
+  _n_wavefcns = _wavefcns.size() > 0 ? 1 : 0;
+
+  size_t mp_wavefcns_stride = _n_wavefcns;
+
+  size_t mp_wavefcns_sz =
+    sizeof (double) * iwavefcns_chunk_sz * mp_wavefcns_stride;
+
+  double *mp_wavefcns = (double *) malloc (mp_wavefcns_sz);
+
+  if (!mp_wavefcns)
+    FATAL("Memory allocation error (mp_wavefcns, %zd bytes).", mp_wavefcns_sz);
+
+#define FILENAME_WAVEFCN "/wavefcn_all_orig.bin"
+
+  file_output *out_wavefcn = NULL;
+
+  assert (_config._td_dir);
+
+  out_wavefcn = new file_output(_config._td_dir, FILENAME_WAVEFCN);
+
+  for (uint64_t start = 0; start < _header.nsd; )
+    {
+      uint64_t num = iwavefcns_chunk_sz;
+      if (start + num > _header.nsd)
+	num = _header.nsd - start;
+
+      /* For debugging, fill with ones (= -1). */
+
+      memset (mp_wavefcns, -1, mp_wavefcns_sz);
+
+      /* Fill in the wavefunctions. */
+
+      for (int i = 0; i < _n_wavefcns; i++)
+	{
+	  _wavefcns[i]->fill_coeff((double *) mp_wavefcns,
+				   _file_reader,
+				   start, num,
+				   mp_wavefcns_stride,
+				   i);
+	}
+
+      size_t mp_used_sz =
+	sizeof (double) * num * mp_wavefcns_stride;
+
+      out_wavefcn->fwrite (mp_wavefcns, mp_used_sz, 1);
+
+      start += num;
+    }
+
+}
+
+template<class header_version_t, class fon_version_t>
 void mr_antoine_reader<header_version_t, fon_version_t>::
   find_inifin_states(mp_state_info &mp_info)
 {
   find_jm_pairs();
   find_mp_bit_packing();
   find_energy_dump_states(mp_info);
+  if (_config._td_dir)
+    dump_wavefcn();
 }
 
 template<class header_version_t, class fon_version_t>
