@@ -5,10 +5,11 @@ endif
 
 all: anicr dumpnlj
 
-OBJS = anicr_main.o anicr_tables.o create.o couple.o packed_create.o \
+OBJS = anicr_main.o anicr_tables.o anicr_tables_sp.o \
+	create.o couple.o packed_create.o \
 	accumulate.o util.o
 
-NLJ_OBJS = anicr_tables.o util.o dumpnlj.o
+NLJ_OBJS = anicr_tables_sp.o util.o dumpnlj.o
 
 ####################################################################
 
