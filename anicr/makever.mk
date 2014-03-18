@@ -31,6 +31,12 @@ LINKFLAGS += `gsl-config --libs`
 
 ####################################################################
 
+ifeq ($(ANICR_PREFIX),pp)
+CFLAGS += -DREVERSED
+endif
+
+####################################################################
+
 ANICR_OBJS = $(addprefix build_$(ANICR_PREFIX)_anicr/,$(OBJS))
 
 ANICR_AUTO_DEPS = $(ANICR_OBJS:%.o=%.d)

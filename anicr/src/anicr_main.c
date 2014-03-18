@@ -96,7 +96,13 @@ int main(int argc, char *argv[])
 
   memset (_hashed_mp, 0, hashed_mp_sz);
 
-  int fd = open ("states_all_orig.bin", O_RDONLY);
+  int fd = open (
+#if REVERSED
+		 "states_all_orig.bin"
+#else
+		 "states_all_rev_orig.bin"
+#endif
+		 , O_RDONLY);
 
   if (fd == -1)
     {
