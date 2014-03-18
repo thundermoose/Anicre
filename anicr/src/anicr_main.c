@@ -39,8 +39,9 @@ int compare_packed_mp_state(const void *p1, const void *p2)
 }
 
 uint64_t *_mp = NULL;
+double   *_wf = NULL;
 
-uint64_t *_hashed_mp = NULL;
+hash_mp_wf *_hashed_mp = NULL;
 
 uint64_t  _hash_mask = 0;
 uint32_t  _hash_stride = 0;
@@ -58,34 +59,34 @@ int main(int argc, char *argv[])
 
   assert(sizeof (uint64_t) == sizeof (double));
 
-  size_t mp_sz = sizeof (uint64_t) * (CFG_PACK_WORDS + CFG_WAVEFCNS) * num_mp;
+  size_t mp_sz = sizeof (uint64_t) * (CFG_PACK_WORDS) * num_mp;
+  size_t wf_sz = sizeof (double)   * (CFG_WAVEFCNS) * num_mp;
 
   _mp = (uint64_t *) malloc (mp_sz);
+  _wf = (double *)   malloc (wf_sz);
 
   if (!_mp)
     {
-      fprintf (stderr, "Memory allocation error (%zd bytes).\n", mp_sz);
+      fprintf (stderr, "Memory allocation error (mp, %zd bytes).\n", mp_sz);
+      exit(1);
+    }
+
+  if (!_wf)
+    {
+      fprintf (stderr, "Memory allocation error (wf, %zd bytes).\n", wf_sz);
       exit(1);
     }
 
   for (_hash_mask = 1; _hash_mask < num_mp * 2; _hash_mask <<= 1)
     ;
 
-  for (_hash_stride_shift = 0;
-       (1 << _hash_stride_shift) < CFG_PACK_WORDS + CFG_WAVEFCNS; 
-	_hash_stride_shift++)
-    ;
-
-  _hash_stride = ((uint32_t) 1) << _hash_stride_shift;
-  _hash_mask *= _hash_stride;
-  
-  size_t hashed_mp_sz = sizeof (uint64_t) * _hash_mask;
+  size_t hashed_mp_sz = sizeof (hash_mp_wf) * _hash_mask;
 
   _hash_mask -= 1;
 
   /* printf ("%"PRIu64" %zd\n",_hash_mask, hashed_mp_sz); */
 
-  _hashed_mp = (uint64_t *) malloc (hashed_mp_sz);
+  _hashed_mp = (hash_mp_wf *) malloc (hashed_mp_sz);
 
   if (!_hashed_mp)
     {
@@ -109,9 +110,24 @@ int main(int argc, char *argv[])
 
   printf ("Read %zd mp states.\n", num_mp);
 
+  fd = open ("wavefcn_all_orig.bin", O_RDONLY);
+
+  if (fd == -1)
+    {
+      perror("open");
+      exit(1);
+    }
+
+  full_read (fd, _wf, wf_sz);
+
+  close (fd);
+
+  printf ("Read %zd wf coeffs.\n", num_mp);
+
   size_t i;
 
   uint64_t *mp = _mp;
+  double   *wf = _wf;
 
   uint64_t max_coll = 0, sum_coll = 0;
 
@@ -121,13 +137,13 @@ int main(int argc, char *argv[])
 
       x ^= x >> 32;
 
-      uint64_t j = (x << _hash_stride_shift) & _hash_mask;
+      uint64_t j = x & _hash_mask;
 
       uint64_t coll = 0;
 
-      while (_hashed_mp[j] != 0)
+      while (_hashed_mp[j]._mp[0] != 0)
 	{
-	  j = (j + _hash_stride) & _hash_mask;
+	  j = (j + 1) & _hash_mask;
 	  coll++;
 	}
 
@@ -139,21 +155,21 @@ int main(int argc, char *argv[])
 
       for (k = 0; k < CFG_PACK_WORDS; k++)
 	{
-	  _hashed_mp[j + k] = mp[k];
+	  _hashed_mp[j]._mp[k] = mp[k];
 	}
       for (k = 0; k < CFG_WAVEFCNS; k++)
 	{
-	  _hashed_mp[j + CFG_PACK_WORDS + k] =
-	    mp[CFG_PACK_WORDS + k];
+	  _hashed_mp[j]._wf[k] = wf[k];
 	}
 
-      mp += (CFG_PACK_WORDS + CFG_WAVEFCNS);
+      mp += CFG_PACK_WORDS;
+      wf += CFG_WAVEFCNS;
     }
 
   printf ("Hash: %"PRIu64" entries (%.1f), "
 	  "avg coll = %.2f, max coll = %"PRIu64"\n",
 	  _hash_mask + 1,
-	  (double) num_mp / ((double) (_hash_mask + 1) / _hash_stride),
+	  (double) num_mp / (double) (_hash_mask + 1),
 	  (double) sum_coll / (double) num_mp, max_coll);
 #if 0 
   /* It turns out that lookup is ~ 20 % faster with original states
@@ -175,6 +191,7 @@ int main(int argc, char *argv[])
   alloc_accumulate();
 
   mp = _mp;
+  wf = _wf;
 
   int packed = 0;
 
@@ -183,7 +200,7 @@ int main(int argc, char *argv[])
 
   for (i = 0; i < num_mp; i++)
     {
-      _cur_val = *(((double *) mp) + CFG_PACK_WORDS);
+      _cur_val = wf[0];
 
       if (packed)
 	{
@@ -195,7 +212,8 @@ int main(int argc, char *argv[])
 	  annihilate_packed_states(mp);
 	}
 
-      mp += (CFG_PACK_WORDS + CFG_WAVEFCNS);
+      mp += CFG_PACK_WORDS;
+      wf += CFG_WAVEFCNS;
       
       if (i % 10000 == 0)
 	{

@@ -1146,9 +1146,7 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
 	    sizeof (BIT_PACK_T), sizeof (double));
     }
 
-  _n_wavefcns = _wavefcns.size() > 0 ? 1 : 0;
-
-  size_t mp_states_stride = _bit_packing._words + _n_wavefcns;
+  size_t mp_states_stride = _bit_packing._words;
 
   size_t mp_states_sz =
     sizeof (BIT_PACK_T) * istate_chunk_sz * mp_states_stride;
@@ -1295,17 +1293,6 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
 
       if (out_states)
 	{
-	  /* Fill in the wavefunctions. */
-
-	  for (int i = 0; i < _n_wavefcns; i++)
-	    {
-	      _wavefcns[i]->fill_coeff((double *) mp_states,
-				       _file_reader,
-				       cm_istate.start(), cm_istate.num(),
-				       mp_states_stride,
-				       _bit_packing._words + i);
-	    }
-
 	  size_t mp_used_sz =
 	    sizeof (BIT_PACK_T) * cm_istate.num() * mp_states_stride;
 
@@ -1461,10 +1448,20 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
 			 _max_j);
       out_config.fprintf("#define CFG_SUM_M           %d\n",
 			 mp_info._sum_m);
+
       out_config.fprintf("#define CFG_PACK_WORDS      %d\n",
 			 _bit_packing._words);
       out_config.fprintf("#define CFG_WAVEFCNS        %d\n",
 			 _n_wavefcns);
+      /* Calculate padding required to get hash items 2^n */
+      int n_data = _bit_packing._words + _n_wavefcns;
+      int n_full;
+      for (n_full = 1; n_full < n_data; n_full *= 2)
+	;
+      int n_pad = n_full - n_data;
+      out_config.fprintf("#define CFG_HASH_MP_PAD64   %d\n",
+			 n_pad);
+
       out_config.fprintf("#define CFG_END_JM_FIRST    %d\n",
 			 _max_jm_first + 1);
       if (_n_wavefcns)

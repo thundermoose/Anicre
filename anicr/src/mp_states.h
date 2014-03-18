@@ -5,11 +5,18 @@
 
 #include <stdint.h>
 
-extern uint64_t *_hashed_mp;
+typedef struct hash_mp_wf_t
+{
+  uint64_t _mp[CFG_PACK_WORDS];
+  double   _wf[CFG_WAVEFCNS];
+#if CFG_HASH_MP_PAD64
+  uint64_t _dummy[CFG_HASH_MP_PAD64];
+#endif
+} hash_mp_wf;
+
+extern hash_mp_wf *_hashed_mp;
 
 extern uint64_t  _hash_mask;
-extern uint32_t  _hash_stride;
-extern int       _hash_stride_shift;
 
 extern uint64_t _lookups;
 extern uint64_t _found;
@@ -50,14 +57,14 @@ inline void find_mp_state_pre(uint64_t *lookfor, uint64_t *rx)
   
   x ^= x >> 32;
   
-  x = (x << _hash_stride_shift) & _hash_mask;
+  x = x & _hash_mask;
 
   *rx = x;
 }
 
 inline void find_mp_state_prefetch(uint64_t x)
 {
-  uint64_t *p = &_hashed_mp[x];
+  hash_mp_wf *p = &_hashed_mp[x];
 
   __builtin_prefetch(p, 0, 0);
 }
@@ -68,30 +75,30 @@ inline int find_mp_state_post(uint64_t *lookfor, uint64_t x, double *val)
 
   for ( ; ; )
     {
-      uint64_t *p = &_hashed_mp[x];
+      hash_mp_wf *p = &_hashed_mp[x];
       
       int k;
       
       for (k = 0; k < CFG_PACK_WORDS; k++)
 	{
-	  if (p[k] != lookfor[k])
+	  if (p->_mp[k] != lookfor[k])
 	    goto not_found;
 	}
       
       {
 	_found++;
-	*val = *(((double *) p) + CFG_PACK_WORDS);
+	*val = p->_wf[0];
 	
 	return 1;
       }
       
     not_found:
-      if (!*p)
+      if (!p->_mp[0])
 	{
 	  return 0;
 	}
       
-      x = (x + _hash_stride) & _hash_mask;
+      x = (x + 1) & _hash_mask;
     }
 }
 
