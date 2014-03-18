@@ -94,7 +94,6 @@ public:
   char                       *_jm_jm_used;
 
   uint32_t *_max_jm_for_jm;  // TO BE REMOVED
-  unsigned int _max_jm_first;  // TO BE REMOVED
 
   BITSONE_CONTAINER_TYPE     *_nlj_used;
   size_t                      _nlj_used_items_per_slot;
@@ -111,7 +110,7 @@ public:
 
 #define BIT_PACK_T uint64_t
 
-  pack_mp_state<BIT_PACK_T>   _bit_packing;
+  pack_mp_state<BIT_PACK_T>   _bit_packing[2];
 
   int                         _n_wavefcns;
 

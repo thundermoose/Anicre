@@ -1100,16 +1100,22 @@ void mr_antoine_reader<header_version_t, fon_version_t>::find_mp_bit_packing()
 	}
     }
 
-  _bit_packing.setup_pack(_header.A[0], _header.A[1],
-			  &_jm_max_spi[1], &_jm_max_spi[1 + _header.A[0]]);
+  _bit_packing[0].setup_pack(_header.A[0], _header.A[1],
+			     &_jm_max_spi[1], &_jm_max_spi[1 + _header.A[0]]);
+  _bit_packing[1].setup_pack(_header.A[1], _header.A[0],
+			     &_jm_max_spi[1 + _header.A[0]], &_jm_max_spi[1]);
 
   for (size_t i = 1; i < _jm_used_slots; i++)
     {
-      printf ("JM %2zd max sp %4d, %2d bits @ %2d in word %d\n",
+      printf ("JM %2zd max sp %4d, "
+	      "%2d bits @ %2d in word %d | %2d bits @ %2d in word %d\n",
 	      i, _jm_max_spi[i],
-	      _bit_packing._items[i-1]._bits,
-	      _bit_packing._items[i-1]._shift,
-	      _bit_packing._items[i-1]._word);
+	      _bit_packing[0]._items[i-1]._bits,
+	      _bit_packing[0]._items[i-1]._shift,
+	      _bit_packing[0]._items[i-1]._word,
+	      _bit_packing[1]._items[i-1]._bits,
+	      _bit_packing[1]._items[i-1]._shift,
+	      _bit_packing[1]._items[i-1]._word);
     }
 }
 
@@ -1146,25 +1152,35 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
 	    sizeof (BIT_PACK_T), sizeof (double));
     }
 
-  size_t mp_states_stride = _bit_packing._words;
+  size_t mp_states_stride[2] = { _bit_packing[0]._words,
+				 _bit_packing[1]._words };
 
-  size_t mp_states_sz =
-    sizeof (BIT_PACK_T) * istate_chunk_sz * mp_states_stride;
+  size_t mp_states_sz[2] = {
+    sizeof (BIT_PACK_T) * istate_chunk_sz * mp_states_stride[0],
+    sizeof (BIT_PACK_T) * istate_chunk_sz * mp_states_stride[1],
+  };
 
-  BIT_PACK_T *mp_states = (BIT_PACK_T *) malloc (mp_states_sz);
+  BIT_PACK_T *mp_states[2] = { NULL, NULL };
 
-  if (!mp_states)
-    FATAL("Memory allocation error (mp_states, %zd bytes).", mp_states_sz);
+  mp_states[0] = (BIT_PACK_T *) malloc (mp_states_sz[0]);
+  mp_states[1] = (BIT_PACK_T *) malloc (mp_states_sz[1]);
 
-  printf ("%zd %zd\n", mp_states_sz, mp_states_stride);
+  if (!mp_states[0] || !mp_states[1])
+    FATAL("Memory allocation error (mp_states, %zd + %zd bytes).",
+	  mp_states_sz[0], mp_states_sz[1]);
 
-#define FILENAME_STATES "/states_all_orig.bin"
+  printf ("%zd %zd\n", mp_states_sz[0], mp_states_stride[0]);
+  printf ("%zd %zd\n", mp_states_sz[1], mp_states_stride[1]);
 
-  file_output *out_states = NULL;
+#define FILENAME_STATES     "/states_all_orig.bin"
+#define FILENAME_STATES_REV "/states_all_rev_orig.bin"
+
+  file_output *out_states[2] = { NULL, NULL };
 
   if (_config._td_dir)
     {
-      out_states = new file_output(_config._td_dir, FILENAME_STATES);
+      out_states[0] = new file_output(_config._td_dir, FILENAME_STATES);
+      out_states[1] = new file_output(_config._td_dir, FILENAME_STATES_REV);
     }
 
   for (mr_file_chunk<mr_antoine_istate_item_t>
@@ -1173,7 +1189,8 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
     {
       /* For debugging, fill with ones (= -1). */
 
-      memset (mp_states, -1, mp_states_sz);
+      memset (mp_states[0], -1, mp_states_sz[0]);
+      memset (mp_states[1], -1, mp_states_sz[1]);
 
       for (mr_file_chunk<mr_antoine_occ_item_t>
 	     cm_occ0(_header.nslt[0], CHUNK_SZ, _header.A[0]);
@@ -1189,7 +1206,7 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
 
 	      mr_antoine_istate_item_t *pistate = cm_istate.ptr();
 
-	      BIT_PACK_T *mp_ptr = mp_states;
+	      BIT_PACK_T *mp_ptr[2] = { mp_states[0], mp_states[1] };
 
 	      for (unsigned int j = 0; j < cm_istate.num(); j++)
 		{
@@ -1214,15 +1231,21 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
 				   _header.A[1]),
 			};
 
-		      BIT_PACK_T *mp_ptr_this = mp_ptr;
+		      BIT_PACK_T *mp_ptr_this[2] = { mp_ptr[0], mp_ptr[1] };
 
-		      _bit_packing.clear_packed(mp_ptr_this);
-
-		      int kk = 0;
+		      _bit_packing[0].clear_packed(mp_ptr_this[0]);
+		      _bit_packing[1].clear_packed(mp_ptr_this[1]);
 
 		      for (unsigned int i = 0; i < 2; i++)
 			{
 			  // uint32_t occ = pistate->istate[i];
+
+			  int kk_off[2] = {
+			    (i == 0) ? 0 : _header.A[0],
+			    (i == 0) ? _header.A[0] : 0,
+			  };
+
+			  int kk = 0;
 
 			  mr_antoine_occ_item_t *pocc = poccs[i];
 
@@ -1253,8 +1276,14 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
 			      else
 				sum_neg_m += mpr;
 
-			      _bit_packing.insert_packed(mp_ptr_this, kk++,
-							 _sps_map[jm]);
+			      _bit_packing[0].insert_packed(mp_ptr_this[0],
+							    kk + kk_off[0],
+							    _sps_map[jm]);
+			      _bit_packing[1].insert_packed(mp_ptr_this[1],
+							    kk + kk_off[1],
+							    _sps_map[jm]);
+
+			      kk++;
 			    }
 			}
 		      /*
@@ -1286,24 +1315,31 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
 		    }
 
 		  pistate++;
-		  mp_ptr += mp_states_stride;
+		  mp_ptr[0] += mp_states_stride[0];
+		  mp_ptr[1] += mp_states_stride[1];
 		}
 	    }
 	}
 
-      if (out_states)
+      if (out_states[0])
 	{
-	  size_t mp_used_sz =
-	    sizeof (BIT_PACK_T) * cm_istate.num() * mp_states_stride;
+	  size_t mp_used_sz[2] = {
+	    sizeof (BIT_PACK_T) * cm_istate.num() * mp_states_stride[0],
+	    sizeof (BIT_PACK_T) * cm_istate.num() * mp_states_stride[1]
+	  };
 
-	  out_states->fwrite (mp_states, mp_used_sz, 1);
+	  out_states[0]->fwrite (mp_states[0], mp_used_sz[0], 1);
+	  out_states[1]->fwrite (mp_states[1], mp_used_sz[1], 1);
 	}
     }
 
-  if (out_states)
-    delete out_states;
+  if (out_states[0])
+    delete out_states[0];
+  if (out_states[1])
+    delete out_states[1];
 
-  free(mp_states);
+  free(mp_states[0]);
+  free(mp_states[1]);
 
   printf ("N_min:     %2d  N_max:     %2d\n", min_N, max_N);
   printf ("m_min:     %2d  m_max:     %2d\n", min_m, max_m);
@@ -1428,7 +1464,8 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
       out_table.fprintf("/* Editing is useless.                   */\n");
       out_table.fprintf("\n");
 
-      _bit_packing.generate_tables(out_table);
+      _bit_packing[0].generate_tables(out_table, "_forw");
+      _bit_packing[1].generate_tables(out_table, "_rev");
 
       missing_mpr_tables(out_table, mp_info._sum_m, mp_info._parity, _sps);
     }
@@ -1460,21 +1497,24 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
       out_config.fprintf("#define CFG_SUM_M           %d\n",
 			 mp_info._sum_m);
 
-      out_config.fprintf("#define CFG_PACK_WORDS      %d\n",
-			 _bit_packing._words);
       out_config.fprintf("#define CFG_WAVEFCNS        %d\n",
 			 _n_wavefcns);
-      /* Calculate padding required to get hash items 2^n */
-      int n_data = _bit_packing._words + _n_wavefcns;
-      int n_full;
-      for (n_full = 1; n_full < n_data; n_full *= 2)
-	;
-      int n_pad = n_full - n_data;
-      out_config.fprintf("#define CFG_HASH_MP_PAD64   %d\n",
-			 n_pad);
+      for (int i = 0; i < 2; i++)
+	{
+	  const char *postfix[2] = { "FORW", "REV" };
 
-      out_config.fprintf("#define CFG_END_JM_FIRST    %d\n",
-			 _max_jm_first + 1);
+	  out_config.fprintf("#define CFG_PACK_WORDS_%s %d\n",
+			     postfix[i], _bit_packing[i]._words);
+	  /* Calculate padding required to get hash items 2^n */
+	  int n_data = _bit_packing[i]._words + _n_wavefcns;
+	  int n_full;
+	  for (n_full = 1; n_full < n_data; n_full *= 2)
+	    ;
+	  int n_pad = n_full - n_data;
+	  out_config.fprintf("#define CFG_HASH_MP_PAD64_%s %d\n",
+			     postfix[i], n_pad);
+	}
+
       if (_n_wavefcns)
 	{
 	  out_config.fprintf("#define CFG_2J_INITIAL       %d\n",
@@ -1492,28 +1532,8 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
       out_config.fprintf("#define CFG_PARITY_FINAL     %d\n",
 			 mp_info._parity);
       
-      
-      /* sum_i=0^(CFG_END_JM_FIRST-1) CFG_NUM_SP_STATES-i */
-      /*
-      index = first * CFG_NUM_SP_STATES - first * (first + 1)/2 +
-        (second - first - 1);
-      index = first * (2 * CFG_NUM_SP_STATES - (first + 1))/2 +
-        (second - first - 1);
-      index = first * (2 * CFG_NUM_SP_STATES - first - 3)/2 + second - 1;
-      total = end * (2 * CFG_NUM_SP_STATES - end - 3)/2 + (end+1) - 1;
-      total = end * (2 * CFG_NUM_SP_STATES - end - 3)/2 + end;
-      total = end * (2 * CFG_NUM_SP_STATES - end - 1)/2;
-      total = end * (2 * CFG_NUM_SP_STATES - end - 1)/2;
-      */
-
-      uint64_t end_first = _max_jm_first + 1;
-      uint64_t total2 = end_first * (2 * _sps.size() - end_first - 1)/2;
-
-      out_config.fprintf("#define CFG_TOT_FIRST_SCND    %"PRIu64"\n",
-                         total2);
       out_config.fprintf("#define CFG_JM_PAIRS          %"PRIu64"\n",
 			 _num_jm_pairs);
-
     }
 
   if (_config._td_dir)
@@ -1526,7 +1546,8 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
       out_code.fprintf("/* Editing is useless.                   */\n");
       out_code.fprintf("\n");
 
-      _bit_packing.generate_code(out_code);
+      _bit_packing[0].generate_code(out_code, "_forw");
+      _bit_packing[1].generate_code(out_code, "_rev");
     }
 }
 

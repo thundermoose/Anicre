@@ -45,7 +45,7 @@ void packed_dump(uint64_t *packed)
 
   for (i = 0; i < CFG_NUM_SP_STATES0; i++)
     {
-      mp_pack_info *pack_info = &_mp_pack_info[i];
+      mp_pack_info *pack_info = &REVNAME(_mp_pack_info)[i];
       int sp = (int) ((packed[pack_info->_word] & pack_info->_mask) >>
                       pack_info->_shift);
       printf (" %3d", sp);
@@ -53,7 +53,7 @@ void packed_dump(uint64_t *packed)
   printf (" :");
   for (i = 0; i < CFG_NUM_SP_STATES1; i++)
     {
-      mp_pack_info *pack_info = &_mp_pack_info[i+CFG_NUM_SP_STATES0];
+      mp_pack_info *pack_info = &REVNAME(_mp_pack_info)[i+CFG_NUM_SP_STATES0];
       int sp = (int) ((packed[pack_info->_word] & pack_info->_mask) >>
                       pack_info->_shift);
       printf (" %3d", sp);
@@ -84,7 +84,7 @@ void packed_annihilate_states(uint64_t *packed)
 
   for (i = 0; i < CFG_NUM_SP_STATES1; i++)
     {
-      mp_pack_info *pack_info = &_mp_pack_info[i+CFG_NUM_SP_STATES0];
+      mp_pack_info *pack_info = &REVNAME(_mp_pack_info)[i+CFG_NUM_SP_STATES0];
       int sp = (int) ((packed[pack_info->_word] & pack_info->_mask) >>
 		      pack_info->_shift);
       E += SP_STATE_E(sp_info[sp]);
@@ -92,7 +92,7 @@ void packed_annihilate_states(uint64_t *packed)
 
   for (i = 1; i < CFG_NUM_SP_STATES0; i++)
     {
-      mp_pack_info *pack_info = &_mp_pack_info[i];
+      mp_pack_info *pack_info = &REVNAME(_mp_pack_info)[i];
       int sp = (int) ((packed[pack_info->_word] & pack_info->_mask) >>
 		      pack_info->_shift);
       E += SP_STATE_E(sp_info[sp]);
@@ -114,7 +114,7 @@ void packed_annihilate_states(uint64_t *packed)
   int sp_anni;
 
   {
-    mp_pack_info *pack_info = &_mp_pack_info[0];
+    mp_pack_info *pack_info = &REVNAME(_mp_pack_info)[0];
     sp_anni = (int) ((mp_work[pack_info->_word] & pack_info->_mask) >>
 		     pack_info->_shift);
     mp_work[pack_info->_word] &= ~pack_info->_mask;
@@ -138,7 +138,7 @@ void packed_annihilate_states(uint64_t *packed)
        * therefore, they wall always fit.
        */
 
-      mp_pack_info *pack_info = &_mp_pack_info[i];
+      mp_pack_info *pack_info = &REVNAME(_mp_pack_info)[i];
       sp_anni = (int) ((mp_work[pack_info->_word] & pack_info->_mask) >>
 		       pack_info->_shift);
       uint64_t mp_tmp = mp_work[pack_info->_word];
@@ -237,14 +237,14 @@ void packed_create_states(uint64_t *packed,
   int sp_next;
 
   {
-    mp_pack_info *pack_info = &_mp_pack_info[1];
+    mp_pack_info *pack_info = &REVNAME(_mp_pack_info)[1];
     sp_next = (int) ((mp_work[pack_info->_word] & pack_info->_mask) >>
 		     pack_info->_shift);
   }
 
   int fill = 0;
 
-  mp_pack_info *pack_info_fill = &_mp_pack_info[fill];
+  mp_pack_info *pack_info_fill = &REVNAME(_mp_pack_info)[fill];
 
   for ( ; num_poss_sp; --num_poss_sp, poss_sp_ptr++)
     {
@@ -269,7 +269,7 @@ void packed_create_states(uint64_t *packed,
 	    ((uint64_t) sp_next) << pack_info_fill->_shift;
 
 	  fill++;
-	  pack_info_fill = &_mp_pack_info[fill];
+	  pack_info_fill = &REVNAME(_mp_pack_info)[fill];
 
 	  /* Clear the current fill position. */
 

@@ -9,7 +9,7 @@ typedef struct hash_mp_wf_t
 {
   uint64_t _mp[CFG_PACK_WORDS];
   double   _wf[CFG_WAVEFCNS];
-#if CFG_HASH_MP_PAD64
+#if CFG_HASH_MP_PAD64 == 0
   uint64_t _dummy[CFG_HASH_MP_PAD64];
 #endif
 } hash_mp_wf;

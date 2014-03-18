@@ -24,6 +24,7 @@ extern double *_accumulate;
 
 void couple_accumulate()
 {
+#if 0
 #if ACC_TABLE
   size_t num_accum;
   size_t non_zero = 0;
@@ -555,7 +556,7 @@ void couple_accumulate()
 #endif
     }
 
-
+#endif
 }
 
 

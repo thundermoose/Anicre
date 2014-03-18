@@ -98,9 +98,9 @@ int main(int argc, char *argv[])
 
   int fd = open (
 #if REVERSED
-		 "states_all_orig.bin"
-#else
 		 "states_all_rev_orig.bin"
+#else
+		 "states_all_orig.bin"
 #endif
 		 , O_RDONLY);
 

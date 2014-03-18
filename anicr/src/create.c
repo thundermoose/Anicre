@@ -126,7 +126,7 @@ void annihilate_packed_states(uint64_t *packed)
 {
   int list[CFG_NUM_SP_STATES0 + CFG_NUM_SP_STATES1];
 
-  packed_to_int_list(list,packed);
+  REVNAME(packed_to_int_list)(list,packed);
 
   annihilate_states(list + CFG_NUM_SP_STATES0, list);
 }
@@ -703,7 +703,7 @@ void created_state(int *in_sp_other,
 
   uint64_t lookfor_packed[CFG_PACK_WORDS];
 
-  int_list2_to_packed(lookfor_packed, in_sp, in_sp_other);
+  REVNAME(int_list2_to_packed)(lookfor_packed, in_sp, in_sp_other);
 
   /*
 #if DEBUG_ANICR
