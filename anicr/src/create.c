@@ -737,7 +737,8 @@ void created_state(int *in_sp_other,
   accumulate_post_add(acc_x, val * _cur_val * sign);
 
 #if DEBUG_ANICR
-  printf ("%5d %15.10f\n", acc_i, val * _cur_val * sign);
+  /* printf ("%5d %15.10f\n", acc_i, val * _cur_val * sign); */
+  printf ("%15.10f\n", val * _cur_val * sign);
 #endif
 }
 

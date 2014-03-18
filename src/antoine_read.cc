@@ -1242,7 +1242,7 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
 
 			  int kk_off[2] = {
 			    (i == 0) ? 0 : _header.A[0],
-			    (i == 0) ? _header.A[0] : 0,
+			    (i == 0) ? _header.A[1] : 0,
 			  };
 
 			  int kk = 0;
