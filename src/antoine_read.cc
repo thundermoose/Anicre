@@ -1486,9 +1486,9 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
 			 _nljs.size());
       out_config.fprintf("#define CFG_NUM_SP_STATES   %zd\n",
 			 _sps.size());
-      out_config.fprintf("#define CFG_NUM_SP_STATES0  %d\n",
+      out_config.fprintf("#define CFG_NUM_SP_STATES_FR0  %d\n",
 			 _header.A[0]);
-      out_config.fprintf("#define CFG_NUM_SP_STATES1  %d\n",
+      out_config.fprintf("#define CFG_NUM_SP_STATES_FR1  %d\n",
 			 _header.A[1]);
       out_config.fprintf("#define CFG_MAX_SUM_E       %d\n",
 			 mp_info._max_N);

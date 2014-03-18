@@ -13,6 +13,14 @@
 #endif
 
 #if REVERSED
+#define CFG_NUM_SP_STATES0  CFG_NUM_SP_STATES_FR1
+#define CFG_NUM_SP_STATES1  CFG_NUM_SP_STATES_FR0
+#else
+#define CFG_NUM_SP_STATES0  CFG_NUM_SP_STATES_FR0
+#define CFG_NUM_SP_STATES1  CFG_NUM_SP_STATES_FR1
+#endif
+
+#if REVERSED
 #define REVNAME(x)  x##_rev
 #else
 #define REVNAME(x)  x##_forw
