@@ -68,8 +68,13 @@ clean:
 
 ####################################################################
 
-anicr-%: %/tables.h
-	make -C $* -f ../anicr/makever.mk
+nn-anicr-%: %/tables.h
+	make -C $* -f ../anicr/makever.mk ANICR_PREFIX=nn
+
+####################################################################
+
+pp-anicr-%: %/tables.h
+	make -C $* -f ../anicr/makever.mk ANICR_PREFIX=pp
 
 ####################################################################
 
