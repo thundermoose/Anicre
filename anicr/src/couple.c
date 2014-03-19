@@ -607,7 +607,7 @@ void couple_accumulate_2()
 
   /* */ 
 
-  uint64_t had = 0;
+  uint64_t had = 0, nz_had = 0;
 
   /* Loop over all combinations of annihilation j,m j,m
    */
@@ -787,6 +787,8 @@ void couple_accumulate_2()
 			  end_items->_fact_anni_crea = fact_anni_crea;
 
 			  end_items++;
+
+			  nz_had++;
 			}
 		    }
 		}
@@ -944,5 +946,5 @@ void couple_accumulate_2()
 	}
     }
 
-  printf ("%" PRIu64 " had\n", had);
+  printf ("%" PRIu64 " had, %" PRIu64 " nz\n", had, nz_had);
 }
