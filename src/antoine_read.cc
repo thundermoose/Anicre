@@ -1562,8 +1562,8 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
 	out_config.fprintf("#define CFG_JM_PAIRS                   %"PRIu64"\n",
 			   _mapped_jm_pair_use[np2].num_pairs());
 
-	  out_config.fprintf("#define CFG_ANICR_NP                 %d\n",
-			     (np2 == 2 ? 1 : 0));
+	out_config.fprintf("#define CFG_ANICR_NP                   %d\n",
+			   (np2 == 2 ? 1 : 0));
       }
     }
 

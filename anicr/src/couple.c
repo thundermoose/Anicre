@@ -780,9 +780,13 @@ void couple_accumulate_2()
 			  end_items->_nlj_key = nlj_key;
 			  end_items->_value = value;
 
+#if !CFG_ANICR_NP
 			  int fact_anni_crea =
 			    (int) (((anni_nlj >> 22) & 1) |
 				   ((crea_nlj >> 21) & 2));
+#else
+			  int fact_anni_crea = 0;
+#endif
 
 			  end_items->_fact_anni_crea = fact_anni_crea;
 
