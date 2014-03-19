@@ -32,9 +32,9 @@ public:
   void insert_packed(pack_T *pack, int i, int value);
 
 public:
-  void generate_code(file_output &out, const char *postfix);
+  void generate_code(file_output &out);
 
-  void generate_tables(file_output &out, const char *postfix);
+  void generate_tables(file_output &out);
 
 };
 

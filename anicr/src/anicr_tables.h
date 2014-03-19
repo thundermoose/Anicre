@@ -55,8 +55,8 @@ extern info_state_for_miss _table_1_0_info;
 extern info_state_for_miss _table_2_0_info;
 extern info_state_for_miss _table_3_0_info;
 
-extern mp_pack_info _mp_pack_info_forw[];
-extern mp_pack_info _mp_pack_info_rev[];
+extern mp_pack_info _mp_pack_info[];
+extern mp_pack_info _mp_pack_info[];
 
 /**********************************************************************/
 
