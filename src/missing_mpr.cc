@@ -57,10 +57,10 @@ missing_mpr_table(const vect_sp_state &sps,
 
 	  int next_miss_m = miss_m - sp._m;
 
-	  int next_N_min;
-
 	  for (int parity = 0; parity < (prev_repl_st ? 2 : 1); parity++)
 	    {
+	      int next_N_min;
+
 	      if (prev_repl_st)
 		{
 		  next_N_min = prev_repl_st->min_N(parity,
