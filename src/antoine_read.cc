@@ -1620,9 +1620,12 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
 			   mp_info._parity);
 	out_config.fprintf("#define CFG_PARITY_FINAL     %d\n",
 			   mp_info._parity);
+
+	out_config.fprintf("#define CFG_FILENAME_JM_PAIRS \""
+			   FILENAME_JM_PAIRS "\"\n", np2_ident[np2]);
       
 	out_config.fprintf("#define CFG_JM_PAIRS          %"PRIu64"\n",
-			   _num_jm_pairs);
+			   _mapped_jm_pair_use[np2].num_pairs());
       }
     }
 

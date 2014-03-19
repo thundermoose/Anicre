@@ -35,7 +35,7 @@ void prepare_accumulate()
       exit(1);
     }
 
-  int fd = open ("jm_pairs.bin", O_RDONLY);
+  int fd = open (CFG_FILENAME_JM_PAIRS, O_RDONLY);
 
   if (fd == -1)
     {

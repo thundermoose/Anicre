@@ -12,12 +12,18 @@
 
 class sp_pair_use
 {
+public:
+  sp_pair_use();
+  ~sp_pair_use();
 
 public:
   size_t _n1, _n2;
   size_t _sz_line_n2;
 
   BITSONE_CONTAINER_TYPE *_used;
+
+public:
+  uint64_t _num_pairs;
 
 public:
   void alloc(size_t n1, size_t n2);
@@ -49,7 +55,9 @@ public:
     return _used[i1 * _sz_line_n2 + offset2] & mask2;
   }
 
-  uint64_t dump_pairs_used(file_output &out);
+  void dump_pairs_used(file_output &out);
+
+  uint64_t num_pairs() { return _num_pairs; }
 
 };
 

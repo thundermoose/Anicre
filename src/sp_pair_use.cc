@@ -6,6 +6,18 @@
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 
+sp_pair_use::sp_pair_use()
+{
+  _used = NULL;
+  _n1 = _n2 = _sz_line_n2 = 0;
+  _num_pairs = 0;
+}
+
+sp_pair_use::~sp_pair_use()
+{
+  free (_used);
+}
+
 void sp_pair_use::alloc(size_t n1, size_t n2)
 {
   size_t sz_line_n2 =
@@ -31,7 +43,7 @@ void sp_pair_use::alloc(size_t n1, size_t n2)
   printf ("sp used  %zd %zd %zd\n", _n1, _n2, _sz_line_n2);
 }
 
-uint64_t sp_pair_use::dump_pairs_used(file_output &out)
+void sp_pair_use::dump_pairs_used(file_output &out)
 {
   uint64_t num_used = 0;
 
@@ -84,5 +96,5 @@ uint64_t sp_pair_use::dump_pairs_used(file_output &out)
 
   free (sp_pairs);
 
-  return num_used;
+  _num_pairs = num_used;
 }
