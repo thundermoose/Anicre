@@ -30,7 +30,6 @@ mr_antoine_reader(mr_file_reader *file_reader)
   for (int i = 0; i < 2; i++)
     _occ_used[i] = NULL;
   _jm_used = NULL;
-  _jm_jm_used = NULL;
   _nlj_used = NULL;
   _nljs_map = NULL;
   _sps_map = NULL;
@@ -719,13 +718,6 @@ void mr_antoine_reader<header_version_t, fon_version_t>::find_jm_used()
 
   memset(_max_jm_for_jm, 0, max_jm_for_jm_sz);
 
-  _jm_jm_used = (char *) malloc (_header.num_of_jm * _header.num_of_jm);
-
-  if (!_jm_jm_used)
-    FATAL("Memory allocation failure (jm_jm_used).");
-
-  memset (_jm_jm_used, 0, _header.num_of_jm * _header.num_of_jm);
-
   for (int i = 0; i < 2; i++)
     {
       uint32_t *max_jm_for_jm = _max_jm_for_jm + _header.num_of_jm * i;
@@ -778,14 +770,6 @@ void mr_antoine_reader<header_version_t, fon_version_t>::find_jm_used()
 		    max_jm_for_jm[jm] = jm_max_plus1;
 		}
 
-	      for (unsigned int j1 = 0; j1 < _header.A[i] - 1; j1++)
-		{
-		  for (unsigned int j2 = j1 + 1; j2 < _header.A[i]; j2++)
-		    {
-		      _jm_jm_used[jm_array[j1] +
-				  jm_array[j2] * _header.num_of_jm] = 1;
-		    }
-		}
 	      /*
 	      (void) pocc1;
 	      (void) max_jm_for_jm;
@@ -991,64 +975,6 @@ void mr_antoine_reader<header_version_t, fon_version_t>::find_used_states()
   find_nlj_used();
   make_nlj_map();
   make_sps_map();
-}
-
-template<class header_version_t, class fon_version_t>
-void mr_antoine_reader<header_version_t, fon_version_t>::find_jm_pairs()
-{
-  /* Find the pairs of sp-states in use. */
-
-  _num_jm_pairs = 0;
-
-  for (unsigned int j1 = 0; j1 < _header.num_of_jm; j1++)
-    {
-      for (unsigned int j2 = 0; j2 < _header.num_of_jm; j2++)
-	{
-	  _num_jm_pairs += _jm_jm_used[j1 + j2 * _header.num_of_jm];
-	}
-    }
-
-  printf ("jm x jm used: %"PRIu64" /  %"PRIu64"\n",
-	  _num_jm_pairs,
-	  (uint64_t) _header.num_of_jm * (uint64_t) _header.num_of_jm);
-
-  /* Dump the pairs of sp-states in use. */
-
-  if (_config._td_dir)
-  {
-    size_t sz_jm_pairs = sizeof (uint32_t) * _num_jm_pairs;
-    
-    uint32_t *jm_pairs =
-      (uint32_t *) malloc (sz_jm_pairs);
-
-    if (!jm_pairs)
-      FATAL("jm_pairs");
-
-    uint32_t *p = jm_pairs;
-
-    for (unsigned int j1 = 0; j1 < _header.num_of_jm; j1++)
-      {
-	for (unsigned int j2 = 0; j2 < _header.num_of_jm; j2++)
-	  {
-	    if (_jm_jm_used[j1 + j2 * _header.num_of_jm])
-	      {
-		int mapped_j1 = _sps_map[j1];
-		int mapped_j2 = _sps_map[j2];
-
-		*p = (mapped_j2 << 16) | mapped_j1;
-		p++;
-	      }
-	  }
-      }
-
-#define FILENAME_JM_PAIRS_OLD "jm_pairs.bin"
-
-    file_output out_jm_pairs(_config._td_dir, FILENAME_JM_PAIRS_OLD);
-
-    out_jm_pairs.fwrite (jm_pairs, sz_jm_pairs, 1);
-
-    free (jm_pairs);
-  }
 }
 
 template<class header_version_t, class fon_version_t>
@@ -1463,7 +1389,6 @@ template<class header_version_t, class fon_version_t>
 void mr_antoine_reader<header_version_t, fon_version_t>::
   find_inifin_states(mp_state_info &mp_info)
 {
-  find_jm_pairs();
   find_mp_bit_packing();
   find_energy_dump_states(mp_info);
   if (_config._td_dir)

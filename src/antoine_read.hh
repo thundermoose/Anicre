@@ -90,8 +90,6 @@ public:
   size_t                      _jm_used_items_per_slot;
   size_t                      _jm_used_slots;
 
-  char                       *_jm_jm_used;
-
   uint32_t *_max_jm_for_jm;  // TO BE REMOVED
 
   BITSONE_CONTAINER_TYPE     *_nlj_used;
@@ -104,8 +102,6 @@ public:
 
   vect_sp_state               _sps;
   int                        *_sps_map;
-
-  uint64_t                    _num_jm_pairs;
 
 #define BIT_PACK_T uint64_t
 
