@@ -96,13 +96,11 @@ int main(int argc, char *argv[])
 
   memset (_hashed_mp, 0, hashed_mp_sz);
 
-  int fd = open (
-#if REVERSED
-		 "states_all_rev_orig.bin"
-#else
-		 "states_all_orig.bin"
-#endif
-		 , O_RDONLY);
+  char filename_states_all[256];
+
+  sprintf (filename_states_all, "states_all_%s_orig.bin", CFG_MP_STATES_FR);
+
+  int fd = open (filename_states_all, O_RDONLY);
 
   if (fd == -1)
     {
