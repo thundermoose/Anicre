@@ -1041,7 +1041,7 @@ void mr_antoine_reader<header_version_t, fon_version_t>::find_jm_pairs()
 	  }
       }
 
-    #define FILENAME_JM_PAIRS_OLD "/jm_pairs.bin"
+#define FILENAME_JM_PAIRS_OLD "jm_pairs.bin"
 
     file_output out_jm_pairs(_config._td_dir, FILENAME_JM_PAIRS_OLD);
 
@@ -1172,8 +1172,8 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
   printf ("%zd %zd\n", mp_states_sz[0], mp_states_stride[0]);
   printf ("%zd %zd\n", mp_states_sz[1], mp_states_stride[1]);
 
-#define FILENAME_STATES     "/states_all_forw_orig.bin"
-#define FILENAME_STATES_REV "/states_all_rev_orig.bin"
+#define FILENAME_STATES     "states_all_forw_orig.bin"
+#define FILENAME_STATES_REV "states_all_rev_orig.bin"
 
   file_output *out_states[2] = { NULL, NULL };
 
@@ -1420,7 +1420,7 @@ void mr_antoine_reader<header_version_t, fon_version_t>::dump_wavefcn()
   if (!mp_wavefcns)
     FATAL("Memory allocation error (mp_wavefcns, %zd bytes).", mp_wavefcns_sz);
 
-#define FILENAME_WAVEFCN "/wavefcn_all_orig.bin"
+#define FILENAME_WAVEFCN "wavefcn_all_orig.bin"
 
   file_output *out_wavefcn = NULL;
 
@@ -1481,7 +1481,7 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
   ///////////////////////////////////////////////////////////////////////
 
   {
-#define FILENAME_TABLE_SP "/tables_sp.h"
+#define FILENAME_TABLE_SP "tables_sp.h"
 
     file_output out_table_sp(_config._td_dir, FILENAME_TABLE_SP);
 
@@ -1498,7 +1498,7 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
     {
       const char *postfix[2] = { "forw", "rev" };
       {
-#define FILENAME_TABLE "/tables_%s.h"
+#define FILENAME_TABLE "tables_%s.h"
 
 	char filename[128];
 	    
@@ -1516,7 +1516,7 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
       }
 
       {
-#define FILENAME_CODE "/code_%s.h"
+#define FILENAME_CODE "code_%s.h"
 
 	char filename[128];
 	    
@@ -1537,7 +1537,7 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
       const char *np2_ident[] = { "nn", "pp", "np" };
 
       {
-#define FILENAME_JM_PAIRS "/jm_pairs_%s.bin"
+#define FILENAME_JM_PAIRS "jm_pairs_%s.bin"
 
 	char filename[128];
 	    
@@ -1549,7 +1549,7 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
       }
 
       {
-#define FILENAME_CONFIG "/config_%s.h"
+#define FILENAME_CONFIG "config_%s.h"
 
 	char filename[128];
 

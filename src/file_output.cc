@@ -10,12 +10,13 @@
 file_output::file_output(const char *prefix, const char *name)
 {
   _filename =
-    (char *) malloc(strlen(prefix) + strlen(name) + 1);
+    (char *) malloc(strlen(prefix) + 1 + strlen(name) + 1);
   
   if (!_filename)
     ERROR("Memory allocation error (_filename).");
   
   strcpy(_filename, prefix);
+  strcat(_filename, "/");
   strcat(_filename, name);
   
   if ((_fid = fopen(_filename, "w")) == NULL)
