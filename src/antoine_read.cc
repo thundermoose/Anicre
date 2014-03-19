@@ -1183,6 +1183,15 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
       out_states[1] = new file_output(_config._td_dir, FILENAME_STATES_REV);
     }
 
+  int *mapped_jm_array =
+    (int *) malloc (sizeof (int) * (_header.A[0] + _header.A[1]));
+
+  if (!mapped_jm_array)
+    FATAL("Memory allocation error (mapped_jm_array).");
+
+  for (int i = 0; i < 3; i++)
+    _mapped_jm_pair_use[i].alloc (_sps.size(), _sps.size());
+
   for (mr_file_chunk<mr_antoine_istate_item_t>
 	 cm_istate(_header.nsd, CHUNK_SZ);
        cm_istate.map_next(_file_reader, _offset_istate); )
@@ -1276,12 +1285,16 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
 			      else
 				sum_neg_m += mpr;
 
+			      int mapped_jm = _sps_map[jm];
+
+			      mapped_jm_array[kk + kk_off[0]] = mapped_jm;
+
 			      _bit_packing[0].insert_packed(mp_ptr_this[0],
 							    kk + kk_off[0],
-							    _sps_map[jm]);
+							    mapped_jm);
 			      _bit_packing[1].insert_packed(mp_ptr_this[1],
 							    kk + kk_off[1],
-							    _sps_map[jm]);
+							    mapped_jm);
 
 			      kk++;
 			    }
@@ -1312,6 +1325,26 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
 			min_neg_m = sum_neg_m;
 
 		      has_parity[sum_l & 1] = 1;
+
+		      /* Find jm combinations in use. */
+
+		      for (unsigned int i = 0; i < _header.A[0]; i++)
+			for (unsigned int k = 0; k < _header.A[0]; k++)
+			  _mapped_jm_pair_use[0].add(mapped_jm_array[i],
+						     mapped_jm_array[k]);
+
+		      int off = _header.A[0];
+
+		      for (unsigned int i = 0; i < _header.A[1]; i++)
+			for (unsigned int k = 0; k < _header.A[1]; k++)
+			  _mapped_jm_pair_use[1].add(mapped_jm_array[off+i],
+						     mapped_jm_array[off+k]);
+
+		      for (unsigned int i = 0; i < _header.A[0]; i++)
+			for (unsigned int k = 0; k < _header.A[1]; k++)
+			  _mapped_jm_pair_use[2].add(mapped_jm_array[i],
+						     mapped_jm_array[off+k]);
+
 		    }
 
 		  pistate++;

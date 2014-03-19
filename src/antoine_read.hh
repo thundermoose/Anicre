@@ -11,11 +11,10 @@
 
 #include "mp_state_info.hh"
 
+#include "sp_pair_use.hh"
+
 #include <set>
 #include <vector>
-
-#define BITSONE_CONTAINER_TYPE    unsigned long
-#define BITSONE_CONTAINER_BITS    (sizeof(BITSONE_CONTAINER_TYPE)*8)
 
 struct coeff_info
 {
@@ -113,6 +112,8 @@ public:
   pack_mp_state<BIT_PACK_T>   _bit_packing[2];
 
   int                         _n_wavefcns;
+
+  sp_pair_use                 _mapped_jm_pair_use[3]; // 00, 11, 01
 
 public:
   bool level1_read_wavefcn(wavefcn_t *wavefcn,
