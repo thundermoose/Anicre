@@ -1472,7 +1472,8 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
 	out_table.fprintf("/* Editing is useless.                   */\n");
 	out_table.fprintf("\n");
 	
-	missing_mpr_tables(out_table, mp_info._sum_m, mp_info._parity, _sps);
+	missing_mpr_tables(out_table, mp_info._sum_m, mp_info._parity, _sps,
+			   np2 == 2 ? 1 : 0);
       }
 
       {
@@ -1568,6 +1569,9 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
       
 	out_config.fprintf("#define CFG_JM_PAIRS                   %"PRIu64"\n",
 			   _mapped_jm_pair_use[np2].num_pairs());
+
+	  out_config.fprintf("#define CFG_ANICR_NP                 %d\n",
+			     (np2 == 2 ? 1 : 0));
       }
     }
 

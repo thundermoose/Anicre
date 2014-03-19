@@ -20,6 +20,7 @@
 /* Annihilate states. */
 
 #define NSP  CFG_NUM_SP_STATES0
+#define NSP_OTHER  CFG_NUM_SP_STATES1
 
 #define SP_STATE_E(sp) (2*(sp)._n+(sp)._l)
 
@@ -88,7 +89,9 @@ void create_states(int *in_sp_other,
 		   int *in_sp,
 #if ANICR2
 		   int sp_anni1, int sp_anni2, int sp_crea1,
+#if !CFG_ANICR_NP
 		   int fill,
+#endif
 #else
 		   int sp_anni,
 #endif
@@ -186,7 +189,8 @@ void annihilate_states(int *in_sp_other,
 
 #if ANICR2
   annihilate_states_2nd(in_sp_other,
-			out_sp, in_sp[0], 0,
+			out_sp, in_sp[0],
+			0,
 			sp_info[in_sp[0]]._l,
 			sp_info[in_sp[0]]._m, E);
 #else
@@ -209,7 +213,8 @@ void annihilate_states(int *in_sp_other,
 
 #if ANICR2
       annihilate_states_2nd(in_sp_other,
-			    out_sp, in_sp[i+1], i+1,
+			    out_sp, in_sp[i+1],
+			    i+1,
 			    sp_info[in_sp[i+1]]._l,
 			    sp_info[in_sp[i+1]]._m,
 			    E - SP_STATE_E(sp_info[in_sp[i+1]]));
@@ -247,6 +252,7 @@ void annihilate_states_2nd(int *in_sp_other,
   printf (" : E=%3d  ~m=%3d  ~p=%d\n", E, miss_m, miss_parity);
 #endif
 
+#if !CFG_ANICR_NP
   /* Delete 1 state. */
 
   int out_sp[NSP];
@@ -280,6 +286,40 @@ void annihilate_states_2nd(int *in_sp_other,
 			  miss_m + sp_info[in_sp[i+1]]._m,
 			  E - SP_STATE_E(sp_info[in_sp[i+1]]));
     }
+#else
+  /* Delete 1 state. */
+
+  int out_sp_other[NSP_OTHER];
+
+  for (i = 1; i < NSP_OTHER; i++)
+    {
+      out_sp_other[i] = in_sp_other[i];
+    }
+
+  /* The out_sp list is missing sp state 0 and 1. */
+
+  create_states_1st(out_sp_other,
+		    in_sp, sp_anni1, in_sp_other[0], phase_i ^ 0,
+		    (sp_info[in_sp_other[0]]._l ^ miss_parity) & 1,
+		    miss_m + sp_info[in_sp_other[0]]._m,
+		    E - SP_STATE_E(sp_info[in_sp_other[0]]));
+
+  /* And now try with all other missing ones. */
+
+  for (i = 1; i < NSP_OTHER - 1; i++)
+    {
+      /* We always have the space at [0] and [1] empty. */
+
+      out_sp_other[i+1] = in_sp_other[i];
+
+      if (sp_anni1 < in_sp[i+1])
+	create_states_1st(out_sp_other,
+			  in_sp, sp_anni1, in_sp_other[i+1], phase_i ^ (i+1),
+			  (sp_info[in_sp_other[i+1]]._l ^ miss_parity) & 1,
+			  miss_m + sp_info[in_sp_other[i+1]]._m,
+			  E - SP_STATE_E(sp_info[in_sp_other[i+1]]));
+    }
+#endif
 }
 
 /* Create states, given that we have the list of states that survived
@@ -290,7 +330,9 @@ void create_states(int *in_sp_other,
 		   int *in_sp,
 #if ANICR2
                    int sp_anni1, int sp_anni2, int sp_crea1,
+#if !CFG_ANICR_NP
 		   int fill,
+#endif
 #else
                    int sp_anni,
 #endif
@@ -299,7 +341,11 @@ void create_states(int *in_sp_other,
 {
   int i;
 
+#if !CFG_ANICR_NP
   int out_sp[NSP + 1];
+#else
+  int out_sp_other[NSP_OTHER + 1];
+#endif
 
   /* We are missing a certain m, and also have a known
    * energy.
@@ -319,10 +365,15 @@ void create_states(int *in_sp_other,
 
 #if DEBUG_ANICR
 #if ANICR2
+#if !CFG_ANICR_NP
   for (i = 0; i < fill; i++)
     printf (" %4d", in_sp[i]); 
   for (i = fill + 1; i < CFG_NUM_SP_STATES0; i++)
-    printf (" %4d", in_sp[i]); 
+    printf (" %4d", in_sp[i]);
+#else
+  for (i = 1; i < CFG_NUM_SP_STATES1; i++)
+    printf (" %4d", in_sp_other[i]); 
+#endif
 #else
   for (i = ANICR2 ? 2 : 1; i < CFG_NUM_SP_STATES0; i++)
     printf (" %4d", in_sp[i]); 
@@ -378,6 +429,7 @@ void create_states(int *in_sp_other,
   /* Assume we will begin by inserting a lowest state. */
 
 #if ANICR2
+#if !CFG_ANICR_NP
   for (i = 0; i < fill; i++)
     {
       out_sp[i] = in_sp[i];
@@ -387,6 +439,12 @@ void create_states(int *in_sp_other,
       out_sp[i] = in_sp[i];
     }
 #else
+  for (i = 1; i < NSP_OTHER; i++)
+    {
+      out_sp_other[i] = in_sp_other[i];
+    }
+#endif
+#else
   for (i = 1; i < NSP; i++)
     {
       out_sp[i] = in_sp[i];
@@ -394,9 +452,13 @@ void create_states(int *in_sp_other,
 #endif
 
   /* Make sure that we do move fill beyond the end. */
+#if !CFG_ANICR_NP
   out_sp[NSP] = INT_MAX;
+#else
+  out_sp_other[NSP_OTHER] = INT_MAX;
+#endif
 
-#if ANICR2
+#if ANICR2 && !CFG_ANICR_NP
   /* Skip past states which are smaller than the one already added. */
   
   for ( ; num_poss_sp; --num_poss_sp, poss_sp_ptr++)
@@ -411,6 +473,7 @@ void create_states(int *in_sp_other,
   int fill = 0;
 #endif
 
+#if !CFG_ANICR_NP
   for ( ; num_poss_sp; --num_poss_sp, poss_sp_ptr++)
     {
       uint32_t poss_sp = *poss_sp_ptr;
@@ -445,6 +508,42 @@ void create_states(int *in_sp_other,
 #endif
 		    (int) crea_sp, phase_i ^ fill);
     }
+#else
+  for ( ; num_poss_sp; --num_poss_sp, poss_sp_ptr++)
+    {
+      uint32_t poss_sp = *poss_sp_ptr;
+      uint32_t crea_sp = EXTRACT_SP(poss_sp);
+
+      while (crea_sp > (uint32_t) out_sp_other[fill+1])
+	{
+	  out_sp_other[fill] = out_sp_other[fill+1];
+	  fill++;
+	}
+
+      if (crea_sp == (uint32_t) out_sp_other[fill+1])
+	{
+#if DEBUG_ANICR
+	  printf ("%4d x %3d *\n", crea_sp, fill);
+#endif
+	  continue;
+	}
+
+      out_sp_other[fill] = (int) crea_sp;
+
+#if DEBUG_ANICR
+      printf ("%4d @ %3d\n", crea_sp, fill);
+#endif
+
+      created_state(out_sp_other,
+		    in_sp,
+#if ANICR2
+		    sp_anni1, sp_anni2, sp_crea1,
+#else
+		    sp_anni,
+#endif
+		    (int) crea_sp, phase_i ^ fill);
+    }
+#endif
 
 
 }
@@ -477,8 +576,11 @@ void create_states_1st(int *in_sp_other,
 #endif
 
 #if DEBUG_ANICR
-  for (i = 2; i < CFG_NUM_SP_STATES0; i++)
+  for (i = (!CFG_ANICR_NP ? 2 : 1); i < CFG_NUM_SP_STATES0; i++)
     printf (" %4d", in_sp[i]); 
+  printf (" :");
+  for (i = (!CFG_ANICR_NP ? 0 : 1); i < CFG_NUM_SP_STATES1; i++)
+    printf (" %4d", in_sp_other[i]);
   printf (" : E=%3d  ~m=%3d  ~p=%d\n", E, miss_m, miss_parity);
 #endif
 
@@ -539,7 +641,7 @@ void create_states_1st(int *in_sp_other,
 
   /* Assume we will begin by inserting a lowest state. */
 
-  for (i = 2; i < NSP; i++)
+  for (i = (!CFG_ANICR_NP ? 2 : 1); i < NSP; i++)
     {
       out_sp[i] = in_sp[i];
     }
@@ -556,9 +658,9 @@ void create_states_1st(int *in_sp_other,
 	  uint32_t poss_sp = *poss_sp_ptr;
 	  uint32_t crea_sp = EXTRACT_SP(poss_sp);
 
-	  while (crea_sp > (uint32_t) out_sp[fill+2])
+	  while (crea_sp > (uint32_t) out_sp[fill+(!CFG_ANICR_NP ? 2 : 1)])
 	    {
-	      out_sp[fill] = out_sp[fill+2];
+	      out_sp[fill] = out_sp[fill+(!CFG_ANICR_NP ? 2 : 1)];
 	      fill++;
 	    }
 
@@ -566,7 +668,7 @@ void create_states_1st(int *in_sp_other,
 	  printf ("===---===\n");
 #endif
 
-	  if (crea_sp == (uint32_t) out_sp[fill+2])
+	  if (crea_sp == (uint32_t) out_sp[fill+(!CFG_ANICR_NP ? 2 : 1)])
 	    {
 #if DEBUG_ANICR
 	      printf ("%4d x %3d *\n", crea_sp, fill);
@@ -583,7 +685,11 @@ void create_states_1st(int *in_sp_other,
 #if ANICR2
 	  create_states(in_sp_other,
 			out_sp, sp_anni1, sp_anni2,
-			(int) crea_sp, fill+1,  phase_i ^ fill,
+			(int) crea_sp,
+#if !CFG_ANICR_NP
+			fill+1,
+#endif
+			phase_i ^ fill,
 			(sp_info[crea_sp]._l ^ miss_parity) & 1,
 			miss_m - sp_info[crea_sp]._m,
 			E + SP_STATE_E(sp_info[crea_sp]));
@@ -626,8 +732,15 @@ void created_state(int *in_sp_other,
    * To get its coefficient.
    */
 
-  (void) in_sp_other;
-  (void) in_sp;
+#if DEBUG_ANICR
+  for (i = 0; i < CFG_NUM_SP_STATES0; i++)
+    printf (" %4d", in_sp[i]);
+  printf (" :");
+  for (i = 0; i < CFG_NUM_SP_STATES1; i++)
+    printf (" %4d", in_sp_other[i]);
+  printf (" <- find\n");
+#endif
+
 #if ANICR2
   (void) sp_anni1;
   (void) sp_anni2;

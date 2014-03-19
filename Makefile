@@ -78,6 +78,11 @@ pp-anicr-%: %/tables_rev.h
 
 ####################################################################
 
+np-anicr-%: %/tables_rev.h
+	make -C $* -f ../anicr/makever.mk ANICR_PREFIX=np
+
+####################################################################
+
 clean-anicr-%:
 	make -C $* -f ../anicr/makever.mk clean
 
