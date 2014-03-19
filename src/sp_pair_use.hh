@@ -1,8 +1,11 @@
 #ifndef __SP_PAIR_USE_HH__
 #define __SP_PAIR_USE_HH__
 
+#include "file_output.hh"
+
 #include <stdlib.h>
 #include <assert.h>
+#include <stdint.h>
 
 #define BITSONE_CONTAINER_TYPE    unsigned long
 #define BITSONE_CONTAINER_BITS    (sizeof(BITSONE_CONTAINER_TYPE)*8)
@@ -32,6 +35,21 @@ public:
 
     _used[i1 * _sz_line_n2 + offset2] |= mask2;
   }
+
+  bool used(unsigned int i1, unsigned int i2)
+  {
+    assert (i1 < _n1);
+    assert (i2 < _n2);
+
+    BITSONE_CONTAINER_TYPE mask2 =
+      ((BITSONE_CONTAINER_TYPE) 1) <<
+      (i2 % (BITSONE_CONTAINER_BITS));
+    size_t offset2 = i2 / (BITSONE_CONTAINER_BITS);
+
+    return _used[i1 * _sz_line_n2 + offset2] & mask2;
+  }
+
+  uint64_t dump_pairs_used(file_output &out);
 
 };
 

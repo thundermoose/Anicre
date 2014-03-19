@@ -1041,9 +1041,9 @@ void mr_antoine_reader<header_version_t, fon_version_t>::find_jm_pairs()
 	  }
       }
 
-    #define FILENAME_JM_PAIRS "/jm_pairs.bin"
+    #define FILENAME_JM_PAIRS_OLD "/jm_pairs.bin"
 
-    file_output out_jm_pairs(_config._td_dir, FILENAME_JM_PAIRS);
+    file_output out_jm_pairs(_config._td_dir, FILENAME_JM_PAIRS_OLD);
 
     out_jm_pairs.fwrite (jm_pairs, sz_jm_pairs, 1);
 
@@ -1328,15 +1328,23 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
 
 		      /* Find jm combinations in use. */
 
-		      for (unsigned int i = 0; i < _header.A[0]; i++)
-			for (unsigned int k = 0; k < _header.A[0]; k++)
+		      for (unsigned int i = 0; i < _header.A[0] - 1; i++)
+			for (unsigned int k = i + 1; k < _header.A[0]; k++)
+			  {
 			  _mapped_jm_pair_use[0].add(mapped_jm_array[i],
 						     mapped_jm_array[k]);
 
+			  if (mapped_jm_array[i] > 0x40)
+			    {
+			      printf ("QQ\n");
+			    }
+
+			  }
+
 		      int off = _header.A[0];
 
-		      for (unsigned int i = 0; i < _header.A[1]; i++)
-			for (unsigned int k = 0; k < _header.A[1]; k++)
+		      for (unsigned int i = 0; i < _header.A[1] - 1; i++)
+			for (unsigned int k = i + 1; k < _header.A[1]; k++)
 			  _mapped_jm_pair_use[1].add(mapped_jm_array[off+i],
 						     mapped_jm_array[off+k]);
 
@@ -1501,6 +1509,24 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
       _bit_packing[1].generate_tables(out_table, "_rev");
 
       missing_mpr_tables(out_table, mp_info._sum_m, mp_info._parity, _sps);
+    }
+
+  if (_config._td_dir)
+    {
+      for (int np2 = 0; np2 < 3; np2++)
+	{
+	  const char *np2_ident[] = { "nn", "pp", "np" };
+
+#define FILENAME_JM_PAIRS "/jm_pairs_%s.bin"
+
+	  char filename[128];
+
+	  sprintf (filename, FILENAME_JM_PAIRS, np2_ident[np2]);
+
+	  file_output out_jm_pairs(_config._td_dir, filename);
+
+	  _mapped_jm_pair_use[np2].dump_pairs_used(out_jm_pairs);
+	}
     }
 
   if (_config._td_dir)
