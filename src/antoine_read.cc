@@ -1578,21 +1578,17 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
 
 	out_config.fprintf("#define CFG_WAVEFCNS        %d\n",
 			   _n_wavefcns);
-	for (int i = 0; i < 2; i++)
-	  {
-	    const char *postfix[2] = { "FORW", "REV" };
-
-	    out_config.fprintf("#define CFG_PACK_WORDS_%s %d\n",
-			       postfix[i], _bit_packing[i]._words);
-	    /* Calculate padding required to get hash items 2^n */
-	    int n_data = _bit_packing[i]._words + _n_wavefcns;
-	    int n_full;
-	    for (n_full = 1; n_full < n_data; n_full *= 2)
-	      ;
-	    int n_pad = n_full - n_data;
-	    out_config.fprintf("#define CFG_HASH_MP_PAD64_%s %d\n",
-			       postfix[i], n_pad);
-	  }
+	int n_pack_words = _bit_packing[use_forw_states ? 0 : 1]._words;
+	out_config.fprintf("#define CFG_PACK_WORDS %d\n",
+			   n_pack_words);
+	/* Calculate padding required to get hash items 2^n */
+	int n_data = n_pack_words + _n_wavefcns;
+	int n_full;
+	for (n_full = 1; n_full < n_data; n_full *= 2)
+	  ;
+	int n_pad = n_full - n_data;
+	out_config.fprintf("#define CFG_HASH_MP_PAD64 %d\n",
+			   n_pad);
 
 	if (_n_wavefcns)
 	  {
