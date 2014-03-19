@@ -6,3 +6,5 @@
 
 #include CFG_FILENAME_TABLES_FR_H
 
+#include CFG_FILENAME_TABLES_MISS_H
+
