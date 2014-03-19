@@ -1256,16 +1256,8 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
 
 		      for (unsigned int i = 0; i < _header.A[0] - 1; i++)
 			for (unsigned int k = i + 1; k < _header.A[0]; k++)
-			  {
 			  _mapped_jm_pair_use[0].add(mapped_jm_array[i],
 						     mapped_jm_array[k]);
-
-			  if (mapped_jm_array[i] > 0x40)
-			    {
-			      printf ("QQ\n");
-			    }
-
-			  }
 
 		      int off = _header.A[0];
 
