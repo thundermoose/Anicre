@@ -2,7 +2,7 @@
 #ifndef __ANICR_CONFIG_H__
 #define __ANICR_CONFIG_H__
 
-#include "config.h"
+#include FILENAME_CONFIG_H
 
 #if REVERSED
 #define CFG_PACK_WORDS     CFG_PACK_WORDS_REV

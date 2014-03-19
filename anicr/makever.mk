@@ -31,6 +31,8 @@ LINKFLAGS += `gsl-config --libs`
 
 ####################################################################
 
+CFLAGS += -DFILENAME_CONFIG_H=\"config_$(ANICR_PREFIX).h\"
+
 ifeq ($(ANICR_PREFIX),pp)
 CFLAGS += -DREVERSED
 endif
