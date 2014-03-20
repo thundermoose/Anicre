@@ -734,13 +734,9 @@ void mr_antoine_reader<header_version_t, fon_version_t>::find_jm_used()
 
 	      mr_antoine_occ_item_t *pocc1 = pocc;
 
-	      uint32_t jm_array[32];
-
 	      for (unsigned int j = 0; j < _header.A[i]; j++)
 		{
 		  uint32_t jm = (pocc++)->sp - 1;
-
-		  jm_array[j] = jm;
 
 		  BITSONE_CONTAINER_TYPE mask =
 		    ((BITSONE_CONTAINER_TYPE) 1) <<
@@ -980,16 +976,6 @@ void mr_antoine_reader<header_version_t, fon_version_t>::find_used_states()
 template<class header_version_t, class fon_version_t>
 void mr_antoine_reader<header_version_t, fon_version_t>::find_mp_bit_packing()
 {
-  /* */
-
-  unsigned int max_jm_first = -1;
-
-  for (unsigned int i = 0; i < _header.num_of_jm; i++)
-    {
-      if (_max_jm_for_jm[i] || _max_jm_for_jm[i + _header.num_of_jm])
-	max_jm_first = _sps_map[i];
-    }
-
   /* Now that we know who are used, we can for each sp location in the
    * mp state find which is the maximum index used.
    */
@@ -1078,8 +1064,8 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
 	    sizeof (BIT_PACK_T), sizeof (double));
     }
 
-  size_t mp_states_stride[2] = { _bit_packing[0]._words,
-				 _bit_packing[1]._words };
+  size_t mp_states_stride[2] = { (size_t) _bit_packing[0]._words,
+				 (size_t) _bit_packing[1]._words };
 
   size_t mp_states_sz[2] = {
     sizeof (BIT_PACK_T) * istate_chunk_sz * mp_states_stride[0],
@@ -1176,8 +1162,8 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
 			  // uint32_t occ = pistate->istate[i];
 
 			  int kk_off[2] = {
-			    (i == 0) ? 0 : _header.A[0],
-			    (i == 0) ? _header.A[1] : 0,
+			    (int) ((i == 0) ? 0 : _header.A[0]),
+			    (int) ((i == 0) ? _header.A[1] : 0),
 			  };
 
 			  int kk = 0;
