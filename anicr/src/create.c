@@ -306,18 +306,17 @@ void annihilate_states_2nd(int *in_sp_other,
 
   /* And now try with all other missing ones. */
 
-  for (i = 1; i < NSP_OTHER - 1; i++)
+  for (i = 0; i < NSP_OTHER - 1; i++)
     {
       /* We always have the space at [0] and [1] empty. */
 
       out_sp_other[i+1] = in_sp_other[i];
 
-      if (sp_anni1 < in_sp[i+1])
-	create_states_1st(out_sp_other,
-			  in_sp, sp_anni1, in_sp_other[i+1], phase_i ^ (i+1),
-			  (sp_info[in_sp_other[i+1]]._l ^ miss_parity) & 1,
-			  miss_m + sp_info[in_sp_other[i+1]]._m,
-			  E - SP_STATE_E(sp_info[in_sp_other[i+1]]));
+      create_states_1st(out_sp_other,
+			in_sp, sp_anni1, in_sp_other[i+1], phase_i ^ (i+1),
+			(sp_info[in_sp_other[i+1]]._l ^ miss_parity) & 1,
+			miss_m + sp_info[in_sp_other[i+1]]._m,
+			E - SP_STATE_E(sp_info[in_sp_other[i+1]]));
     }
 #endif
 }
