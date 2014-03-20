@@ -205,7 +205,7 @@ void annihilate_states(int *in_sp_other,
 
   /* And now try with all other missing ones. */
 
-  for (i = 0; i < NSP - (ANICR2 ? 2 : 1); i++)
+  for (i = 0; i < NSP - (ANICR2 && !CFG_ANICR_NP ? 2 : 1); i++)
     {
       /* We always have the space at [0] empty. */
 

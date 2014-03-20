@@ -636,6 +636,9 @@ void couple_accumulate_2()
 
       couple_j_item *end_anni = anni_items;
 
+      if (diff_anni_j < abs(anni_m))
+	diff_anni_j = abs(anni_m);
+
       {
       int anni_j;
       for (anni_j = diff_anni_j; anni_j <= sum_anni_j; anni_j += 2)
@@ -808,6 +811,9 @@ void couple_accumulate_2()
 	  int crea_m      = cpg->_info._m1 + cpg->_info._m2;
 
 	  couple_j_item *end_crea = crea_items;
+
+	  if (diff_crea_j < abs(anni_m))
+	    diff_crea_j = abs(anni_m);
 
 	  {
 	  int crea_j;

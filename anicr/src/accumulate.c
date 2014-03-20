@@ -811,7 +811,6 @@ void prepare_nlj()
 	  printf ("PAIR: %4d %4d : %3d , %3d ,  %3d , %3d , %d\n",
 		  sp_1, sp_2, nlj_1, nlj_2, j12, sum_m, parity);
 	  */
-
 	  uint32_t nlj_key =
 	    (uint32_t) (nlj_1 | (nlj_2 << 12) | (j12 << 24) | (parity << 31));
 	  
@@ -989,7 +988,19 @@ void prepare_nlj()
 		    (((uint64_t) anni_j) << 44) |
 		    (((uint64_t) crea_j) << 51) |
 		    (((uint64_t) jtrans) << 58);
-		  
+		  /*
+		  printf ("nlj item: "
+			  "(key=%016" PRIx64 ") "
+			  "(%d %d, %d %d, %d %d %d)"
+			  ".\n", key,
+			  (int) ((key >>  0) & 0x7ff),
+			  (int) ((key >> 11) & 0x7ff),
+			  (int) ((key >> 22) & 0x7ff),
+			  (int) ((key >> 33) & 0x7ff),
+			  (int) ((key >> 44) & 0x07f),
+			  (int) ((key >> 51) & 0x07f),
+			  (int) ((key >> 58) & 0x03f));
+		  */
 		  uint64_t x = nlj_hash_key(key);
 
 		  x ^= x >> 32;
@@ -1039,7 +1050,18 @@ void nlj_add(uint64_t key, double value)
     {
       if (_nlj_hash[j]._key == (uint64_t) -1)
 	{
-	  fprintf (stderr, "Internal error: nlj item not found.\n");
+	  fprintf (stderr, "Internal error: nlj item not found "
+		   "(key=%016" PRIx64 ") "
+		   "(%d %d, %d %d, %d %d %d)"
+		   ".\n", key,
+		   (int) ((key >>  0) & 0x7ff),
+		   (int) ((key >> 11) & 0x7ff),
+		   (int) ((key >> 22) & 0x7ff),
+		   (int) ((key >> 33) & 0x7ff),
+		   (int) ((key >> 44) & 0x07f),
+		   (int) ((key >> 51) & 0x07f),
+		   (int) ((key >> 58) & 0x03f));
+	  assert(0);
 	  exit(1);
 	}
 
