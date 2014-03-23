@@ -16,8 +16,6 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#define countof(x) (sizeof(x)/sizeof(x[0]))
-
 int _debug = 0;
 
 void check_create_dir(const char *dir)

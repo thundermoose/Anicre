@@ -1433,16 +1433,33 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
       }
     }
 
-  for (int np2 = 0; np2 < 3; np2++)
+  struct np_config_t
+  {
+    const char *_ident;
+    bool        _use_forw_states;
+    int         _num_change;
+    int         _change_pn_at;
+    int         _jm_pairs_table;
+  } np_config[] = {
+    { "n",  true,  1, 0, -1 },
+    { "p",  false, 1, 0, -1 },
+    { "nn", true,  2, 0, 0 },
+    { "pp", false, 2, 0, 1 },
+    { "np", true,  2, 1, 2 },
+  };
+
+  
+
+  for (size_t icfg = 0; icfg < countof(np_config); icfg++)
     {
-      const char *np2_ident[] = { "nn", "pp", "np" };
+      np_config_t &cfg = np_config[icfg];
 
       {
 #define FILENAME_TABLE_MISS "tables_miss_%s.h"
 
 	char filename[128];
 	    
-	sprintf (filename, FILENAME_TABLE_MISS, np2_ident[np2]);
+	sprintf (filename, FILENAME_TABLE_MISS, cfg._ident);
 	    
 	file_output out_table(_config._td_dir, filename);
 	
@@ -1451,19 +1468,20 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
 	out_table.fprintf("\n");
 	
 	missing_mpr_tables(out_table, mp_info._sum_m, mp_info._parity, _sps,
-			   np2 == 2 ? 1 : 0);
+			   cfg._num_change, cfg._change_pn_at);
       }
 
+      if (cfg._jm_pairs_table != -1)
       {
 #define FILENAME_JM_PAIRS "jm_pairs_%s.bin"
 
 	char filename[128];
 	    
-	sprintf (filename, FILENAME_JM_PAIRS, np2_ident[np2]);
+	sprintf (filename, FILENAME_JM_PAIRS, cfg._ident);
 	    
 	file_output out_jm_pairs(_config._td_dir, filename);
 	    
-	_mapped_jm_pair_use[np2].dump_pairs_used(out_jm_pairs);
+	_mapped_jm_pair_use[cfg._jm_pairs_table].dump_pairs_used(out_jm_pairs);
       }
 
       {
@@ -1471,7 +1489,7 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
 
 	char filename[128];
 
-	sprintf (filename, FILENAME_CONFIG, np2_ident[np2]);
+	sprintf (filename, FILENAME_CONFIG, cfg._ident);
 
 	file_output out_config(_config._td_dir, filename);
 
@@ -1481,7 +1499,7 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
 
 	bool use_forw_states = true;
 
-	if (np2 == 1)
+	if (cfg._use_forw_states == 1)
 	  use_forw_states = false;
 
 	out_config.fprintf("#define CFG_MP_STATES_FR               \"%s\"\n",
@@ -1489,7 +1507,7 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
 	out_config.fprintf("#define CFG_FILENAME_TABLES_FR_H       \"tables_%s.h\"\n",
 			   use_forw_states ? "forw" : "rev");
 	out_config.fprintf("#define CFG_FILENAME_TABLES_MISS_H     "
-			   "\"" FILENAME_TABLE_MISS "\"\n", np2_ident[np2]);
+			   "\"" FILENAME_TABLE_MISS "\"\n", cfg._ident);
 	out_config.fprintf("#define CFG_FILENAME_CODE_FR_H         \"code_%s.h\"\n",
 			   use_forw_states ? "forw" : "rev");
 
@@ -1543,15 +1561,16 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
 			   mp_info._parity);
 
 	out_config.fprintf("#define CFG_FILENAME_JM_PAIRS          "
-			   "\"" FILENAME_JM_PAIRS "\"\n", np2_ident[np2]);
+			   "\"" FILENAME_JM_PAIRS "\"\n", cfg._ident);
       
-	out_config.fprintf("#define CFG_JM_PAIRS                   %"PRIu64"\n",
-			   _mapped_jm_pair_use[np2].num_pairs());
+	if (cfg._jm_pairs_table != -1)
+	  out_config.fprintf("#define CFG_JM_PAIRS                   %"PRIu64"\n",
+			     _mapped_jm_pair_use[cfg._jm_pairs_table].num_pairs());
 
 	out_config.fprintf("#define CFG_ANICR_TWO                  %d\n",
-			   (np2 < 3 ? 1 : 0));
+			   (cfg._num_change == 2 ? 1 : 0));
 	out_config.fprintf("#define CFG_ANICR_NP                   %d\n",
-			   (np2 == 2 ? 1 : 0));
+			   (cfg._change_pn_at ? 1 : 0));
       }
     }
 

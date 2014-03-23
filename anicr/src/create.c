@@ -77,10 +77,14 @@ void ammend_tables()
 
   ammend_table(_table_1_0_info._miss,
 	       _table_1_0_info._offset[2 * _table_1_0_info._parity_stride]);
+#if CFG_ANICR_TWO
   ammend_table(_table_2_0_info._miss,
 	       _table_2_0_info._offset[2 * _table_2_0_info._parity_stride]);
+#endif
+  /*
   ammend_table(_table_3_0_info._miss,
 	       _table_3_0_info._offset[2 * _table_3_0_info._parity_stride]);
+  */
 
 }
 
