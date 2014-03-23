@@ -792,14 +792,22 @@ void created_state(int *in_sp_other,
   (void) acc_i;
 #endif
 #else
+#if 0
   int acc_i = sp_anni * CFG_NUM_SP_STATES + sp_crea;
 #endif
+#endif
 
+#if CFG_ANICR_TWO
   uint64_t key =
     (((uint64_t) sp_anni1) <<  0) |
     (((uint64_t) sp_anni2) << 16) |
     (((uint64_t) sp_crea1) << 32) |
     (((uint64_t) sp_crea2) << 48);
+#else
+  uint64_t key =
+    (((uint64_t) sp_anni) <<  0) |
+    (((uint64_t) sp_crea) << 32);
+#endif
 
   uint64_t acc_x;
 
