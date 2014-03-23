@@ -19,23 +19,23 @@
 
 #define DUMP_JM_PAIRS 0
 
-uint32_t *_jm_pairs = NULL;
+uint32_t *_sp_pairs = NULL;
 
 void prepare_accumulate()
 {
   /* Read in the jm pairs info. */
 
-  size_t sz_jm_pairs = sizeof (uint32_t) * CFG_JM_PAIRS;
+  size_t sz_sp_pairs = sizeof (uint32_t) * CFG_SP_PAIRS;
 
-  _jm_pairs = (uint32_t*) malloc (sz_jm_pairs);
+  _sp_pairs = (uint32_t*) malloc (sz_sp_pairs);
 
-  if (!_jm_pairs)
+  if (!_sp_pairs)
     {
-      fprintf (stderr, "Memory allocation error (%zd bytes).\n", sz_jm_pairs);
+      fprintf (stderr, "Memory allocation error (%zd bytes).\n", sz_sp_pairs);
       exit(1);
     }
 
-  int fd = open (CFG_FILENAME_JM_PAIRS, O_RDONLY);
+  int fd = open (CFG_FILENAME_SP_PAIRS, O_RDONLY);
 
   if (fd == -1)
     {
@@ -43,19 +43,19 @@ void prepare_accumulate()
       exit(1);
     }
 
-  full_read (fd, _jm_pairs, sz_jm_pairs);
+  full_read (fd, _sp_pairs, sz_sp_pairs);
 
   close (fd);
   /*
   size_t a_i;
 
-  for (a_i = 0; a_i < CFG_JM_PAIRS; a_i++)
+  for (a_i = 0; a_i < CFG_SP_PAIRS; a_i++)
     {
       printf ("%5zd: %3d %3d\n",
-	      a_i, _jm_pairs[a_i] & 0xffff, _jm_pairs[a_i] >> 16);
+	      a_i, _sp_pairs[a_i] & 0xffff, _sp_pairs[a_i] >> 16);
     }
   */
-  printf ("Read %zd jm pairs states.\n", (size_t) CFG_JM_PAIRS);
+  printf ("Read %zd sp pairs.\n", (size_t) CFG_SP_PAIRS);
 }
 
 #if ACC_TABLE
@@ -181,7 +181,7 @@ void alloc_accumulate()
 
   /* List of the pairs sorted by j,m for the contained states. */
 
-  size_t sz_jmpis = sizeof (jm_pair_info_sort) * CFG_JM_PAIRS;
+  size_t sz_jmpis = sizeof (jm_pair_info_sort) * CFG_SP_PAIRS;
 
   jm_pair_info_sort *jmpis = (jm_pair_info_sort *) malloc (sz_jmpis);
 
@@ -197,9 +197,9 @@ void alloc_accumulate()
   int min_sum_m = INT_MAX;
   int max_sum_m = INT_MIN;
 
-  for (i = 0; i < CFG_JM_PAIRS; i++)
+  for (i = 0; i < CFG_SP_PAIRS; i++)
     {
-      uint32_t pair = _jm_pairs[i];
+      uint32_t pair = _sp_pairs[i];
 
       uint32_t sp_1 = pair & 0x0000ffff;
       uint32_t sp_2 = pair >> 16;
@@ -230,7 +230,7 @@ void alloc_accumulate()
 	max_sum_m = sum_m;
     }
 
-  qsort (jmpis, CFG_JM_PAIRS, sizeof (jm_pair_info_sort),
+  qsort (jmpis, CFG_SP_PAIRS, sizeof (jm_pair_info_sort),
 	 compare_jm_pair_info_sort);
 
   /* Count number of unique jms. */
@@ -238,7 +238,7 @@ void alloc_accumulate()
   size_t num_jm_infos = 1;
   /*size_t num_parity_infos = 1;*/
 
-  for (i = 1; i < CFG_JM_PAIRS; i++)
+  for (i = 1; i < CFG_SP_PAIRS; i++)
     {
       int ret_jmjm = compare_jm_pair_info_sort_jmjm(&jmpis[i-1], &jmpis[i]);
 
@@ -266,7 +266,7 @@ void alloc_accumulate()
   _num_jm_pair_group2s = num_jm_infos;
 
   _jm_pairs_group2_list = (uint32_t *) 
-    malloc (2 * sizeof (uint32_t) * CFG_JM_PAIRS);
+    malloc (2 * sizeof (uint32_t) * CFG_SP_PAIRS);
   /*
   _jm_pair_subgroups = (jm_pair_subgroup *) 
     malloc (sizeof (jm_pair_subgroup) * _num_jm_pair_subgroups);
@@ -288,7 +288,7 @@ void alloc_accumulate()
   jm_pair_group *curgroup = NULL;
   uint32_t *list = _jm_pairs_group2_list;
 
-  for (i = 0; i < CFG_JM_PAIRS; i++)
+  for (i = 0; i < CFG_SP_PAIRS; i++)
     {
       jm_pair_info_sort *jmpisi = &jmpis[i];
 
@@ -350,14 +350,14 @@ void alloc_accumulate()
 #endif
   /* And then the list with major sorting on parity and sum_m */
 
-  qsort (jmpis, CFG_JM_PAIRS, sizeof (jm_pair_info_sort),
+  qsort (jmpis, CFG_SP_PAIRS, sizeof (jm_pair_info_sort),
 	 compare_jm_pair_info_sort_major_summ);
 
   /* Count number of unique jms. */
 
   num_jm_infos = 1;
 
-  for (i = 1; i < CFG_JM_PAIRS; i++)
+  for (i = 1; i < CFG_SP_PAIRS; i++)
     {
       int ret_jmjm =
 	compare_jm_pair_info_sort_summ_jmjm(&jmpis[i-1], &jmpis[i]);
@@ -372,7 +372,7 @@ void alloc_accumulate()
   _num_jm_pair_groups = num_jm_infos;
 
   _jm_pairs_group_list = (uint32_t *) 
-    malloc (2 * sizeof (uint32_t) * CFG_JM_PAIRS);
+    malloc (2 * sizeof (uint32_t) * CFG_SP_PAIRS);
   _jm_pair_groups = (jm_pair_group *) 
     malloc (sizeof (jm_pair_group) * _num_jm_pair_groups);
 
@@ -401,7 +401,7 @@ void alloc_accumulate()
 
   _summ_parity_jm_pair_groups[idx] = group;
 
-  for (i = 0; i < CFG_JM_PAIRS; i++)
+  for (i = 0; i < CFG_SP_PAIRS; i++)
     {
       jm_pair_info_sort *jmpisi = &jmpis[i];
 
@@ -526,9 +526,9 @@ void alloc_accumulate()
 
   uint64_t num_accum_comb = 0;
 
-  for (a_i = 0; a_i < CFG_JM_PAIRS; a_i++)
+  for (a_i = 0; a_i < CFG_SP_PAIRS; a_i++)
     {
-      uint32_t anni_pair = _jm_pairs[a_i];
+      uint32_t anni_pair = _sp_pairs[a_i];
 
       uint32_t anni_1 = anni_pair & 0x0000ffff;
       uint32_t anni_2 = anni_pair >> 16;
@@ -541,9 +541,9 @@ void alloc_accumulate()
 	_table_sp_states[anni_1]._l +
 	_table_sp_states[anni_2]._l;
 
-      for (c_i = 0; c_i < CFG_JM_PAIRS; c_i++)
+      for (c_i = 0; c_i < CFG_SP_PAIRS; c_i++)
 	{
-	  uint32_t crea_pair = _jm_pairs[c_i];
+	  uint32_t crea_pair = _sp_pairs[c_i];
 
 	  uint32_t crea_1 = crea_pair & 0x0000ffff;
 	  uint32_t crea_2 = crea_pair >> 16;
@@ -610,9 +610,9 @@ void alloc_accumulate()
 
   uint64_t max_coll = 0, sum_coll = 0;
 
-  for (a_i = 0; a_i < CFG_JM_PAIRS; a_i++)
+  for (a_i = 0; a_i < CFG_SP_PAIRS; a_i++)
     {
-      uint32_t anni_pair = _jm_pairs[a_i];
+      uint32_t anni_pair = _sp_pairs[a_i];
 
       uint32_t anni_1 = anni_pair & 0x0000ffff;
       uint32_t anni_2 = anni_pair >> 16;
@@ -625,9 +625,9 @@ void alloc_accumulate()
 	_table_sp_states[anni_1]._l +
 	_table_sp_states[anni_2]._l;
 
-      for (c_i = 0; c_i < CFG_JM_PAIRS; c_i++)
+      for (c_i = 0; c_i < CFG_SP_PAIRS; c_i++)
 	{
-	  uint32_t crea_pair = _jm_pairs[c_i];
+	  uint32_t crea_pair = _sp_pairs[c_i];
 
 	  uint32_t crea_1 = crea_pair & 0x0000ffff;
 	  uint32_t crea_2 = crea_pair >> 16;
@@ -757,10 +757,10 @@ void prepare_nlj()
 
   /* We first just enumerate them, and then sort and pick the unique
    * items.  During first enumeration, we may find at most
-   * CFG_JM_PAIRS * (CFG_MAX_J+1) configurations.
+   * CFG_SP_PAIRS * (CFG_MAX_J+1) configurations.
    */
 
-  size_t max_nlj_pairs = CFG_JM_PAIRS * (CFG_MAX_J+1);
+  size_t max_nlj_pairs = CFG_SP_PAIRS * (CFG_MAX_J+1);
 
   size_t sz_nlj_pairs = sizeof (uint32_t) * max_nlj_pairs;
 
@@ -776,9 +776,9 @@ void prepare_nlj()
 
   size_t i;
 
-  for (i = 0; i < CFG_JM_PAIRS; i++)
+  for (i = 0; i < CFG_SP_PAIRS; i++)
     {
-      uint32_t sp_pair = _jm_pairs[i];
+      uint32_t sp_pair = _sp_pairs[i];
 
       uint32_t sp_1 = sp_pair & 0x0000ffff;
       uint32_t sp_2 = sp_pair >> 16;

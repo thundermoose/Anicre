@@ -109,7 +109,7 @@ public:
 
   int                         _n_wavefcns;
 
-  sp_pair_use                 _mapped_jm_pair_use[3]; // 00, 11, 01
+  sp_pair_use                 _mapped_sp_pair_use[3]; // 00, 11, 01
 
 public:
   bool level1_read_wavefcn(wavefcn_t *wavefcn,
@@ -139,7 +139,7 @@ protected:
   void find_nlj_used();
   void make_nlj_map();
   void make_sps_map();
-  void find_jm_pairs();
+  void find_sp_pairs();
   void find_mp_bit_packing();
   void find_energy_dump_states(mp_state_info &mp_info);
   void dump_wavefcn();

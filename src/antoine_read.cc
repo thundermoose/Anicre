@@ -1095,14 +1095,14 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
       out_states[1] = new file_output(_config._td_dir, FILENAME_STATES_REV);
     }
 
-  int *mapped_jm_array =
+  int *mapped_sp_array =
     (int *) malloc (sizeof (int) * (_header.A[0] + _header.A[1]));
 
-  if (!mapped_jm_array)
-    FATAL("Memory allocation error (mapped_jm_array).");
+  if (!mapped_sp_array)
+    FATAL("Memory allocation error (mapped_sp_array).");
 
   for (int i = 0; i < 3; i++)
-    _mapped_jm_pair_use[i].alloc (_sps.size(), _sps.size());
+    _mapped_sp_pair_use[i].alloc (_sps.size(), _sps.size());
 
   for (mr_file_chunk<mr_antoine_istate_item_t>
 	 cm_istate(_header.nsd, CHUNK_SZ);
@@ -1197,16 +1197,16 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
 			      else
 				sum_neg_m += mpr;
 
-			      int mapped_jm = _sps_map[jm];
+			      int mapped_sp = _sps_map[jm];
 
-			      mapped_jm_array[kk + kk_off[0]] = mapped_jm;
+			      mapped_sp_array[kk + kk_off[0]] = mapped_sp;
 
 			      _bit_packing[0].insert_packed(mp_ptr_this[0],
 							    kk + kk_off[0],
-							    mapped_jm);
+							    mapped_sp);
 			      _bit_packing[1].insert_packed(mp_ptr_this[1],
 							    kk + kk_off[1],
-							    mapped_jm);
+							    mapped_sp);
 
 			      kk++;
 			    }
@@ -1242,20 +1242,20 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
 
 		      for (unsigned int i = 0; i < _header.A[0] - 1; i++)
 			for (unsigned int k = i + 1; k < _header.A[0]; k++)
-			  _mapped_jm_pair_use[0].add(mapped_jm_array[i],
-						     mapped_jm_array[k]);
+			  _mapped_sp_pair_use[0].add(mapped_sp_array[i],
+						     mapped_sp_array[k]);
 
 		      int off = _header.A[0];
 
 		      for (unsigned int i = 0; i < _header.A[1] - 1; i++)
 			for (unsigned int k = i + 1; k < _header.A[1]; k++)
-			  _mapped_jm_pair_use[1].add(mapped_jm_array[off+i],
-						     mapped_jm_array[off+k]);
+			  _mapped_sp_pair_use[1].add(mapped_sp_array[off+i],
+						     mapped_sp_array[off+k]);
 
 		      for (unsigned int i = 0; i < _header.A[0]; i++)
 			for (unsigned int k = 0; k < _header.A[1]; k++)
-			  _mapped_jm_pair_use[2].add(mapped_jm_array[i],
-						     mapped_jm_array[off+k]);
+			  _mapped_sp_pair_use[2].add(mapped_sp_array[i],
+						     mapped_sp_array[off+k]);
 
 		    }
 
@@ -1439,7 +1439,7 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
     bool        _use_forw_states;
     int         _num_change;
     int         _change_pn_at;
-    int         _jm_pairs_table;
+    int         _sp_pairs_table;
   } np_config[] = {
     { "n",  true,  1, 0, -1 },
     { "p",  false, 1, 0, -1 },
@@ -1471,17 +1471,17 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
 			   cfg._num_change, cfg._change_pn_at);
       }
 
-      if (cfg._jm_pairs_table != -1)
+      if (cfg._sp_pairs_table != -1)
       {
-#define FILENAME_JM_PAIRS "jm_pairs_%s.bin"
+#define FILENAME_SP_PAIRS "sp_pairs_%s.bin"
 
 	char filename[128];
 	    
-	sprintf (filename, FILENAME_JM_PAIRS, cfg._ident);
+	sprintf (filename, FILENAME_SP_PAIRS, cfg._ident);
 	    
-	file_output out_jm_pairs(_config._td_dir, filename);
+	file_output out_sp_pairs(_config._td_dir, filename);
 	    
-	_mapped_jm_pair_use[cfg._jm_pairs_table].dump_pairs_used(out_jm_pairs);
+	_mapped_sp_pair_use[cfg._sp_pairs_table].dump_pairs_used(out_sp_pairs);
       }
 
       {
@@ -1555,13 +1555,13 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
 	out_config.fprintf("#define CFG_PARITY_FINAL               %d\n",
 			   mp_info._parity);
 
-	if (cfg._jm_pairs_table != -1)
+	if (cfg._sp_pairs_table != -1)
 	  {
-	    out_config.fprintf("#define CFG_FILENAME_JM_PAIRS          "
-			       "\"" FILENAME_JM_PAIRS "\"\n", cfg._ident);
+	    out_config.fprintf("#define CFG_FILENAME_SP_PAIRS          "
+			       "\"" FILENAME_SP_PAIRS "\"\n", cfg._ident);
       
-	    out_config.fprintf("#define CFG_JM_PAIRS                   %"PRIu64"\n",
-			       _mapped_jm_pair_use[cfg._jm_pairs_table].num_pairs());
+	    out_config.fprintf("#define CFG_SP_PAIRS                   %"PRIu64"\n",
+			       _mapped_sp_pair_use[cfg._sp_pairs_table].num_pairs());
 	  }
 
 	out_config.fprintf("#define CFG_ANICR_TWO                  %d\n",
