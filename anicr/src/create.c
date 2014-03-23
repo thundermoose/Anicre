@@ -87,7 +87,7 @@ void ammend_tables()
 
 void create_states(int *in_sp_other,
 		   int *in_sp,
-#if ANICR2
+#if CFG_ANICR_TWO
 		   int sp_anni1, int sp_anni2, int sp_crea1,
 #if !CFG_ANICR_NP
 		   int fill,
@@ -110,7 +110,7 @@ void create_states_2nd(int *in_sp_other,
 
 void created_state(int *in_sp_other,
 		   int *in_sp,
-#if ANICR2
+#if CFG_ANICR_TWO
 		   int sp_anni1, int sp_anni2,
 		   int sp_crea1, int sp_crea2,
 #else
@@ -187,7 +187,7 @@ void annihilate_states(int *in_sp_other,
 
   /* The out_sp list is missing sp state 0. */
 
-#if ANICR2
+#if CFG_ANICR_TWO
   annihilate_states_2nd(in_sp_other,
 			out_sp, in_sp[0],
 			0,
@@ -205,13 +205,13 @@ void annihilate_states(int *in_sp_other,
 
   /* And now try with all other missing ones. */
 
-  for (i = 0; i < NSP - (ANICR2 && !CFG_ANICR_NP ? 2 : 1); i++)
+  for (i = 0; i < NSP - (CFG_ANICR_TWO && !CFG_ANICR_NP ? 2 : 1); i++)
     {
       /* We always have the space at [0] empty. */
 
       out_sp[i+1] = in_sp[i];
 
-#if ANICR2
+#if CFG_ANICR_TWO
       annihilate_states_2nd(in_sp_other,
 			    out_sp, in_sp[i+1],
 			    i+1,
@@ -327,7 +327,7 @@ void annihilate_states_2nd(int *in_sp_other,
 
 void create_states(int *in_sp_other,
 		   int *in_sp,
-#if ANICR2
+#if CFG_ANICR_TWO
                    int sp_anni1, int sp_anni2, int sp_crea1,
 #if !CFG_ANICR_NP
 		   int fill,
@@ -355,7 +355,7 @@ void create_states(int *in_sp_other,
   /* Print the state. */
 
 #if DEBUG_ANICR
-#if ANICR2
+#if CFG_ANICR_TWO
   printf ("--- a %3d a %3d c %3d --------------------------------------------------------\n", sp_anni1, sp_anni2, sp_crea1);
 #else
   printf ("--- a %3d --------------------------------------------------------------------\n", sp_anni);
@@ -363,7 +363,7 @@ void create_states(int *in_sp_other,
 #endif
 
 #if DEBUG_ANICR
-#if ANICR2
+#if CFG_ANICR_TWO
 #if !CFG_ANICR_NP
   for (i = 0; i < fill; i++)
     printf (" %4d", in_sp[i]); 
@@ -374,7 +374,7 @@ void create_states(int *in_sp_other,
     printf (" %4d", in_sp_other[i]); 
 #endif
 #else
-  for (i = ANICR2 ? 2 : 1; i < CFG_NUM_SP_STATES0; i++)
+  for (i = CFG_ANICR_TWO ? 2 : 1; i < CFG_NUM_SP_STATES0; i++)
     printf (" %4d", in_sp[i]); 
 #endif
   printf (" : E=%3d  ~m=%3d  ~p=%d\n", E, miss_m, miss_parity);
@@ -427,7 +427,7 @@ void create_states(int *in_sp_other,
 
   /* Assume we will begin by inserting a lowest state. */
 
-#if ANICR2
+#if CFG_ANICR_TWO
 #if !CFG_ANICR_NP
   for (i = 0; i < fill; i++)
     {
@@ -457,7 +457,7 @@ void create_states(int *in_sp_other,
   out_sp_other[NSP_OTHER] = INT_MAX;
 #endif
 
-#if ANICR2 && !CFG_ANICR_NP
+#if CFG_ANICR_TWO && !CFG_ANICR_NP
   /* Skip past states which are smaller than the one already added. */
   
   for ( ; num_poss_sp; --num_poss_sp, poss_sp_ptr++)
@@ -500,7 +500,7 @@ void create_states(int *in_sp_other,
 
       created_state(in_sp_other,
 		    out_sp,
-#if ANICR2
+#if CFG_ANICR_TWO
 		    sp_anni1, sp_anni2, sp_crea1,
 #else
 		    sp_anni,
@@ -535,7 +535,7 @@ void create_states(int *in_sp_other,
 
       created_state(out_sp_other,
 		    in_sp,
-#if ANICR2
+#if CFG_ANICR_TWO
 		    sp_anni1, sp_anni2, sp_crea1,
 #else
 		    sp_anni,
@@ -567,7 +567,7 @@ void create_states_1st(int *in_sp_other,
   /* Print the state. */
 
 #if DEBUG_ANICR
-#if ANICR2
+#if CFG_ANICR_TWO
   printf ("--- a %3d a %3d --------------------------------------------------------------\n", sp_anni1, sp_anni2);
 #else
   printf ("----a %3d --------------------------------------------------------------------\n", sp_anni1);
@@ -681,7 +681,7 @@ void create_states_1st(int *in_sp_other,
 	  printf ("%4d @ %3d\n", crea_sp, fill);
 #endif
 
-#if ANICR2
+#if CFG_ANICR_TWO
 	  create_states(in_sp_other,
 			out_sp, sp_anni1, sp_anni2,
 			(int) crea_sp,
@@ -716,7 +716,7 @@ extern double _cur_val;
 
 void created_state(int *in_sp_other,
 		   int *in_sp,
-#if ANICR2
+#if CFG_ANICR_TWO
 		   int sp_anni1, int sp_anni2,
 		   int sp_crea1, int sp_crea2,
 #else
@@ -740,7 +740,7 @@ void created_state(int *in_sp_other,
   printf (" <- find\n");
 #endif
 
-#if ANICR2
+#if CFG_ANICR_TWO
   (void) sp_anni1;
   (void) sp_anni2;
   (void) sp_crea1;
@@ -770,7 +770,7 @@ void created_state(int *in_sp_other,
   (void) jms;
 #endif
 
-#if ANICR2
+#if CFG_ANICR_TWO
 #if ACC_TABLE
   int sp_a = sp_anni1 * (2 * CFG_NUM_SP_STATES - sp_anni1 - 3) / 2 + sp_anni2-1;
   int sp_c = sp_crea1 * (2 * CFG_NUM_SP_STATES - sp_crea1 - 3) / 2 + sp_crea2-1;

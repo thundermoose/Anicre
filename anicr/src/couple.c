@@ -30,7 +30,7 @@ void couple_accumulate()
   size_t non_zero = 0;
   size_t i;
 
-#if ANICR2
+#if CFG_ANICR_TWO
   num_accum = CFG_TOT_FIRST_SCND * CFG_TOT_FIRST_SCND;
 #else
   num_accum = CFG_NUM_SP_STATES * CFG_NUM_SP_STATES;
@@ -97,7 +97,7 @@ void couple_accumulate()
 
 #define J_STRIDE (CFG_NUM_NLJ_STATES * CFG_NUM_NLJ_STATES * CFG_NUM_NLJ_STATES * CFG_NUM_NLJ_STATES)
 
-#if ANICR2
+#if CFG_ANICR_TWO
 #if NLJ_TABLE
       double *final_1b = NULL;    
 

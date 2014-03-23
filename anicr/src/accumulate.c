@@ -156,7 +156,7 @@ void alloc_accumulate()
 #if ACC_TABLE
   size_t num_accum;
 
-#if ANICR2
+#if CFG_ANICR_TWO
   num_accum = CFG_TOT_FIRST_SCND * CFG_TOT_FIRST_SCND;
 #else
   num_accum = CFG_NUM_SP_STATES * CFG_NUM_SP_STATES;
