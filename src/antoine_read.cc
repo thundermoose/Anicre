@@ -1497,19 +1497,14 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
 	out_config.fprintf("/* Editing is useless.                   */\n");
 	out_config.fprintf("\n");
 
-	bool use_forw_states = true;
-
-	if (cfg._use_forw_states == 1)
-	  use_forw_states = false;
-
 	out_config.fprintf("#define CFG_MP_STATES_FR               \"%s\"\n",
-			   use_forw_states ? "forw" : "rev");
+			   cfg._use_forw_states ? "forw" : "rev");
 	out_config.fprintf("#define CFG_FILENAME_TABLES_FR_H       \"tables_%s.h\"\n",
-			   use_forw_states ? "forw" : "rev");
+			   cfg._use_forw_states ? "forw" : "rev");
 	out_config.fprintf("#define CFG_FILENAME_TABLES_MISS_H     "
 			   "\"" FILENAME_TABLE_MISS "\"\n", cfg._ident);
 	out_config.fprintf("#define CFG_FILENAME_CODE_FR_H         \"code_%s.h\"\n",
-			   use_forw_states ? "forw" : "rev");
+			   cfg._use_forw_states ? "forw" : "rev");
 
 	out_config.fprintf("\n");
 	out_config.fprintf("#define CFG_NUM_MP_STATES              %d\n",
@@ -1519,9 +1514,9 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
 	out_config.fprintf("#define CFG_NUM_SP_STATES              %zd\n",
 			   _sps.size());
 	out_config.fprintf("#define CFG_NUM_SP_STATES0             %d\n",
-			   _header.A[use_forw_states ? 0 : 1]);
+			   _header.A[cfg._use_forw_states ? 0 : 1]);
 	out_config.fprintf("#define CFG_NUM_SP_STATES1             %d\n",
-			   _header.A[use_forw_states ? 1 : 0]);
+			   _header.A[cfg._use_forw_states ? 1 : 0]);
 	out_config.fprintf("#define CFG_MAX_SUM_E                  %d\n",
 			   mp_info._max_N);
 	out_config.fprintf("#define CFG_MAX_J                      %d\n",
@@ -1531,7 +1526,7 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
 
 	out_config.fprintf("#define CFG_WAVEFCNS                   %d\n",
 			   _n_wavefcns);
-	int n_pack_words = _bit_packing[use_forw_states ? 0 : 1]._words;
+	int n_pack_words = _bit_packing[cfg._use_forw_states ? 0 : 1]._words;
 	out_config.fprintf("#define CFG_PACK_WORDS                 %d\n",
 			   n_pack_words);
 	/* Calculate padding required to get hash items 2^n */
@@ -1560,12 +1555,14 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
 	out_config.fprintf("#define CFG_PARITY_FINAL               %d\n",
 			   mp_info._parity);
 
-	out_config.fprintf("#define CFG_FILENAME_JM_PAIRS          "
-			   "\"" FILENAME_JM_PAIRS "\"\n", cfg._ident);
-      
 	if (cfg._jm_pairs_table != -1)
-	  out_config.fprintf("#define CFG_JM_PAIRS                   %"PRIu64"\n",
-			     _mapped_jm_pair_use[cfg._jm_pairs_table].num_pairs());
+	  {
+	    out_config.fprintf("#define CFG_FILENAME_JM_PAIRS          "
+			       "\"" FILENAME_JM_PAIRS "\"\n", cfg._ident);
+      
+	    out_config.fprintf("#define CFG_JM_PAIRS                   %"PRIu64"\n",
+			       _mapped_jm_pair_use[cfg._jm_pairs_table].num_pairs());
+	  }
 
 	out_config.fprintf("#define CFG_ANICR_TWO                  %d\n",
 			   (cfg._num_change == 2 ? 1 : 0));
