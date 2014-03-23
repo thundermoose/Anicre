@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "anicr_config.h"
+
 void prepare_accumulate();
 
 /*****************************************************************************/
@@ -118,8 +120,8 @@ void write_nlj();
 
 typedef struct jm_pair_info_t
 {
-  char _j1, _m1;
-  char _j2, _m2;
+  char _j[CFG_NUM_SP_ANICR];
+  char _m[CFG_NUM_SP_ANICR];
 } jm_pair_info;
 
 typedef struct jm_pair_info_sort_t

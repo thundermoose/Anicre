@@ -630,9 +630,9 @@ void couple_accumulate_2()
        * so we can precalculate the 3j symbols.
        */
 
-      int diff_anni_j = abs(apg->_info._j1 - apg->_info._j2);
-      int sum_anni_j  = apg->_info._j1 + apg->_info._j2;
-      int anni_m      = apg->_info._m1 + apg->_info._m2;
+      int diff_anni_j = abs(apg->_info._j[0] - apg->_info._j[1]);
+      int sum_anni_j  = apg->_info._j[0] + apg->_info._j[1];
+      int anni_m      = apg->_info._m[0] + apg->_info._m[1];
 
       couple_j_item *end_anni = anni_items;
 
@@ -649,8 +649,8 @@ void couple_accumulate_2()
 	  gsl_sf_result result;
         
 	  int ret =
-	    gsl_sf_coupling_3j_e(apg->_info._j1, apg->_info._j2,  anni_j,
-				 apg->_info._m1, apg->_info._m2, -anni_m,
+	    gsl_sf_coupling_3j_e(apg->_info._j[0], apg->_info._j[1],  anni_j,
+				 apg->_info._m[0], apg->_info._m[1], -anni_m,
 				 &result);
 	  
 	  if (ret != GSL_SUCCESS)
@@ -660,7 +660,7 @@ void couple_accumulate_2()
 	    }
 
 	  int sign =
-	    1 - ((apg->_info._j1 - apg->_info._j2 + anni_m + anni_j) & 2);
+	    1 - ((apg->_info._j[0] - apg->_info._j[1] + anni_m + anni_j) & 2);
 
 	  mult_anni = result.val * sign;
 	  /*
@@ -806,9 +806,9 @@ void couple_accumulate_2()
 
 	  /* We have items.  Find the 3j's that can come into play. */
 
-	  int diff_crea_j = abs(cpg->_info._j1 - cpg->_info._j2);
-	  int sum_crea_j  = cpg->_info._j1 + cpg->_info._j2;
-	  int crea_m      = cpg->_info._m1 + cpg->_info._m2;
+	  int diff_crea_j = abs(cpg->_info._j[0] - cpg->_info._j[1]);
+	  int sum_crea_j  = cpg->_info._j[0] + cpg->_info._j[1];
+	  int crea_m      = cpg->_info._m[0] + cpg->_info._m[1];
 
 	  couple_j_item *end_crea = crea_items;
 
@@ -825,8 +825,8 @@ void couple_accumulate_2()
 	      gsl_sf_result result;
         
 	      int ret =
-		gsl_sf_coupling_3j_e(cpg->_info._j1, cpg->_info._j2,  crea_j,
-				     cpg->_info._m1, cpg->_info._m2, -crea_m,
+		gsl_sf_coupling_3j_e(cpg->_info._j[0],cpg->_info._j[1], crea_j,
+				     cpg->_info._m[0],cpg->_info._m[1],-crea_m,
 				     &result);
 	  
 	      if (ret != GSL_SUCCESS)
@@ -836,7 +836,7 @@ void couple_accumulate_2()
 		}
 
 	      int sign =
-		1 - ((cpg->_info._j1 - cpg->_info._j2 + 2 * crea_m) & 2);
+		1 - ((cpg->_info._j[0] - cpg->_info._j[1] + 2 * crea_m) & 2);
 
 	      mult_crea = result.val * sign;
 	  /*

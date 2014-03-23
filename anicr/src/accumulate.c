@@ -3,7 +3,6 @@
 #include "util.h"
 
 #include "anicr_tables.h"
-#include "anicr_config.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -23,6 +22,7 @@ uint32_t *_sp_pairs = NULL;
 
 void prepare_accumulate()
 {
+#if CFG_ANICR_TWO
   /* Read in the jm pairs info. */
 
   size_t sz_sp_pairs = sizeof (uint32_t) * CFG_SP_PAIRS;
@@ -56,6 +56,7 @@ void prepare_accumulate()
     }
   */
   printf ("Read %zd sp pairs.\n", (size_t) CFG_SP_PAIRS);
+#endif
 }
 
 #if ACC_TABLE
@@ -92,10 +93,11 @@ int compare_jm_pair_info_sort_jmjm(const void *p1, const void *p2)
   const jm_pair_info_sort *s1 = (const jm_pair_info_sort *) p1;
   const jm_pair_info_sort *s2 = (const jm_pair_info_sort *) p2;
 
-  COMPARE_RET_DIFF(s1->_info._j1, s2->_info._j1);
-  COMPARE_RET_DIFF(s1->_info._m1, s2->_info._m1);
-  COMPARE_RET_DIFF(s1->_info._j2, s2->_info._j2);
-  COMPARE_RET_DIFF(s1->_info._m2, s2->_info._m2);
+  for (int k = 0; k < CFG_NUM_SP_ANICR; k++)
+    {
+      COMPARE_RET_DIFF(s1->_info._j[k], s2->_info._j[k]);
+      COMPARE_RET_DIFF(s1->_info._m[k], s2->_info._m[k]);
+    }
 
   return 0;
 }
@@ -115,8 +117,16 @@ int compare_jm_pair_info_sort_summ(const void *p1, const void *p2)
   const jm_pair_info_sort *s1 = (const jm_pair_info_sort *) p1;
   const jm_pair_info_sort *s2 = (const jm_pair_info_sort *) p2;
 
-  COMPARE_RET_DIFF(s1->_info._m1 + s1->_info._m2,
-		   s2->_info._m1 + s2->_info._m2);
+  int sum1_m = 0;
+  int sum2_m = 0;
+
+  for (int k = 0; k < CFG_NUM_SP_ANICR; k++)
+    {
+      sum1_m += s1->_info._m[k];
+      sum2_m += s2->_info._m[k];
+    }
+
+  COMPARE_RET_DIFF(sum1_m, sum2_m);
 
   return 0;
 }
@@ -201,28 +211,32 @@ void alloc_accumulate()
     {
       uint32_t pair = _sp_pairs[i];
 
-      uint32_t sp_1 = pair & 0x0000ffff;
-      uint32_t sp_2 = pair >> 16;
+      uint32_t sp[2];
 
-      int l_1 = _table_sp_states[sp_1]._l;
-      int l_2 = _table_sp_states[sp_2]._l;
+      sp[0] = pair & 0x0000ffff;
+      sp[1] = pair >> 16;
 
-      int j_1 = _table_sp_states[sp_1]._j;
-      int j_2 = _table_sp_states[sp_2]._j;
+      jmpis[i]._parity = 0;
 
-      int m_1 = _table_sp_states[sp_1]._m;
-      int m_2 = _table_sp_states[sp_2]._m;
+      int sum_m = 0;
 
-      jmpis[i]._info._j1 = (char) j_1;
-      jmpis[i]._info._j2 = (char) j_2;
-      jmpis[i]._info._m1 = (char) m_1;
-      jmpis[i]._info._m2 = (char) m_2;
+      for (int k = 0; k < CFG_NUM_SP_ANICR; k++)
+	{
+	  int l = _table_sp_states[sp[k]]._l;
+	  int j = _table_sp_states[sp[k]]._j;
+	  int m = _table_sp_states[sp[k]]._m;
 
-      jmpis[i]._parity = (l_1 + l_2) & 1;
+	  jmpis[i]._info._j[k] = (char) j;
+	  jmpis[i]._info._m[k] = (char) m;
+
+	  jmpis[i]._parity += l;
+
+	  sum_m += m;
+	}
+
+      jmpis[i]._parity &= 1;
 
       jmpis[i]._pair = pair;
-
-      int sum_m = m_1 + m_2;
 
       if (sum_m < min_sum_m)
 	min_sum_m = sum_m;
@@ -283,7 +297,7 @@ void alloc_accumulate()
     }
 
   {
-  jm_pair_info_sort prev_pair_info = { { -1, -1, -1, -1 }, -1, 0 };
+  jm_pair_info_sort prev_pair_info = { { { -1, -1}, { -1, -1 } }, -1, 0 };
   jm_pair_group *group = _jm_pair_group2s;
   jm_pair_group *curgroup = NULL;
   uint32_t *list = _jm_pairs_group2_list;
@@ -343,8 +357,8 @@ void alloc_accumulate()
       jm_pair_group *group = &_jm_pair_group2s[i];
 
       printf ("%3d %3d %3d %3d (%2d %2d)\n",
-	      group->_info._j1, group->_info._m1,
-	      group->_info._j2, group->_info._m2,
+	      group->_info._j[0], group->_info._m[0],
+	      group->_info._j[1], group->_info._m[1],
 	      group->_num[0], group->_num[1]);
     }
 #endif
@@ -393,7 +407,7 @@ void alloc_accumulate()
   size_t max_jm_pairs_per_parity = 0;
 
   {
-  jm_pair_info_sort prev_pair_info = { { -1, -1, -1, -1 }, -1, 0 };
+  jm_pair_info_sort prev_pair_info = { { {-1, -1}, {-1, -1 } }, -1, 0 };
   jm_pair_group *group = _jm_pair_groups;
   jm_pair_group *curgroup = NULL;
   uint32_t *list = _jm_pairs_group_list;
@@ -407,7 +421,11 @@ void alloc_accumulate()
 
       if (compare_jm_pair_info_sort_summ(&prev_pair_info, jmpisi))
 	{
-	  int sum_m = jmpisi->_info._m1 + jmpisi->_info._m2;
+	  int sum_m = 0;
+
+	  for (int k = 0; k < CFG_NUM_SP_ANICR; k++)
+	    sum_m += jmpisi->_info._m[k];
+
 	  int nidx = (sum_m - _summ_parity_jm_pair_groups_min_sum_m) / 2;
 
 	  while (idx < nidx)
@@ -436,17 +454,22 @@ void alloc_accumulate()
 
       *(list++) = pair;
 
-      uint32_t sp_1 = pair & 0x0000ffff;
-      uint32_t sp_2 = pair >> 16;
+      uint32_t sp[2];
 
-      int nlj_1 = _table_sp_states[sp_1]._nlj;
-      int nlj_2 = _table_sp_states[sp_2]._nlj;
+      sp[0] = pair & 0x0000ffff;
+      sp[1] = pair >> 16;
 
-      int same = (nlj_1 == nlj_2);
+      int nlj[2];
 
-      uint32_t nlj = (uint32_t) ((nlj_1) | (nlj_2 << 11) | (same << 22));
+      for (int k = 0; k < CFG_NUM_SP_ANICR; k++)
+	nlj[k] = _table_sp_states[sp[k]]._nlj;
 
-      *(list++) = nlj;
+      int same = (nlj[0] == nlj[1]);
+
+      uint32_t nlj_comb =
+	(uint32_t) ((nlj[0]) | (nlj[1] << 11) | (same << 22));
+
+      *(list++) = nlj_comb;
 
       prev_pair_info = *jmpisi;
     }
@@ -492,8 +515,8 @@ void alloc_accumulate()
       for (group = begin; group < end; group++)
 	{
 	  printf ("%3d %3d %3d %3d (%2d %2d)\n",
-		  group->_info._j1, group->_info._m1,
-		  group->_info._j2, group->_info._m2,
+		  group->_info._j[0], group->_info._m[0],
+		  group->_info._j[1], group->_info._m[1],
 		  group->_num[0], group->_num[1]);
 
 	  int parity;
@@ -780,22 +803,32 @@ void prepare_nlj()
     {
       uint32_t sp_pair = _sp_pairs[i];
 
-      uint32_t sp_1 = sp_pair & 0x0000ffff;
-      uint32_t sp_2 = sp_pair >> 16;
+      uint32_t sp[2];
 
-      int nlj_1 = _table_sp_states[sp_1]._nlj;
-      int nlj_2 = _table_sp_states[sp_2]._nlj;
+      sp[0] = sp_pair & 0x0000ffff;
+      sp[1] = sp_pair >> 16;
 
-      int sum_m =
-        _table_sp_states[sp_1]._m +
-        _table_sp_states[sp_2]._m;
+      int nlj[2];
+      int parity = 0;
+      int sum_m = 0;
 
-      int parity =
-        (_table_sp_states[sp_1]._l +
-	 _table_sp_states[sp_2]._l) & 1;
+      for (int k = 0; k < CFG_NUM_SP_ANICR; k++)
+	{
+	  int l = _table_sp_states[sp[k]]._l;
+	  /*int j = _table_sp_states[sp[k]]._j;*/
+	  int m = _table_sp_states[sp[k]]._m;
 
-      int j_1 = _table_sp_states[sp_1]._j;
-      int j_2 = _table_sp_states[sp_2]._j;
+	  nlj[k] = _table_sp_states[sp[k]]._nlj;
+
+	  parity += l;
+
+	  sum_m += m;
+	}
+
+      parity &= 1;
+
+      int j_1 = _table_sp_states[sp[0]]._j;
+      int j_2 = _table_sp_states[sp[1]]._j;
 
       int min_j = abs(j_1 - j_2);
       int max_j = j_1 + j_2;
@@ -812,7 +845,8 @@ void prepare_nlj()
 		  sp_1, sp_2, nlj_1, nlj_2, j12, sum_m, parity);
 	  */
 	  uint32_t nlj_key =
-	    (uint32_t) (nlj_1 | (nlj_2 << 12) | (j12 << 24) | (parity << 31));
+	    (uint32_t) (nlj[0] | (nlj[1] << 12) |
+			(j12 << 24) | (parity << 31));
 	  
 	  *(nlj_pair++) = nlj_key;
 	}

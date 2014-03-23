@@ -1564,6 +1564,8 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
 			       _mapped_sp_pair_use[cfg._sp_pairs_table].num_pairs());
 	  }
 
+	out_config.fprintf("#define CFG_NUM_SP_ANICR               %d\n",
+			   cfg._num_change);
 	out_config.fprintf("#define CFG_ANICR_TWO                  %d\n",
 			   (cfg._num_change == 2 ? 1 : 0));
 	out_config.fprintf("#define CFG_ANICR_NP                   %d\n",
