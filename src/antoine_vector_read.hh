@@ -18,6 +18,10 @@ public:
 public:
   mr_antoine_vector_header_t _header;
 
+  mr_antoine_vector_info1_t  _info1;
+
+  uint64_t _offset_cut;
+
 public:
   virtual bool level1_read();
   virtual bool level2_read();

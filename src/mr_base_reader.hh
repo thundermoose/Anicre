@@ -87,6 +87,22 @@ public:
       sizeof(block1) + sizeof(block2) + 2 * sizeof(uint32_t);		\
   } while (0)
 
+#define TRY_GET_FORTRAN_BLOCK_EXTRA(block, extra, extra_offset)		\
+  do {									\
+    ssize_t len = _file_reader->has_fortran_block(cur_offset,-1);	\
+    if (len < (ssize_t) sizeof (block))					\
+      return false;							\
+    uint64_t __offset = cur_offset + sizeof(uint32_t);			\
+    _file_reader->get_fortran_block_data(__offset,&block,sizeof(block)); \
+    extra_offset = __offset + sizeof(block);				\
+    extra = len - sizeof(block);					\
+    if (_debug >= 1)							\
+      INFO(" Good block for '%s'+extra "				\
+	   "(%" PRIuPTR "+%" PRIuPTR " bytes).",			\
+	   #block, sizeof(block), extra);				\
+    cur_offset += len + 2 * sizeof(uint32_t);				\
+  } while (0)
+
 #define TRY_HAS_FORTRAN_BLOCK(block,offset)				\
   do {									\
     if (_file_reader->has_fortran_block(cur_offset,			\

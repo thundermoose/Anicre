@@ -34,8 +34,22 @@ bool mr_antoine_vector_reader<dummy>::level1_read()
   
   TRY_GET_FORTRAN_BLOCK(_header);
 
+  ssize_t  extra;
+  uint64_t extra_offset;
 
+  TRY_GET_FORTRAN_BLOCK_EXTRA(_info1, extra, extra_offset);
 
+  printf ("%d\n", _info1.ncut);
+  printf ("%d\n", _info1.sht);
+
+  if (_info1.sht * sizeof (uint32_t) != (size_t) extra)
+    return false;
+
+  // TRY_GET_FORTRAN_BLOCK(_info1);
+
+  TRY_HAS_FORTRAN_BLOCK_ITEMS(mr_antoine_cut_item_t,
+			      _info1.ncut,
+			      _offset_cut);
 
   return true;
 }
@@ -43,7 +57,7 @@ bool mr_antoine_vector_reader<dummy>::level1_read()
 template<int dummy>
 bool mr_antoine_vector_reader<dummy>::level2_read()
 { 
-  return false;
+  return true;
 }
 
 template<int dummy>
