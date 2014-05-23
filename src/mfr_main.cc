@@ -7,6 +7,7 @@
 #include "mr_file_reader.hh"
 #include "mr_base_reader.hh"
 #include "antoine_read.hh"
+#include "antoine_vector_read.hh"
 #include "prepare_anicr.hh"
 
 #include "mr_config.hh"
@@ -71,6 +72,7 @@ mr_base_reader *identify_file(mr_file_reader *file_reader)
 			  mr_antoine_fon_old_t>(file_reader),
     new mr_antoine_reader<mr_antoine_header_new_t,
 			  mr_antoine_fon_new_t>(file_reader),
+    new mr_antoine_vector_reader<1>(file_reader),
   };
 
   mr_base_reader *matching = NULL;

@@ -9,6 +9,7 @@ OBJS = mfr_main.o mr_file_reader.o mr_base_reader.o \
 	file_output.o sp_states.o pack_mp_state.o sp_pair_use.o \
 	antoine_read.o missing_mpr.o repl_states.o \
 	prepare_anicr.o \
+	antoine_vector_read.o \
 	colourtext.o markconvbold.o error.o
 
 ####################################################################
