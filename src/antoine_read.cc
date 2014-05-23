@@ -17,9 +17,6 @@
 
 extern int _debug;
 
-#define __STDC_FORMAT_MACROS
-#include <inttypes.h>
-
 template<class header_version_t, class fon_version_t>
 mr_antoine_reader<header_version_t, fon_version_t>::
 mr_antoine_reader(mr_file_reader *file_reader)

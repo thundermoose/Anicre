@@ -4,6 +4,9 @@
 #include "error.hh"
 #include "mr_file_reader.hh"
 
+#define __STDC_FORMAT_MACROS
+#include <inttypes.h>
+
 class mp_state_info;
 
 class mr_base_reader
