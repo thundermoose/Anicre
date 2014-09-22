@@ -1,6 +1,6 @@
 
 #include "sp_states.hh"
-
+#include <cmath>
 void nlj_states_table(file_output &out, vect_nlj_state &nljs)
 {
   out.fprintf("/********************************************/\n");
@@ -49,3 +49,49 @@ void sp_states_table(file_output &out, vect_sp_state &sps)
   out.fprintf("\n");
 }
 
+void twob_states_table(file_output &out, vect_nlj_state &nljs)
+{
+    int Jmax=2;
+    int Jmin=0;
+    out.fprintf("/********************************************/\n");
+    //  out.fprintf("/* Table.  nlj_states: %7zd               */\n",
+      //      nljs.size());
+      out.fprintf("\n");
+  // out.fprintf("nlj_state_info _table_nlj_states[] =\n");
+      out.fprintf("{\n");
+  //  out.fprintf("  /*       i   N        n    l   2j */\n");
+      out.fprintf("TWO_BODY\n");
+    int ind=0;
+    for (int pi=-1; pi<=1; pi=pi+2){
+        out.fprintf("%2d",pi);
+        for (int J=Jmin; J<=Jmax; J++)
+          {
+	      out.fprintf("J %3d \n",J);
+	      for (int T=-1;T<=1;T++)
+	        {
+	    for (size_t i = 0; i < nljs.size(); i++)
+	        {
+		    for (size_t jj=i; jj <nljs.size(); jj++)
+		     
+		        {
+		    const nlj_state &nlj1 = nljs[i];
+		    const nlj_state &nlj2 = nljs[jj];
+		    if(pow(-1,(nlj1._l+nlj2._l))==pi){
+		        if((nlj1._j+nlj2._j)>J){continue;}
+		        //energy
+			  //symmetry i==jj 
+			  if(i==jj && pow(-1,(J+T))==-1)
+			    {
+			      continue;}
+		        out.fprintf("  {%3d, %3lu, %3lu, %3d, %3d, %3d },\n",
+				           ind,i,jj, J,T,pi);
+		        ind++;
+		      }
+		          }
+		  }
+	          }
+	    }
+      }
+   out.fprintf("};\n");
+         out.fprintf("\n");
+  }

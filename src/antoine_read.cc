@@ -1395,7 +1395,8 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
     nlj_states_table(out_table_sp, _nljs);
 
     sp_states_table(out_table_sp, _sps);
-  }
+    twob_states_table(out_table_sp,_nljs);
+}
 
   for (int fr = 0; fr < 2; fr++)
     {
