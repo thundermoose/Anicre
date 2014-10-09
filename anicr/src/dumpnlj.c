@@ -9,6 +9,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <math.h>
 
 #include <gsl/gsl_errno.h>
 #include "gsl/gsl_sf_coupling.h"
@@ -128,7 +129,6 @@ int main()
       fprintf (stderr, "FIXME: abs(mtrans) > jtrans_max.\n");
       exit(1);
     }
-
   for (jtrans = jtrans_min; jtrans <= jtrans_max; jtrans += 2)
     {
       printf ("Jtrans=%d\n", jtrans/2);
@@ -155,34 +155,109 @@ int main()
       }
 
       size_t i;
-      
-      for (i = 0; i < _num_nlj_items; i++)
-	{
-	  uint64_t key = _nlj_items[i]._key;
-	  
-	  int nlj_a1, nlj_a2, nlj_c1, nlj_c2;
-	  int anni_j, crea_j;
-	  int key_jtrans;
-	  
-	  nlj_a1 = (key >>  0) & 0x7ff;
-	  nlj_a2 = (key >> 11) & 0x7ff;
-	  nlj_c1 = (key >> 22) & 0x7ff;
-	  nlj_c2 = (key >> 33) & 0x7ff;
-	  anni_j = (key >> 44) &  0x7f;
-	  crea_j = (key >> 51) &  0x7f;
-	  key_jtrans = (int) (key >> 58);
+      int T1;
+      int J1;
+      int pi1;
+    
+      int twob1=0;
+      int twob2=0;
+      printf("num %d",CFG_NUM_NLJ_STATES);
+	      for(pi1=1;pi1>=-1;pi1=pi1-2){
+	        for(J1=0; J1<=CFG_MAX_J;J1++){
+		  for (T1=0;T1<=1;T1++){
+		    for (int i1 = 0; i1<CFG_NUM_NLJ_STATES; i1++)
+		      {
+			for(int i2 = i1; i2<CFG_NUM_NLJ_STATES; i2++)
+			  { 
+		    int li1=_table_nlj_states[i1]._l;
+		    int li2=_table_nlj_states[i2]._l;
+		    int ni1=_table_nlj_states[i1]._n;
+		    int ni2=_table_nlj_states[i2]._n;
+		    int ji1=_table_nlj_states[i1]._j;
+		    int ji2=_table_nlj_states[i2]._j;
+		    if(ji1+ji2<2*J1){continue;}
+		    if(abs(ji1-ji2)>2*J1){continue;}
+		    if(pow(-1,(li1+li2))!=pi1){continue;}
+		    if(i1==i2 && pow(-1,(J1+T1))!=-1){continue;}
+		    if(2*ni1+li1+2*ni2+li2>CFG_MAX_SUM_E){continue;}
+		    //		    printf("a,b: %d: %d %d %d    %d: %d %d %d\n",i1+1,ni1,li1,ji1,i2+1,ni2,li2,ji2);
+		    //		    printf("1:Two-body state %d: %d %d J=%d T=%d pi=%d \n",twob1,i1+1,i2+1,J1,T1,pi1);
+		    twob1++;
+		    twob2=0;
+		    for(int pi2=1;pi2>=-1;pi2=pi2-2){
+		      for(int J2=0; J2<=CFG_MAX_J;J2++){
+			for (int T2=0;T2<=1;T2++){
+			  for (int j1 = 0; j1<CFG_NUM_NLJ_STATES; j1++)
+			    {
+			for(int j2 = j1; j2<CFG_NUM_NLJ_STATES; j2++)
+			  { 
+			    //	    printf("%d %d \n",j1,j2);
+		    int lj1=_table_nlj_states[j1]._l;
+		    int lj2=_table_nlj_states[j2]._l;
+		    int nj1=_table_nlj_states[j1]._n;
+		    int nj2=_table_nlj_states[j2]._n;
+		    int jj1=_table_nlj_states[j1]._j;
+		    int jj2=_table_nlj_states[j2]._j;
+		    if(jj1+jj2<2*J2){continue;}
+		    if(abs(jj1-jj2)>2*J2){continue;}
+		    if(pow(-1,(lj1+lj2))!=pi2){continue;}
+		    if(j1==j2 && pow(-1,(J2+T2))!=-1){continue;}
+		    if(2*nj1+lj1+2*nj2+lj2>CFG_MAX_SUM_E){continue;}
+		    //		    printf("c,d: %d: %d %d %d    %d: %d %d %d\n",j1+1,nj1,lj1,jj1,j2+1,nj2,lj2,jj2);
+		    //	    printf("2:Two-body state %d:%d %d J=%d T=%d pi=%d \n",twob2,j1+1,j2+1,J2,T2,pi2);
+		    twob2++;
 
-	  if (key_jtrans == jtrans)
-	    {	  
-	      double value = _nlj_items[i]._value;
+		    //Energy 
+	      //Parity
+	      //spin
+		    
 
-	      if (value)
-		printf ("Create %3d %3d : %2d | Annihilate %3d %3d : %2d = %11.6f\n",
-			nlj_c1+1, nlj_c2+1, crea_j,
-			nlj_a1+1, nlj_a2+1, anni_j,
-			mult * value);
+	        for (i = 0; i < _num_nlj_items; i++)
+		    //	       for (i = 0; i <1; i++)
+		{
+		  uint64_t key = _nlj_items[i]._key;
+		  
+		  int nlj_a1, nlj_a2, nlj_c1, nlj_c2;
+		  int anni_j, crea_j;
+		  int key_jtrans;
+	  
+		  nlj_a1 = (key >>  0) & 0x7ff;
+		  nlj_a2 = (key >> 11) & 0x7ff;
+		  nlj_c1 = (key >> 22) & 0x7ff;
+		  nlj_c2 = (key >> 33) & 0x7ff;
+		  anni_j = (key >> 44) &  0x7f;
+		  crea_j = (key >> 51) &  0x7f;
+		  key_jtrans = (int) (key >> 58);
+		  //For nn
+		  if (key_jtrans == jtrans && nlj_c1==i1 && nlj_c2==i2 && nlj_a1==j1 && nlj_a2==j2 && T2==1 &&T1==1 )
+		    {	  
+		      double value = _nlj_items[i]._value;
+		      if (value){
+			//		      if(crea_j==J1 &&anni_j==J2){
+			//Testing for NN-case
+			//int m3=2;
+		       
+			//	int ret =
+			//  gsl_sf_coupling_3j_e(CFG_2J_INITIAL,  jtrans,  CFG_2J_FINAL,
+			//      CFG_2M_INITIAL, -mtrans, -CFG_2M_FINAL,
+			//     &result);
+			printf("test %d %d %d \n",twob1,twob2,T1);
+
+		        printf ("Create %3d %3d : %2d | Annihilate %3d %3d : %2d = %11.6f\n",
+			      nlj_c1+1, nlj_c2+1, crea_j,
+			      nlj_a1+1, nlj_a2+1, anni_j,
+			      mult * value);
+				}
+		    }}
+	  	  }
 	    }
-	  
+	      }
+		      }
+		    }
+			  }
+		      }
+		  }
+	}
 	}
     }
 
