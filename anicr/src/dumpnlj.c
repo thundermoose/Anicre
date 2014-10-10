@@ -180,8 +180,14 @@ for (int i=0;i<(int)*num_nlj_items;i++){
 int main()
 {
 
-  char filename[14]="nlj_out-nn.bin";
-  _nlj_items_nn=readDumpfile(filename,&_num_nlj_items_nn);
+  char filename_nn[14]="nlj_out-nn.bin";
+  char filename_pp[14]="nlj_out-pp.bin";
+  char filename_np[14]="nlj_out-np.bin";
+
+  _nlj_items_nn=readDumpfile(filename_nn,&_num_nlj_items_nn);
+  _nlj_items_pp=readDumpfile(filename_pp,&_num_nlj_items_pp);
+  _nlj_items_np=readDumpfile(filename_np,&_num_nlj_items_np);
+
   printf("test %d",(int) _num_nlj_items_nn);
   int jtrans_min = abs(CFG_2J_INITIAL - CFG_2J_FINAL);
   int jtrans_max = CFG_2J_INITIAL + CFG_2J_FINAL;
@@ -266,19 +272,22 @@ int main()
 		    if(j1==j2 && pow(-1,(Jcd+Tcd))!=-1){continue;}
 		    if(2*nj1+lj1+2*nj2+lj2>CFG_MAX_SUM_E){continue;}
 		    twob2++;
-		    double value=findState(_nlj_items_nn, _num_nlj_items_nn, i1, i2,  j1, j2, Jab,Jcd,jtrans);
+		    double value_nn=findState(_nlj_items_nn, _num_nlj_items_nn, i1, i2,  j1, j2, Jab,Jcd,jtrans);
+		    double value_pp=findState(_nlj_items_pp, _num_nlj_items_pp, i1, i2,  j1, j2, Jab,Jcd,jtrans);
+		    double value_np=findState(_nlj_items_np, _num_nlj_items_np, i1, i2,  j1, j2, Jab,Jcd,jtrans);
+
 
 		  //For nn
 		  
-		      if (value){
+		      if (value_np || value_pp || value_nn){
 	
 			printf("test %d %d %d \n",twob1,twob2,Tab);
 		       
 
-			printf ("Create %3d %3d : %2d | Annihilate %3d %3d : %2d = %11.6f\n",
+			printf ("Create %3d %3d : %2d | Annihilate %3d %3d : %2d = %11.6f %11.6f %11.6f\n",
 			    i1+1, i2+1, Jab,
 			    j1+1, j2+1, Jcd,
-			    mult * value);
+				mult * value_nn, mult*value_pp,mult*value_np);
 				}
 		    
 	  	  }
