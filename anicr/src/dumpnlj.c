@@ -248,8 +248,7 @@ int main()
 		    if(pow(-1,(li1+li2))!=pi1){continue;}
 		    if(i1==i2 && pow(-1,(Jab+Tab))!=-1){continue;}
 		    if(2*ni1+li1+2*ni2+li2>CFG_MAX_SUM_E){continue;}
-		    //		    printf("a,b: %d: %d %d %d    %d: %d %d %d\n",i1+1,ni1,li1,ji1,i2+1,ni2,li2,ji2);
-		    //		    printf("1:Two-body state %d: %d %d J=%d T=%d pi=%d \n",twob1,i1+1,i2+1,J1,T1,pi1);
+
 		    twob1++;
 		    twob2=0;
 		    for(int pi2=1;pi2>=-1;pi2=pi2-2){
@@ -275,9 +274,33 @@ int main()
 		    double value_nn=findState(_nlj_items_nn, _num_nlj_items_nn, i1, i2,  j1, j2, Jab,Jcd,jtrans);
 		    double value_pp=findState(_nlj_items_pp, _num_nlj_items_pp, i1, i2,  j1, j2, Jab,Jcd,jtrans);
 		    double value_np=findState(_nlj_items_np, _num_nlj_items_np, i1, i2,  j1, j2, Jab,Jcd,jtrans);
+	
+		    double j3nnab=0.0;
+		    double j3nncd=0.0;
+		    j3nnab=gsl_sf_coupling_3j(1, 1, 2*Tab,-1,-1, 2);
+		    j3nncd=gsl_sf_coupling_3j(1,1,2*Tcd,-1,-1,2);
+		    double clebsch_nn=sqrt(2.0*Tab+1.0)*sqrt(2.0*Tcd+1.0)*j3nnab*j3nncd;
 
+		    double j3ppab=0.0;
+		    double j3ppcd=0.0;
+		    j3ppab=gsl_sf_coupling_3j(1, 1, 2*Tab,1, 1, -2);
+		    j3ppcd=gsl_sf_coupling_3j(1,1,2*Tcd,1,1,-2);
+		    double clebsch_pp=sqrt(2.0*Tab+1.0)*sqrt(2.0*Tcd+1.0)*j3ppab*j3ppcd;
 
-		  //For nn
+		    double j3npab=0.0;
+		    double j3npcd=0.0;
+		    j3npab=gsl_sf_coupling_3j(1, 1, 2*Tab,-1, 1, 0);  //Opposite situation? pn-coupling?
+		    j3npcd=gsl_sf_coupling_3j(1,1,2*Tcd,-1,1,0);
+		    double clebsch_np=sqrt(2.0*Tab+1.0)*sqrt(2.0*Tcd+1.0)*j3npab*j3npcd;
+
+		    //	    printf("Tab: %d J3: %f Tot:%f\n",Tab, j3nnab,clebsch_nn);
+		    // printf("Tcd: %d J3: %f Tot:%f\n",Tcd, j3nncd,clebsch_nn);
+		    
+		    value_nn=value_nn*clebsch_nn;
+		    value_pp=value_pp*clebsch_pp;
+		    value_np=value_np*clebsch_np;
+
+		  //Compute Isospin Clebsch. Multiply with value_*
 		  
 		      if (value_np || value_pp || value_nn){
 	
@@ -287,7 +310,7 @@ int main()
 			printf ("Create %3d %3d : %2d | Annihilate %3d %3d : %2d = %11.6f %11.6f %11.6f\n",
 			    i1+1, i2+1, Jab,
 			    j1+1, j2+1, Jcd,
-				mult * value_nn, mult*value_pp,mult*value_np);
+				mult * value_np, mult*value_pp,mult*value_nn);
 				}
 		    
 	  	  }
