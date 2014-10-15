@@ -31,6 +31,7 @@ size_t     _num_nlj_items_np = 0;
 double findState(nlj_hash_item *nlj_items, size_t num_nlj_items,int i1,int i2, int j1,int j2, int J1, int J2,int jtrans)
 {
   uint64_t savedkey=0;
+  int foundKey=0;
     for (size_t i = 0; i < num_nlj_items; i++)
   //    	       for (size_t i = 0; i <1; i++)
     {
@@ -50,26 +51,27 @@ double findState(nlj_hash_item *nlj_items, size_t num_nlj_items,int i1,int i2, i
       crea_j = (key >> 51) &  0x7f;
       key_jtrans = (int) (key >> 58);
       //For nn
-      //   printf("TESTING %d %d %d %d %d \n", (int)i,nlj_a1,nlj_a2,nlj_c1,nlj_c2);
+      //      printf("TESTING %d %d %d %d %d %f \n", (int)i,nlj_a1,nlj_a2,nlj_c1,nlj_c2,(double)nlj_items[i]._value);
       if (key_jtrans == jtrans && nlj_c1==i1 && nlj_c2==i2 && nlj_a1==j1 && nlj_a2==j2 && anni_j==J1 && crea_j==J2)
 	{
-	  printf("Found state %d %d and %d %d ",i1,i2,j1,j2);
-	  if(savedkey!=0){
+	  //  printf("Found state %d %d and %d %d ",i1,i2,j1,j2);
+	  if(foundKey){
 	    printf("ERROR: More then one key found!");
 	    return 0;
 	   }
 	  savedkey=i;
+	  foundKey=1;
 	}
       //printf("test2\n");
     }
     //  printf("Saved key %d /n",(int)savedkey);
-  if(savedkey==0)
+  if(!foundKey)
     {
     return 0;
     }
   else
     {
-    printf("Klart!");
+      //    printf("Klart!");
     return (double)nlj_items[savedkey]._value;
     }
   }
@@ -138,7 +140,7 @@ int compare_nlj_item(const void *p1, const void *p2)
 void*  readDumpfile(char *filename, size_t *num_nlj_items)
 { 
   nlj_hash_item *nlj_items=0;
-  printf("Address1: %p\n",(void*)nlj_items);
+  // printf("Address1: %p\n",(void*)nlj_items);
   int fd = open (filename,O_RDONLY);
   if (fd == -1)
     {
@@ -151,9 +153,9 @@ void*  readDumpfile(char *filename, size_t *num_nlj_items)
   printf ("%zd nlj items.\n", *num_nlj_items);
 
   size_t sz_nlj_items = sizeof (nlj_hash_item) * *num_nlj_items;
-  printf("test %d",(int)sz_nlj_items);
+  // printf("test %d",(int)sz_nlj_items);
   nlj_items = (nlj_hash_item *) malloc (sz_nlj_items);
-  printf("Address1: %p\n",(void*)nlj_items);
+  //printf("Address1: %p\n",(void*)nlj_items);
 
   if (!nlj_items)
     {
@@ -168,11 +170,11 @@ void*  readDumpfile(char *filename, size_t *num_nlj_items)
   close (fd);
  
  qsort (nlj_items, *num_nlj_items, sizeof (nlj_hash_item), compare_nlj_item);
-for (int i=0;i<(int)*num_nlj_items;i++){
+ //for (int i=0;i<(int)*num_nlj_items;i++){
 
-   printf("test %f",nlj_items[i]._value);
-  }
-  printf("Address1: %p\n",(void*)nlj_items);
+  // printf("test %f",nlj_items[i]._value);
+ // }
+// printf("Address1: %p\n",(void*)nlj_items);
 
   return nlj_items;
 }
@@ -200,6 +202,39 @@ int main()
       fprintf (stderr, "FIXME: abs(mtrans) > jtrans_max.\n");
       exit(1);
     }
+  int Tab;
+  int Jab;
+  int pi1;
+  int twob1=0;
+//List two-body states!
+  printf("Two-nucleon states\n");
+      //  printf("num %d",CFG_NUM_NLJ_STATES);
+  for(pi1=1;pi1>=-1;pi1=pi1-2){
+    for(Jab=0; Jab<=CFG_MAX_J;Jab++){
+      for (Tab=0;Tab<=1;Tab++){
+	for (int i1 = 0; i1<CFG_NUM_NLJ_STATES; i1++)
+	  {
+	    for(int i2 = i1; i2<CFG_NUM_NLJ_STATES; i2++)
+	      { 
+		int li1=_table_nlj_states[i1]._l;
+		int li2=_table_nlj_states[i2]._l;
+		int ni1=_table_nlj_states[i1]._n;
+		int ni2=_table_nlj_states[i2]._n;
+		int ji1=_table_nlj_states[i1]._j;
+		int ji2=_table_nlj_states[i2]._j;
+		if(ji1+ji2<2*Jab){continue;}
+		if(abs(ji1-ji2)>2*Jab){continue;}
+		if(pow(-1,(li1+li2))!=pi1){continue;}
+		if(i1==i2 && pow(-1,(Jab+Tab))!=-1){continue;}
+		if(2*ni1+li1+2*ni2+li2>CFG_MAX_SUM_E){continue;}
+		
+		twob1++;
+		printf("#%5d  a b J T= %3d %3d %2d %2d \n",twob1,i1+1,i2+1,Jab,Tab);
+	      }
+	  }
+      }
+    }
+  }
   for (jtrans = jtrans_min; jtrans <= jtrans_max; jtrans += 2)
     {
       printf ("Jtrans=%d\n", jtrans/2);
@@ -223,13 +258,11 @@ int main()
 	mult = 1 / (result.val) * sign;
       }
       
-      int Tab;
-      int Jab;
-      int pi1;
+ 
     
-      int twob1=0;
+      twob1=0;
       int twob2=0;
-      printf("num %d",CFG_NUM_NLJ_STATES);
+      printf("num %d \n",CFG_NUM_NLJ_STATES);
 	      for(pi1=1;pi1>=-1;pi1=pi1-2){
 	        for(Jab=0; Jab<=CFG_MAX_J;Jab++){
 		  for (Tab=0;Tab<=1;Tab++){
@@ -274,24 +307,36 @@ int main()
 		    double value_nn=findState(_nlj_items_nn, _num_nlj_items_nn, i1, i2,  j1, j2, Jab,Jcd,jtrans);
 		    double value_pp=findState(_nlj_items_pp, _num_nlj_items_pp, i1, i2,  j1, j2, Jab,Jcd,jtrans);
 		    double value_np=findState(_nlj_items_np, _num_nlj_items_np, i1, i2,  j1, j2, Jab,Jcd,jtrans);
-	
+		    //		    printf("testst %d %d %d %d %d %d %d %d %f \n",i1,i2,j1,j2,Jab, Tab,Jcd,Tcd,value_nn);
+		      
 		    double j3nnab=0.0;
 		    double j3nncd=0.0;
 		    j3nnab=gsl_sf_coupling_3j(1, 1, 2*Tab,-1,-1, 2);
 		    j3nncd=gsl_sf_coupling_3j(1,1,2*Tcd,-1,-1,2);
 		    double clebsch_nn=sqrt(2.0*Tab+1.0)*sqrt(2.0*Tcd+1.0)*j3nnab*j3nncd;
+		    double clebsch_pp=0.0;
+		    if(Tab==1 && Tcd==1){
+		      clebsch_nn=1.0;
+		      clebsch_pp=1.0;
+		    }
+		    else{
+		      clebsch_nn=0.0;
+		      clebsch_pp=0.0;
+		    }
 
-		    double j3ppab=0.0;
-		    double j3ppcd=0.0;
-		    j3ppab=gsl_sf_coupling_3j(1, 1, 2*Tab,1, 1, -2);
-		    j3ppcd=gsl_sf_coupling_3j(1,1,2*Tcd,1,1,-2);
-		    double clebsch_pp=sqrt(2.0*Tab+1.0)*sqrt(2.0*Tcd+1.0)*j3ppab*j3ppcd;
 
+		    //    double j3ppab=0.0;
+		    //double j3ppcd=0.0;
+		    // j3ppab=gsl_sf_coupling_3j(1, 1, 2*Tab,1, 1, -2);
+		    //j3ppcd=gsl_sf_coupling_3j(1,1,2*Tcd,1,1,-2);
+		    //		    double clebsch_pp=sqrt(2.0*Tab+1.0)*sqrt(2.0*Tcd+1.0)*j3ppab*j3ppcd;
+		    //   printf("sqrt %f %f j3: %f %f Tot: %f \n",sqrt(2.0*Tab+1.0),sqrt(2.0*Tab+1.0),j3nnab,j3nncd,sqrt(2.0*Tab+1.0)*sqrt(2.0*Tab+1.0)*j3nnab*j3nncd);
 		    double j3npab=0.0;
 		    double j3npcd=0.0;
 		    j3npab=gsl_sf_coupling_3j(1, 1, 2*Tab,-1, 1, 0);  //Opposite situation? pn-coupling?
 		    j3npcd=gsl_sf_coupling_3j(1,1,2*Tcd,-1,1,0);
-		    double clebsch_np=sqrt(2.0*Tab+1.0)*sqrt(2.0*Tcd+1.0)*j3npab*j3npcd;
+  
+		    double clebsch_np=sqrt(2.0*Tab+1.0)*sqrt(2.*Tcd+1.0)*j3npab*j3npcd;
 
 		    //	    printf("Tab: %d J3: %f Tot:%f\n",Tab, j3nnab,clebsch_nn);
 		    // printf("Tcd: %d J3: %f Tot:%f\n",Tcd, j3nncd,clebsch_nn);
@@ -302,17 +347,18 @@ int main()
 
 		  //Compute Isospin Clebsch. Multiply with value_*
 		  
-		      if (value_np || value_pp || value_nn){
+		      if (value_np || value_pp || value_nn ){
 	
-			printf("test %d %d %d \n",twob1,twob2,Tab);
+			// 			printf("test %d %d %d \n",twob1,twob2,Tab);
 		       
 
-			printf ("Create %3d %3d : %2d | Annihilate %3d %3d : %2d = %11.6f %11.6f %11.6f\n",
-			    i1+1, i2+1, Jab,
-			    j1+1, j2+1, Jcd,
-				mult * value_np, mult*value_pp,mult*value_nn);
-				}
-		    
+			//	printf ("Create %3d %3d : %2d | Annihilate %3d %3d : %2d = %11.6f %11.6f %11.6f\n",
+			//    i1+1, i2+1, Jab,
+			//    j1+1, j2+1, Jcd,
+			//	mult * value_np, mult*value_pp,mult*value_nn);
+			//	}
+			printf(" (a+a+)J=%5d  (a-a-)J=%5d   td: pn=%10.6f   pp=%10.6f   nn=%10.6f - Jab=%d Tab=%d Jcd=%d Tcd=%d\n",twob1,twob2,mult * value_np, mult*value_pp,mult*value_nn, Jab, Tab, Jcd,Tcd);
+		      }
 	  	  }
 	    }
 	      }
@@ -326,6 +372,7 @@ int main()
     }
 
   free (_nlj_items_nn);
-
+  free (_nlj_items_pp);
+  free (_nlj_items_np);
   return 0;
 }
