@@ -13,16 +13,14 @@ typedef struct hash_mp_wf_item_t
   uint64_t _dummy[CFG_HASH_MP_PAD64];
 #endif
 } hash_mp_wf_item;
-/*
+
 typedef struct hash_mp_wf_t
 {
+  hash_mp_wf_item *_hashed;
+  uint64_t         _hash_mask;
+} hash_mp_wf;
 
-
-};
-*/
-extern hash_mp_wf_item *_hashed_mp;
-
-extern uint64_t  _hash_mask;
+hash_mp_wf *_hashed_mp;
 
 extern uint64_t _lookups;
 extern uint64_t _found;
@@ -63,14 +61,14 @@ inline void find_mp_state_pre(uint64_t *lookfor, uint64_t *rx)
   
   x ^= x >> 32;
   
-  x = x & _hash_mask;
+  x = x & _hashed_mp->_hash_mask;
 
   *rx = x;
 }
 
 inline void find_mp_state_prefetch(uint64_t x)
 {
-  hash_mp_wf_item *p = &_hashed_mp[x];
+  hash_mp_wf_item *p = &_hashed_mp->_hashed[x];
 
   __builtin_prefetch(p, 0, 0);
 }
@@ -81,7 +79,7 @@ inline int find_mp_state_post(uint64_t *lookfor, uint64_t x, double *val)
 
   for ( ; ; )
     {
-      hash_mp_wf_item *p = &_hashed_mp[x];
+      hash_mp_wf_item *p = &_hashed_mp->_hashed[x];
       
       int k;
       
@@ -104,7 +102,7 @@ inline int find_mp_state_post(uint64_t *lookfor, uint64_t x, double *val)
 	  return 0;
 	}
       
-      x = (x + 1) & _hash_mask;
+      x = (x + 1) & _hashed_mp->_hash_mask;
     }
 }
 
