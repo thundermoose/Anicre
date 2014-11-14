@@ -48,31 +48,8 @@ uint64_t _found = 0;
 
 double   _cur_val;
 
-int main(int argc, char *argv[])
+void setup_hash_table(size_t num_mp)
 {
-  size_t num_mp = CFG_NUM_MP_STATES;
-  /* size_t num_sp = CFG_NUM_SP_STATES0 + CFG_NUM_SP_STATES1; */
-
-  assert(sizeof (uint64_t) == sizeof (double));
-
-  size_t mp_sz = sizeof (uint64_t) * (CFG_PACK_WORDS) * num_mp;
-  size_t wf_sz = sizeof (double)   * (CFG_WAVEFCNS) * num_mp;
-
-  _mp = (uint64_t *) malloc (mp_sz);
-  _wf = (double *)   malloc (wf_sz);
-
-  if (!_mp)
-    {
-      fprintf (stderr, "Memory allocation error (mp, %zd bytes).\n", mp_sz);
-      exit(1);
-    }
-
-  if (!_wf)
-    {
-      fprintf (stderr, "Memory allocation error (wf, %zd bytes).\n", wf_sz);
-      exit(1);
-    }
-
   _hashed_mp = (hash_mp_wf *) malloc (sizeof (hash_mp_wf));
 
   if (!_hashed_mp)
@@ -102,38 +79,6 @@ int main(int argc, char *argv[])
     }
 
   memset (_hashed_mp->_hashed, 0, hashed_mp_sz);
-
-  char filename_states_all[256];
-
-  sprintf (filename_states_all, "states_all_%s_orig.bin", CFG_MP_STATES_FR);
-
-  int fd = open (filename_states_all, O_RDONLY);
-
-  if (fd == -1)
-    {
-      perror("open");
-      exit(1);
-    }
-
-  full_read (fd, _mp, mp_sz);
-
-  close (fd);
-
-  printf ("Read %zd mp states.\n", num_mp);
-
-  fd = open ("wavefcn_all_orig.bin", O_RDONLY);
-
-  if (fd == -1)
-    {
-      perror("open");
-      exit(1);
-    }
-
-  full_read (fd, _wf, wf_sz);
-
-  close (fd);
-
-  printf ("Read %zd wf coeffs.\n", num_mp);
 
   size_t i;
 
@@ -182,6 +127,69 @@ int main(int argc, char *argv[])
 	  _hashed_mp->_hash_mask + 1,
 	  (double) num_mp / (double) (_hashed_mp->_hash_mask + 1),
 	  (double) sum_coll / (double) num_mp, max_coll);
+}
+
+
+
+int main(int argc, char *argv[])
+{
+  size_t num_mp = CFG_NUM_MP_STATES;
+  /* size_t num_sp = CFG_NUM_SP_STATES0 + CFG_NUM_SP_STATES1; */
+
+  assert(sizeof (uint64_t) == sizeof (double));
+
+  size_t mp_sz = sizeof (uint64_t) * (CFG_PACK_WORDS) * num_mp;
+  size_t wf_sz = sizeof (double)   * (CFG_WAVEFCNS) * num_mp;
+
+  _mp = (uint64_t *) malloc (mp_sz);
+  _wf = (double *)   malloc (wf_sz);
+
+  if (!_mp)
+    {
+      fprintf (stderr, "Memory allocation error (mp, %zd bytes).\n", mp_sz);
+      exit(1);
+    }
+
+  if (!_wf)
+    {
+      fprintf (stderr, "Memory allocation error (wf, %zd bytes).\n", wf_sz);
+      exit(1);
+    }
+
+  char filename_states_all[256];
+
+  sprintf (filename_states_all, "states_all_%s_orig.bin", CFG_MP_STATES_FR);
+
+  int fd = open (filename_states_all, O_RDONLY);
+
+  if (fd == -1)
+    {
+      perror("open");
+      exit(1);
+    }
+
+  full_read (fd, _mp, mp_sz);
+
+  close (fd);
+
+  printf ("Read %zd mp states.\n", num_mp);
+
+  fd = open ("wavefcn_all_orig.bin", O_RDONLY);
+
+  if (fd == -1)
+    {
+      perror("open");
+      exit(1);
+    }
+
+  full_read (fd, _wf, wf_sz);
+
+  close (fd);
+
+  printf ("Read %zd wf coeffs.\n", num_mp);
+
+  setup_hash_table(num_mp);
+
 #if 0 
   /* It turns out that lookup is ~ 20 % faster with original states
    * in original antoine order...
@@ -201,8 +209,10 @@ int main(int argc, char *argv[])
 
   alloc_accumulate();
 
-  mp = _mp;
-  wf = _wf;
+  size_t i;
+
+  uint64_t *mp = _mp;
+  double   *wf = _wf;
 
   int packed = 0;
 
