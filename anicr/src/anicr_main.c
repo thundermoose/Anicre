@@ -41,7 +41,7 @@ int compare_packed_mp_state(const void *p1, const void *p2)
 uint64_t *_mp = NULL;
 double   *_wf = NULL;
 
-hash_mp_wf *_hashed_mp = NULL;
+hash_mp_wf_item *_hashed_mp = NULL;
 
 uint64_t  _hash_mask = 0;
 uint32_t  _hash_stride = 0;
@@ -80,13 +80,13 @@ int main(int argc, char *argv[])
   for (_hash_mask = 1; _hash_mask < num_mp * 2; _hash_mask <<= 1)
     ;
 
-  size_t hashed_mp_sz = sizeof (hash_mp_wf) * _hash_mask;
+  size_t hashed_mp_sz = sizeof (hash_mp_wf_item) * _hash_mask;
 
   _hash_mask -= 1;
 
   /* printf ("%"PRIu64" %zd\n",_hash_mask, hashed_mp_sz); */
 
-  _hashed_mp = (hash_mp_wf *) malloc (hashed_mp_sz);
+  _hashed_mp = (hash_mp_wf_item *) malloc (hashed_mp_sz);
 
   if (!_hashed_mp)
     {

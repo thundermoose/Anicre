@@ -5,16 +5,22 @@
 
 #include <stdint.h>
 
-typedef struct hash_mp_wf_t
+typedef struct hash_mp_wf_item_t
 {
   uint64_t _mp[CFG_PACK_WORDS];
   double   _wf[CFG_WAVEFCNS];
 #if CFG_HASH_MP_PAD64 == 0
   uint64_t _dummy[CFG_HASH_MP_PAD64];
 #endif
-} hash_mp_wf;
+} hash_mp_wf_item;
+/*
+typedef struct hash_mp_wf_t
+{
 
-extern hash_mp_wf *_hashed_mp;
+
+};
+*/
+extern hash_mp_wf_item *_hashed_mp;
 
 extern uint64_t  _hash_mask;
 
@@ -64,7 +70,7 @@ inline void find_mp_state_pre(uint64_t *lookfor, uint64_t *rx)
 
 inline void find_mp_state_prefetch(uint64_t x)
 {
-  hash_mp_wf *p = &_hashed_mp[x];
+  hash_mp_wf_item *p = &_hashed_mp[x];
 
   __builtin_prefetch(p, 0, 0);
 }
@@ -75,7 +81,7 @@ inline int find_mp_state_post(uint64_t *lookfor, uint64_t x, double *val)
 
   for ( ; ; )
     {
-      hash_mp_wf *p = &_hashed_mp[x];
+      hash_mp_wf_item *p = &_hashed_mp[x];
       
       int k;
       
