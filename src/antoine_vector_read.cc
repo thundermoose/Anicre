@@ -39,6 +39,8 @@ bool mr_antoine_vector_reader<dummy>::level1_read()
 
   TRY_GET_FORTRAN_BLOCK_EXTRA(_info1, extra, extra_offset);
 
+  (void) extra_offset;
+
   printf ("%d\n", _info1.ncut);
   printf ("%d\n", _info1.sht);
 
