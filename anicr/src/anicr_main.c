@@ -106,6 +106,13 @@ uint64_t _found = 0;
 
 double   _cur_val;
 
+hash_mp_wf *setup_hash_table(uint64_t *mp,
+#if !CFG_CONN_TABLES
+			     double   *wf,
+#endif
+			     size_t num_mp);
+
+#if CFG_CONN_TABLES
 size_t sort_mp_by_E_M(size_t num_mp)
 {
   /* First, remove all 'other' particles from the states, as we
@@ -255,10 +262,20 @@ size_t sort_mp_by_E_M(size_t num_mp)
       mp += CFG_PACK_WORDS;
     }
 
+  _mp_cut_E_M[cut_E_M]._start = reduced_num_mp;
+
   printf ("%zd E-M pairs\n", _num_mp_cut_E_M);
+
+  for (i = 0; i < _num_mp_cut_E_M; i++)
+    {
+      _mp_cut_E_M[cut_E_M]._hashed_mp =
+	setup_hash_table(_mp + _mp_cut_E_M[i]._start * CFG_PACK_WORDS,
+			 _mp_cut_E_M[i+1]._start - _mp_cut_E_M[i]._start);
+    }
 
   return reduced_num_mp;
 }
+#endif
 
 hash_mp_wf *setup_hash_table(uint64_t *mp,
 #if !CFG_CONN_TABLES
