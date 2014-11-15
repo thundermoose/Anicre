@@ -100,17 +100,35 @@ void create_states(int *in_sp_other,
 		   int sp_anni,
 #endif
 		   int phase_i,
-		   int miss_parity, int miss_m, int E);
+		   int miss_parity, int miss_m, 
+#if CFG_CONN_TABLES
+		   int miss_E
+#else
+		   int E
+#endif
+);
 
 void create_states_1st(int *in_sp_other,
 		       int *in_sp, int sp_anni1, int sp_anni2,
 		       int phase_i,
-		       int miss_parity, int miss_m, int E);
+		       int miss_parity, int miss_m,
+#if CFG_CONN_TABLES
+		       int miss_E
+#else
+		       int E
+#endif
+		       );
 
 void create_states_2nd(int *in_sp_other,
 		       int *in_sp, int sp_anni1, int sp_anni2,
 		       int sp_crea1,
-		       int miss_parity, int miss_m, int E);
+		       int miss_parity, int miss_m,
+#if CFG_CONN_TABLES
+		       int miss_E
+#else
+		       int E
+#endif
+		       );
 
 void created_state(int *in_sp_other,
 		   int *in_sp,
@@ -127,15 +145,31 @@ void annihilate_states_2nd(int *in_sp_other,
 			   int *in_sp,
 			   int sp_anni1,
 			   int phase_i,
-			   int miss_parity, int miss_m, int E);
+			   int miss_parity, int miss_m,
+#if CFG_CONN_TABLES
+			   int miss_E
+#else
+			   int E
+#endif
+			   );
 
-void annihilate_packed_states(uint64_t *packed)
+void annihilate_packed_states(uint64_t *packed
+#if CFG_CONN_TABLES
+			      ,
+			      int miss_parity, int miss_m, int miss_E
+#endif
+)
 {
   int list[CFG_NUM_SP_STATES0 + CFG_NUM_SP_STATES1];
 
   packed_to_int_list(list,packed);
 
-  annihilate_states(list + CFG_NUM_SP_STATES0, list);
+  annihilate_states(list + CFG_NUM_SP_STATES0, list
+#if CFG_CONN_TABLES
+		    ,
+		    miss_parity, miss_m, miss_E
+#endif
+		    );
 }
 
 int mp_state_in_E(int *in_sp)
@@ -167,9 +201,18 @@ int mp_state_in_M(int *in_sp)
 }
 
 void annihilate_states(int *in_sp_other,
-		       int *in_sp)
+		       int *in_sp
+#if CFG_CONN_TABLES
+		       ,
+		       int miss_parity, int miss_m, int miss_E
+#endif
+		       )
 {
   int i;
+#if !CFG_CONN_TABLES
+  int miss_parity = 0;
+  int miss_m = 0;
+#endif
 
   /* Print the state. */
 
@@ -177,9 +220,11 @@ void annihilate_states(int *in_sp_other,
   printf ("==============================================================================\n");
   for (i = 0; i < CFG_NUM_SP_STATES0; i++)
     printf (" %4d", in_sp[i]);
+#if !CFG_CONN_TABLES
   printf (" :");
   for (i = 0; i < CFG_NUM_SP_STATES1; i++)
     printf (" %4d", in_sp_other[i]);
+#endif
   printf ("\n");
 #endif
 
@@ -187,9 +232,16 @@ void annihilate_states(int *in_sp_other,
 
   int out_sp[NSP];
 
+#if CFG_CONN_TABLES
+  for (i = 1; i < NSP; i++)
+    {
+      out_sp[i] = in_sp[i];
+    }
+#else
   int E = 0;
   /* int M = 0; */
 
+#if !CFG_CONN_TABLES
   for (i = 0; i < CFG_NUM_SP_STATES1; i++)
     {
       /* M += sp_info[in_sp_other[i]]._m; */
@@ -200,6 +252,7 @@ void annihilate_states(int *in_sp_other,
 	      sp_info[in_sp_other[i]]._m, SP_STATE_E(sp_info[in_sp_other[i]]));
 #endif
     }
+#endif
 
   for (i = 1; i < NSP; i++)
     {
@@ -216,6 +269,7 @@ void annihilate_states(int *in_sp_other,
 #if DEBUG_ANICR
   printf ("E=%3d\n", E);
 #endif
+#endif
 
   /* The out_sp list is missing sp state 0. */
 
@@ -223,17 +277,31 @@ void annihilate_states(int *in_sp_other,
   annihilate_states_2nd(in_sp_other,
 			out_sp, in_sp[0],
 			0,
-			sp_info[in_sp[0]]._l,
-			sp_info[in_sp[0]]._m, E);
+			(sp_info[in_sp[0]]._l ^ miss_parity) & 1,
+			miss_m + sp_info[in_sp[0]]._m,
+#if CFG_CONN_TABLES
+			miss_E + SP_STATE_E(sp_info[in_sp[0]])
+#else
+			E
+#endif
+			);
 #else
   create_states(in_sp_other,
 		out_sp,
 		in_sp[0], 0,
-		sp_info[in_sp[0]]._l & 1,
-		sp_info[in_sp[0]]._m, E);
+		(sp_info[in_sp[0]]._l ^ miss_parity) & 1,
+		miss_m + sp_info[in_sp[0]]._m,
+#if CFG_CONN_TABLES
+		miss_E + SP_STATE_E(sp_info[in_sp[0]])
+#else
+		E
+#endif
+		);
 #endif
 
+#if !CFG_CONN_TABLES
   E += SP_STATE_E(sp_info[in_sp[0]]);
+#endif
 
   /* And now try with all other missing ones. */
 
@@ -247,24 +315,41 @@ void annihilate_states(int *in_sp_other,
       annihilate_states_2nd(in_sp_other,
 			    out_sp, in_sp[i+1],
 			    i+1,
-			    sp_info[in_sp[i+1]]._l,
-			    sp_info[in_sp[i+1]]._m,
-			    E - SP_STATE_E(sp_info[in_sp[i+1]]));
+			    (sp_info[in_sp[i+1]]._l ^ miss_parity) & 1,
+			    miss_m + sp_info[in_sp[i+1]]._m,
+#if CFG_CONN_TABLES
+			    miss_E + SP_STATE_E(sp_info[in_sp[i+1]])
+#else
+			    E - SP_STATE_E(sp_info[in_sp[i+1]])
+#endif
+			    );
 #else
       create_states(in_sp_other,
 		    out_sp, 
 		    in_sp[i+1], i+1,
-		    sp_info[in_sp[i+1]]._l & 1,
-		    sp_info[in_sp[i+1]]._m,
-		    E - SP_STATE_E(sp_info[in_sp[i+1]]));
+		    (sp_info[in_sp[i+1]]._l ^ miss_parity) & 1,
+		    miss_m + sp_info[in_sp[i+1]]._m,
+#if CFG_CONN_TABLES
+		    miss_E + SP_STATE_E(sp_info[in_sp[i+1]])
+#else
+		    E - SP_STATE_E(sp_info[in_sp[i+1]])
+#endif
+		    );
 #endif
     }
 }
 
+#if CFG_ANICR_TWO
 void annihilate_states_2nd(int *in_sp_other,
 			   int *in_sp, int sp_anni1,
 			   int phase_i,
-			   int miss_parity, int miss_m, int E)
+			   int miss_parity, int miss_m,
+#if CFG_CONN_TABLES
+			   int miss_E
+#else
+			   int E
+#endif
+			   )
 {
   int i;
 
@@ -274,14 +359,20 @@ void annihilate_states_2nd(int *in_sp_other,
   printf ("===------------------------------------------------------------------------===\n");
   for (i = 1; i < CFG_NUM_SP_STATES0; i++)
     printf (" %4d", in_sp[i]);
+#if !CFG_CONN_TABLES
   printf (" :");
   for (i = 0; i < CFG_NUM_SP_STATES1; i++)
     printf (" %4d", in_sp_other[i]);
+#endif
   printf ("\n");
 #endif
 
 #if DEBUG_ANICR
+#if CFG_CONN_TABLES
+  printf (" : ~E=%3d  ~m=%3d  ~p=%d\n", miss_E, miss_m, miss_parity);
+#else
   printf (" : E=%3d  ~m=%3d  ~p=%d\n", E, miss_m, miss_parity);
+#endif
 #endif
 
 #if !CFG_ANICR_NP
@@ -301,7 +392,12 @@ void annihilate_states_2nd(int *in_sp_other,
 		      out_sp, sp_anni1, in_sp[1], phase_i ^ 1,
 		      (sp_info[in_sp[1]]._l ^ miss_parity) & 1,
 		      miss_m + sp_info[in_sp[1]]._m,
-		      E - SP_STATE_E(sp_info[in_sp[1]]));
+#if CFG_CONN_TABLES
+		      miss_E + SP_STATE_E(sp_info[in_sp[1]])
+#else
+		      E - SP_STATE_E(sp_info[in_sp[1]])
+#endif
+		      );
 
   /* And now try with all other missing ones. */
 
@@ -316,7 +412,12 @@ void annihilate_states_2nd(int *in_sp_other,
 			  out_sp, sp_anni1, in_sp[i+1], phase_i ^ (i+1),
 			  (sp_info[in_sp[i+1]]._l ^ miss_parity) & 1,
 			  miss_m + sp_info[in_sp[i+1]]._m,
-			  E - SP_STATE_E(sp_info[in_sp[i+1]]));
+#if CFG_CONN_TABLES
+			  miss_E + SP_STATE_E(sp_info[in_sp[i+1]])
+#else
+			  E - SP_STATE_E(sp_info[in_sp[i+1]])
+#endif
+			  );
     }
 #else
   /* Delete 1 state. */
@@ -352,6 +453,7 @@ void annihilate_states_2nd(int *in_sp_other,
     }
 #endif
 }
+#endif
 
 /* Create states, given that we have the list of states that survived
  * the annihilation.
@@ -368,7 +470,13 @@ void create_states(int *in_sp_other,
                    int sp_anni,
 #endif
 		   int phase_i,
-		   int miss_parity, int miss_m, int E)
+		   int miss_parity, int miss_m,
+#if CFG_CONN_TABLES
+		   int miss_E
+#else
+		   int E
+#endif
+		   )
 {
   int i;
 
@@ -409,15 +517,45 @@ void create_states(int *in_sp_other,
   for (i = CFG_ANICR_TWO ? 2 : 1; i < CFG_NUM_SP_STATES0; i++)
     printf (" %4d", in_sp[i]); 
 #endif
+#if CFG_CONN_TABLES
+  printf (" : ~E=%3d  ~m=%3d  ~p=%d\n", miss_E, miss_m, miss_parity);
+#else
   printf (" : E=%3d  ~m=%3d  ~p=%d\n", E, miss_m, miss_parity);
+#endif
 #endif
 
   /* Find the list of potential sp states to use. */
 
+#if CFG_CONN_TABLES
+  /* Can be fixed earlier? */
+
+  if (!(miss_m >= miss_info->_m_min &&
+	miss_m <  miss_info->_m_min + miss_info->_m_steps))
+    return;
+
+#else
   assert (miss_m >= miss_info->_m_min &&
 	  miss_m <  miss_info->_m_min + miss_info->_m_steps);
+#endif
 
+#if CFG_CONN_TABLES
+  int max_add_E = miss_E;
+  int min_add_E = miss_E;
+
+  if (min_add_E < 0)
+    return; /* cannot add state with negative energy,
+	     * we should kill this already at annihilation.
+	     */
+
+  if (min_add_E >= miss_info->_num_E)
+    min_add_E = miss_info->_num_E - 1;
+
+  int table_begin_E = (min_add_E + miss_parity) / 2;
+#else
   int max_add_E = CFG_MAX_SUM_E - E;
+
+  int table_begin_E = 0;
+#endif
 
   if (max_add_E >= miss_info->_num_E)
     max_add_E = miss_info->_num_E - 1;
@@ -427,7 +565,8 @@ void create_states(int *in_sp_other,
   int offset_poss_sp =
     miss_info->_offset[miss_info->_parity_stride * miss_parity +
 		       miss_info->_m_stride *
-		       (miss_m - miss_info->_m_min) / 2];
+		       (miss_m - miss_info->_m_min) / 2 +
+		       table_begin_E];
   int offset_poss_sp_end =
     miss_info->_offset[miss_info->_parity_stride * miss_parity +
 		       miss_info->_m_stride *
@@ -579,10 +718,17 @@ void create_states(int *in_sp_other,
 
 }
 
+#if CFG_ANICR_TWO
 void create_states_1st(int *in_sp_other,
 		       int *in_sp, int sp_anni1, int sp_anni2,
 		       int phase_i,
-		       int miss_parity, int miss_m, int E)
+		       int miss_parity, int miss_m,
+#if CFG_CONN_TABLES
+		       int miss_E
+#else
+		       int E
+#endif
+		       )
 {
   int i;
 
@@ -609,18 +755,40 @@ void create_states_1st(int *in_sp_other,
 #if DEBUG_ANICR
   for (i = (!CFG_ANICR_NP ? 2 : 1); i < CFG_NUM_SP_STATES0; i++)
     printf (" %4d", in_sp[i]); 
+#if ~CFG_CONN_TABLES
   printf (" :");
   for (i = (!CFG_ANICR_NP ? 0 : 1); i < CFG_NUM_SP_STATES1; i++)
     printf (" %4d", in_sp_other[i]);
+#endif
+#if CFG_CONN_TABLES
+  printf (" : ~E=%3d  ~m=%3d  ~p=%d\n", miss_E, miss_m, miss_parity);
+#else
   printf (" : E=%3d  ~m=%3d  ~p=%d\n", E, miss_m, miss_parity);
+#endif
 #endif
 
   /* Find the list of potential sp states to use. */
 
+#if CFG_CONN_TABLES
+  /* Can be fixed earlier? */
+
+  if (!(miss_m >= miss_info->_m_min &&
+	miss_m <  miss_info->_m_min + miss_info->_m_steps))
+    return;
+
+#else
   assert (miss_m >= miss_info->_m_min &&
 	  miss_m <  miss_info->_m_min + miss_info->_m_steps);
+#endif
 
+#if CFG_CONN_TABLES
+  int max_add_E = miss_E;
+
+  if (miss_E < 0)
+    return; /* can be fixed earlier? */
+#else
   int max_add_E = CFG_MAX_SUM_E - E;
+#endif
 
   if (max_add_E >= miss_info->_num_E)
     max_add_E = miss_info->_num_E - 1;
@@ -711,6 +879,7 @@ void create_states_1st(int *in_sp_other,
 
 #if DEBUG_ANICR
 	  printf ("%4d @ %3d\n", crea_sp, fill);
+	  fflush(stdout);
 #endif
 
 #if CFG_ANICR_TWO
@@ -723,7 +892,12 @@ void create_states_1st(int *in_sp_other,
 			phase_i ^ fill,
 			(sp_info[crea_sp]._l ^ miss_parity) & 1,
 			miss_m - sp_info[crea_sp]._m,
-			E + SP_STATE_E(sp_info[crea_sp]));
+#if CFG_CONN_TABLES
+			miss_E - SP_STATE_E(sp_info[crea_sp])
+#else
+			E + SP_STATE_E(sp_info[crea_sp])
+#endif
+			);
 #else
 	  (void) in_sp_other;
 	  (void) sp_anni1;
@@ -741,6 +915,7 @@ void create_states_1st(int *in_sp_other,
 
 
 }
+#endif
 
 extern double *_accumulate;
 
@@ -766,9 +941,11 @@ void created_state(int *in_sp_other,
 #if DEBUG_ANICR
   for (i = 0; i < CFG_NUM_SP_STATES0; i++)
     printf (" %4d", in_sp[i]);
+#if !CFG_CONN_TABLES
   printf (" :");
   for (i = 0; i < CFG_NUM_SP_STATES1; i++)
     printf (" %4d", in_sp_other[i]);
+#endif
   printf (" <- find\n");
 #endif
 

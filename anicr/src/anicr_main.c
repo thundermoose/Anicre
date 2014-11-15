@@ -529,6 +529,8 @@ int main(int argc, char *argv[])
 
   size_t tot_ini_states = 0;
 
+  uint64_t prev_found = 0;
+
   for (cut_ini_i = 0; cut_ini_i < _num_mp_cut_E_M; cut_ini_i++)
     {
       mp_cut_E_M *cut_ini = _mp_cut_E_M + cut_ini_i;
@@ -544,12 +546,29 @@ int main(int argc, char *argv[])
 
 	  size_t i;
 
+	  int diff_E = cut_fin->_E - cut_ini->_E;
+	  int diff_M = cut_fin->_M - cut_ini->_M;
+
 	  for (i = 0; i < mp_states; i++)
 	    {
-	      packed_annihilate_states(mp);
+	      annihilate_packed_states(mp,
+				       diff_E & 1, diff_M, diff_E);
 
 	      mp += CFG_PACK_WORDS;
 	    }
+
+	  printf ("%2d %3d  ->  %2d %3d  :  dE=%2d dM=%3d  : %10zd %10zd : "
+		  "%10" PRIu64 "\n",
+		  cut_ini->_E,
+		  cut_ini->_M,
+		  cut_fin->_E,
+		  cut_fin->_M,
+		  diff_E, diff_M,
+		  mp_states,
+		  (cut_fin+1)->_start - cut_fin->_start,
+		  _found - prev_found);
+
+	  prev_found = _found;
 
 	  tot_ini_states += mp_states;
 

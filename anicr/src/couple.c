@@ -22,6 +22,7 @@
 extern double *_accumulate;
 #endif
 
+#if !CFG_CONN_TABLES
 void couple_accumulate()
 {
 #if 0
@@ -958,3 +959,4 @@ void couple_accumulate_2()
 
   printf ("%" PRIu64 " had, %" PRIu64 " nz\n", had, nz_had);
 }
+#endif
