@@ -260,37 +260,37 @@ size_t sort_mp_by_E_M(size_t num_mp)
   return reduced_num_mp;
 }
 
-void setup_hash_table(size_t num_mp)
+hash_mp_wf *setup_hash_table(size_t num_mp)
 {
-  _hashed_mp = (hash_mp_wf *) malloc (sizeof (hash_mp_wf));
+  hash_mp_wf *hashed_mp = (hash_mp_wf *) malloc (sizeof (hash_mp_wf));
 
-  if (!_hashed_mp)
+  if (!hashed_mp)
     {
       fprintf (stderr, "Memory allocation error (%zd bytes).\n",
 	       sizeof (hash_mp_wf));
       exit(1);
      }
 
-  for (_hashed_mp->_hash_mask = 1; 
-       _hashed_mp->_hash_mask < num_mp * 2;
-       _hashed_mp->_hash_mask <<= 1)
+  for (hashed_mp->_hash_mask = 1; 
+       hashed_mp->_hash_mask < num_mp * 2;
+       hashed_mp->_hash_mask <<= 1)
     ;
 
-  size_t hashed_mp_sz = sizeof (hash_mp_wf_item) * _hashed_mp->_hash_mask;
+  size_t hashed_mp_sz = sizeof (hash_mp_wf_item) * hashed_mp->_hash_mask;
 
-  _hashed_mp->_hash_mask -= 1;
+  hashed_mp->_hash_mask -= 1;
 
   /* printf ("%"PRIu64" %zd\n",_hash_mask, hashed_mp_sz); */
 
-  _hashed_mp->_hashed = (hash_mp_wf_item *) malloc (hashed_mp_sz);
+  hashed_mp->_hashed = (hash_mp_wf_item *) malloc (hashed_mp_sz);
 
-  if (!_hashed_mp->_hashed)
+  if (!hashed_mp->_hashed)
     {
       fprintf (stderr, "Memory allocation error (%zd bytes).\n", hashed_mp_sz);
       exit(1);
     }
 
-  memset (_hashed_mp->_hashed, 0, hashed_mp_sz);
+  memset (hashed_mp->_hashed, 0, hashed_mp_sz);
 
   size_t i;
 
@@ -307,13 +307,13 @@ void setup_hash_table(size_t num_mp)
 
       x ^= x >> 32;
 
-      uint64_t j = x & _hashed_mp->_hash_mask;
+      uint64_t j = x & hashed_mp->_hash_mask;
 
       uint64_t coll = 0;
 
-      while (_hashed_mp->_hashed[j]._mp[0] != 0)
+      while (hashed_mp->_hashed[j]._mp[0] != 0)
 	{
-	  j = (j + 1) & _hashed_mp->_hash_mask;
+	  j = (j + 1) & hashed_mp->_hash_mask;
 	  coll++;
 	}
 
@@ -325,12 +325,12 @@ void setup_hash_table(size_t num_mp)
 
       for (k = 0; k < CFG_PACK_WORDS; k++)
 	{
-	  _hashed_mp->_hashed[j]._mp[k] = mp[k];
+	  hashed_mp->_hashed[j]._mp[k] = mp[k];
 	}
 #if !CFG_CONN_TABLES
       for (k = 0; k < CFG_WAVEFCNS; k++)
 	{
-	  _hashed_mp->_hashed[j]._wf[k] = wf[k];
+	  hashed_mp->_hashed[j]._wf[k] = wf[k];
 	}
 #endif
 
@@ -342,9 +342,11 @@ void setup_hash_table(size_t num_mp)
 
   printf ("Hash: %"PRIu64" entries (%.1f), "
 	  "avg coll = %.2f, max coll = %"PRIu64"\n",
-	  _hashed_mp->_hash_mask + 1,
-	  (double) num_mp / (double) (_hashed_mp->_hash_mask + 1),
+	  hashed_mp->_hash_mask + 1,
+	  (double) num_mp / (double) (hashed_mp->_hash_mask + 1),
 	  (double) sum_coll / (double) num_mp, max_coll);
+
+  return hashed_mp;
 }
 
 
@@ -418,7 +420,7 @@ int main(int argc, char *argv[])
   sort_mp_by_E_M(num_mp);
 #endif
 
-  setup_hash_table(num_mp);
+  _hashed_mp = setup_hash_table(num_mp);
 
 #if 0 
   /* It turns out that lookup is ~ 20 % faster with original states
