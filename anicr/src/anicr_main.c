@@ -260,7 +260,11 @@ size_t sort_mp_by_E_M(size_t num_mp)
   return reduced_num_mp;
 }
 
-hash_mp_wf *setup_hash_table(size_t num_mp)
+hash_mp_wf *setup_hash_table(uint64_t *mp,
+#if !CFG_CONN_TABLES
+			     double   *wf,
+#endif
+			     size_t num_mp)
 {
   hash_mp_wf *hashed_mp = (hash_mp_wf *) malloc (sizeof (hash_mp_wf));
 
@@ -293,11 +297,6 @@ hash_mp_wf *setup_hash_table(size_t num_mp)
   memset (hashed_mp->_hashed, 0, hashed_mp_sz);
 
   size_t i;
-
-  uint64_t *mp = _mp;
-#if !CFG_CONN_TABLES
-  double   *wf = _wf;
-#endif
 
   uint64_t max_coll = 0, sum_coll = 0;
 
@@ -420,7 +419,11 @@ int main(int argc, char *argv[])
   sort_mp_by_E_M(num_mp);
 #endif
 
-  _hashed_mp = setup_hash_table(num_mp);
+  _hashed_mp = setup_hash_table(_mp,
+#if !CFG_CONN_TABLES
+				_wf,
+#endif
+				num_mp);
 
 #if 0 
   /* It turns out that lookup is ~ 20 % faster with original states
