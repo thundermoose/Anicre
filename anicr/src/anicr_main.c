@@ -110,7 +110,8 @@ hash_mp_wf *setup_hash_table(uint64_t *mp,
 #if !CFG_CONN_TABLES
 			     double   *wf,
 #endif
-			     size_t num_mp);
+			     size_t num_mp,
+			     int verbose);
 
 #if CFG_CONN_TABLES
 size_t sort_mp_by_E_M(size_t num_mp)
@@ -268,9 +269,17 @@ size_t sort_mp_by_E_M(size_t num_mp)
 
   for (i = 0; i < _num_mp_cut_E_M; i++)
     {
-      _mp_cut_E_M[cut_E_M]._hashed_mp =
+      size_t mp_states = _mp_cut_E_M[i+1]._start - _mp_cut_E_M[i]._start;
+
+      _mp_cut_E_M[i]._hashed_mp =
 	setup_hash_table(_mp + _mp_cut_E_M[i]._start * CFG_PACK_WORDS,
-			 _mp_cut_E_M[i+1]._start - _mp_cut_E_M[i]._start);
+			 mp_states,
+			 0);
+
+      printf ("%2d %3d : %10zd\n",
+	      _mp_cut_E_M[i]._E,
+	      _mp_cut_E_M[i]._M,
+	      mp_states);
     }
 
   return reduced_num_mp;
@@ -281,7 +290,8 @@ hash_mp_wf *setup_hash_table(uint64_t *mp,
 #if !CFG_CONN_TABLES
 			     double   *wf,
 #endif
-			     size_t num_mp)
+			     size_t num_mp,
+			     int verbose)
 {
   hash_mp_wf *hashed_mp = (hash_mp_wf *) malloc (sizeof (hash_mp_wf));
 
@@ -356,11 +366,12 @@ hash_mp_wf *setup_hash_table(uint64_t *mp,
 #endif
     }
 
-  printf ("Hash: %"PRIu64" entries (%.1f), "
-	  "avg coll = %.2f, max coll = %"PRIu64"\n",
-	  hashed_mp->_hash_mask + 1,
-	  (double) num_mp / (double) (hashed_mp->_hash_mask + 1),
-	  (double) sum_coll / (double) num_mp, max_coll);
+  if (verbose)
+    printf ("Hash: %"PRIu64" entries (%.1f), "
+	    "avg coll = %.2f, max coll = %"PRIu64"\n",
+	    hashed_mp->_hash_mask + 1,
+	    (double) num_mp / (double) (hashed_mp->_hash_mask + 1),
+	    (double) sum_coll / (double) num_mp, max_coll);
 
   return hashed_mp;
 }
@@ -436,11 +447,14 @@ int main(int argc, char *argv[])
   sort_mp_by_E_M(num_mp);
 #endif
 
+#if !CFG_CONN_TABLES /* lets not even set it up... */
   _hashed_mp = setup_hash_table(_mp,
 #if !CFG_CONN_TABLES
 				_wf,
 #endif
-				num_mp);
+				num_mp,
+				1);
+#endif
 
 #if 0 
   /* It turns out that lookup is ~ 20 % faster with original states
@@ -507,6 +521,52 @@ int main(int argc, char *argv[])
   couple_accumulate_2();
 
   write_nlj();
+#endif
+
+#if CFG_CONN_TABLES
+  size_t cut_ini_i;
+  size_t cut_fin_i;
+
+  size_t tot_ini_states = 0;
+
+  for (cut_ini_i = 0; cut_ini_i < _num_mp_cut_E_M; cut_ini_i++)
+    {
+      mp_cut_E_M *cut_ini = _mp_cut_E_M + cut_ini_i;
+
+      for (cut_fin_i = 0; cut_fin_i < _num_mp_cut_E_M; cut_fin_i++)
+	{
+	  mp_cut_E_M *cut_fin = _mp_cut_E_M + cut_fin_i;
+
+	  uint64_t *mp = _mp + cut_ini->_start * CFG_PACK_WORDS;
+	  size_t mp_states = (cut_ini+1)->_start - cut_ini->_start;
+
+	  _hashed_mp = cut_fin->_hashed_mp;
+
+	  size_t i;
+
+	  for (i = 0; i < mp_states; i++)
+	    {
+	      packed_annihilate_states(mp);
+
+	      mp += CFG_PACK_WORDS;
+	    }
+
+	  tot_ini_states += mp_states;
+
+	  printf ("anicr %zd : %zd / %zd\r",
+		  cut_ini_i, cut_fin_i, _num_mp_cut_E_M);
+          fflush (stdout);
+	}
+
+    }
+
+  printf ("Annihilated-created for %zd mp states "
+	  "in %zd * %zd E-M combinations.\n",
+	  tot_ini_states,
+	  _num_mp_cut_E_M, _num_mp_cut_E_M);
+
+  printf ("Found %"PRIu64"/%"PRIu64".\n", _found, _lookups);
+  
 #endif
   
   return 0;
