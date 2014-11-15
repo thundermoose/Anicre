@@ -842,6 +842,19 @@ void created_state(int *in_sp_other,
   find_mp_state_pre(lookfor_packed, &lookfor_x);
   find_mp_state_prefetch(lookfor_x);
 
+#if CFG_CONN_TABLES
+  uint64_t ind;
+
+  if (!find_mp_state_post(lookfor_packed, lookfor_x, &ind))
+    {
+      fprintf (stderr, "NOT FOUND!\n");
+      exit (1);
+    }
+
+  (void) phase_i;
+
+
+#else
   double val;
 
   if (!find_mp_state_post(lookfor_packed, lookfor_x, &val))
@@ -863,6 +876,7 @@ void created_state(int *in_sp_other,
 #if DEBUG_ANICR
   /* printf ("%5d %15.10f\n", acc_i, val * _cur_val * sign); */
   printf ("%15.10f\n", val * _cur_val * sign);
+#endif
 #endif
 }
 

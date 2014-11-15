@@ -39,7 +39,9 @@ int compare_packed_mp_state(const void *p1, const void *p2)
 }
 
 uint64_t *_mp = NULL;
+#if !CFG_CONN_TABLES
 double   *_wf = NULL;
+#endif
 
 hash_mp_wf *_hashed_mp = NULL;
 
@@ -83,7 +85,9 @@ void setup_hash_table(size_t num_mp)
   size_t i;
 
   uint64_t *mp = _mp;
+#if !CFG_CONN_TABLES
   double   *wf = _wf;
+#endif
 
   uint64_t max_coll = 0, sum_coll = 0;
 
@@ -113,13 +117,17 @@ void setup_hash_table(size_t num_mp)
 	{
 	  _hashed_mp->_hashed[j]._mp[k] = mp[k];
 	}
+#if !CFG_CONN_TABLES
       for (k = 0; k < CFG_WAVEFCNS; k++)
 	{
 	  _hashed_mp->_hashed[j]._wf[k] = wf[k];
 	}
+#endif
 
       mp += CFG_PACK_WORDS;
+#if !CFG_CONN_TABLES
       wf += CFG_WAVEFCNS;
+#endif
     }
 
   printf ("Hash: %"PRIu64" entries (%.1f), "
@@ -139,10 +147,14 @@ int main(int argc, char *argv[])
   assert(sizeof (uint64_t) == sizeof (double));
 
   size_t mp_sz = sizeof (uint64_t) * (CFG_PACK_WORDS) * num_mp;
+#if !CFG_CONN_TABLES
   size_t wf_sz = sizeof (double)   * (CFG_WAVEFCNS) * num_mp;
+#endif
 
   _mp = (uint64_t *) malloc (mp_sz);
+#if !CFG_CONN_TABLES
   _wf = (double *)   malloc (wf_sz);
+#endif
 
   if (!_mp)
     {
@@ -150,11 +162,13 @@ int main(int argc, char *argv[])
       exit(1);
     }
 
+#if !CFG_CONN_TABLES
   if (!_wf)
     {
       fprintf (stderr, "Memory allocation error (wf, %zd bytes).\n", wf_sz);
       exit(1);
     }
+#endif
 
   char filename_states_all[256];
 
@@ -174,6 +188,7 @@ int main(int argc, char *argv[])
 
   printf ("Read %zd mp states.\n", num_mp);
 
+#if !CFG_CONN_TABLES
   fd = open ("wavefcn_all_orig.bin", O_RDONLY);
 
   if (fd == -1)
@@ -187,6 +202,7 @@ int main(int argc, char *argv[])
   close (fd);
 
   printf ("Read %zd wf coeffs.\n", num_mp);
+#endif
 
   setup_hash_table(num_mp);
 
@@ -203,6 +219,14 @@ int main(int argc, char *argv[])
 
   ammend_tables();
 
+  int packed = 0;
+
+  if (argc > 1 && strcmp(argv[1],"--packed") == 0)
+    packed = 1;
+
+  (void) packed;
+
+#if !CFG_CONN_TABLES
   prepare_accumulate();
 
   prepare_nlj();
@@ -213,11 +237,6 @@ int main(int argc, char *argv[])
 
   uint64_t *mp = _mp;
   double   *wf = _wf;
-
-  int packed = 0;
-
-  if (argc > 1 && strcmp(argv[1],"--packed") == 0)
-    packed = 1;
 
   for (i = 0; i < num_mp; i++)
     {
@@ -252,6 +271,7 @@ int main(int argc, char *argv[])
   couple_accumulate_2();
 
   write_nlj();
+#endif
   
   return 0;
 }

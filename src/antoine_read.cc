@@ -1529,13 +1529,16 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
 	out_config.fprintf("#define CFG_SUM_M                      %d\n",
 			   mp_info._sum_m);
 
-	out_config.fprintf("#define CFG_WAVEFCNS                   %d\n",
-			   _n_wavefcns);
+	if (!cfg._conn_tables_output)
+	  out_config.fprintf("#define CFG_WAVEFCNS                   %d\n",
+			     _n_wavefcns);
+
 	int n_pack_words = _bit_packing[cfg._use_forw_states ? 0 : 1]._words;
 	out_config.fprintf("#define CFG_PACK_WORDS                 %d\n",
 			   n_pack_words);
 	/* Calculate padding required to get hash items 2^n */
-	int n_data = n_pack_words + _n_wavefcns;
+	int n_data = n_pack_words + 
+	  (cfg._conn_tables_output ? 1 : _n_wavefcns);
 	int n_full;
 	for (n_full = 1; n_full < n_data; n_full *= 2)
 	  ;

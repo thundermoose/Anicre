@@ -335,6 +335,10 @@ void packed_created_state(uint64_t *packed,
   find_mp_state_pre(packed, &lookfor_x);
   find_mp_state_prefetch(lookfor_x);
 
+#if CFG_CONN_TABLES
+
+
+#else
   double val;
 
   if (!find_mp_state_post(packed, lookfor_x, &val))
@@ -342,5 +346,6 @@ void packed_created_state(uint64_t *packed,
       fprintf (stderr, "NOT FOUND!\n");
       exit (1);
     }
+#endif
 
 }

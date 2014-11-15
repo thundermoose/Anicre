@@ -8,8 +8,12 @@
 typedef struct hash_mp_wf_item_t
 {
   uint64_t _mp[CFG_PACK_WORDS];
+#if CFG_CONN_TABLES
+  uint64_t _index;
+#else
   double   _wf[CFG_WAVEFCNS];
-#if CFG_HASH_MP_PAD64 == 0
+#endif
+#if CFG_HASH_MP_PAD64 != 0
   uint64_t _dummy[CFG_HASH_MP_PAD64];
 #endif
 } hash_mp_wf_item;
@@ -20,7 +24,7 @@ typedef struct hash_mp_wf_t
   uint64_t         _hash_mask;
 } hash_mp_wf;
 
-hash_mp_wf *_hashed_mp;
+extern hash_mp_wf *_hashed_mp;
 
 extern uint64_t _lookups;
 extern uint64_t _found;
@@ -73,7 +77,13 @@ inline void find_mp_state_prefetch(uint64_t x)
   __builtin_prefetch(p, 0, 0);
 }
 
-inline int find_mp_state_post(uint64_t *lookfor, uint64_t x, double *val)
+inline int find_mp_state_post(uint64_t *lookfor, uint64_t x, 
+#if CFG_CONN_TABLES
+			      uint64_t *ind
+#else
+			      double *val
+#endif
+			      )
 {
   _lookups++;
 
@@ -91,7 +101,11 @@ inline int find_mp_state_post(uint64_t *lookfor, uint64_t x, double *val)
       
       {
 	_found++;
+#if CFG_CONN_TABLES
+	*ind = p->_index;
+#else
 	*val = p->_wf[0];
+#endif
 	
 	return 1;
       }
