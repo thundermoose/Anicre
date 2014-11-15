@@ -90,6 +90,17 @@ double   *_wf = NULL;
 
 hash_mp_wf *_hashed_mp = NULL;
 
+typedef struct mp_cut_E_M_t
+{
+  int    _E, _M;
+  size_t _start;
+
+  hash_mp_wf *_hashed_mp;
+} mp_cut_E_M;
+
+mp_cut_E_M    *_mp_cut_E_M;
+size_t     _num_mp_cut_E_M;
+
 uint64_t _lookups = 0;
 uint64_t _found = 0;
 
@@ -159,36 +170,92 @@ size_t sort_mp_by_E_M(size_t num_mp)
 
   printf ("Reduced %zd mp states.\n", reduced_num_mp);
 
-  if (1)
+  _num_mp_cut_E_M = 0;
+
+  mp_cut_E_M tmp_E_M;
+
+  tmp_E_M._E = -1;
+  tmp_E_M._M = 0; /* does not matter */
+
+  mp = _mp;
+
+  for (i = 0; i < reduced_num_mp; i++)
     {
-      mp = _mp;
+      int list[CFG_NUM_SP_STATES0 + CFG_NUM_SP_STATES1];
 
-      for (i = 0; i < reduced_num_mp; i++)
+      uint64_t *packed = mp;
+
+      packed_to_int_list(list, packed);
+
+      int E = mp_state_in_E(list);
+      int M = mp_state_in_M(list);
+
+      if (E != tmp_E_M._E || M != tmp_E_M._M)
 	{
-	  int list[CFG_NUM_SP_STATES0 + CFG_NUM_SP_STATES1];
-
-	  uint64_t *packed = mp;
-
-	  packed_to_int_list(list, packed);
-
-	  int E = mp_state_in_E(list);
-	  int M = mp_state_in_M(list);
-
-	  printf ("%2d %3d : ", E, M);
-
-	  int j;
-
-	  for (j = 0; j < CFG_NUM_SP_STATES0; j++)
-	    {
-	      printf (" %5d", list[j]);
-     
-	    }
-
-	  printf ("\n");
-
-	  mp += CFG_PACK_WORDS;
+	  tmp_E_M._E = E;
+	  tmp_E_M._M = M;
+	  _num_mp_cut_E_M++;
 	}
+
+      mp += CFG_PACK_WORDS;      
     }
+
+  _mp_cut_E_M =
+    (mp_cut_E_M *) malloc ((_num_mp_cut_E_M + 1) * sizeof (mp_cut_E_M));
+
+  if (!_mp_cut_E_M)
+    {
+      fprintf (stderr, "Memory allocation error (%zd bytes).\n",
+	       _num_mp_cut_E_M * sizeof (mp_cut_E_M));     
+    }
+
+  tmp_E_M._E = -1;
+  tmp_E_M._M = 0; /* does not matter */
+
+  size_t cut_E_M = 0;
+
+  mp = _mp;
+
+  for (i = 0; i < reduced_num_mp; i++)
+    {
+      int list[CFG_NUM_SP_STATES0 + CFG_NUM_SP_STATES1];
+
+      uint64_t *packed = mp;
+
+      packed_to_int_list(list, packed);
+
+      int E = mp_state_in_E(list);
+      int M = mp_state_in_M(list);
+
+      if (E != tmp_E_M._E || M != tmp_E_M._M)
+	{
+	  _mp_cut_E_M[cut_E_M]._E = E;
+	  _mp_cut_E_M[cut_E_M]._M = M;
+	  _mp_cut_E_M[cut_E_M]._start = i;
+	  _mp_cut_E_M[cut_E_M]._hashed_mp = NULL;
+
+	  tmp_E_M._E = E;
+	  tmp_E_M._M = M;
+	  cut_E_M++;
+	}
+
+      /*
+      printf ("%2d %3d : ", E, M);
+
+      int j;
+
+      for (j = 0; j < CFG_NUM_SP_STATES0; j++)
+	{
+	  printf (" %5d", list[j]);
+     
+	}
+
+      printf ("\n");
+      */
+      mp += CFG_PACK_WORDS;
+    }
+
+  printf ("%zd E-M pairs\n", _num_mp_cut_E_M);
 
   return reduced_num_mp;
 }
