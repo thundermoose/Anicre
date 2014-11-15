@@ -94,6 +94,26 @@ np-anicr-%: %/tables_rev.h
 
 ####################################################################
 
+n-tables-anicr-%: %/tables_forw.h
+	make -C $* -f ../anicr/makever.mk ANICR_PREFIX=n_tables
+
+####################################################################
+
+nn-tables-anicr-%: %/tables_forw.h
+	make -C $* -f ../anicr/makever.mk ANICR_PREFIX=nn_tables
+
+####################################################################
+
+p-tables-anicr-%: %/tables_rev.h
+	make -C $* -f ../anicr/makever.mk ANICR_PREFIX=p_tables
+
+####################################################################
+
+pp-tables-anicr-%: %/tables_rev.h
+	make -C $* -f ../anicr/makever.mk ANICR_PREFIX=pp_tables
+
+####################################################################
+
 clean-anicr-%:
 	make -C $* -f ../anicr/makever.mk clean
 
