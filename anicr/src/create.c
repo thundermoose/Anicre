@@ -138,6 +138,34 @@ void annihilate_packed_states(uint64_t *packed)
   annihilate_states(list + CFG_NUM_SP_STATES0, list);
 }
 
+int mp_state_in_E(int *in_sp)
+{
+  int i;
+
+  int E = 0;
+
+  for (i = 0; i < CFG_NUM_SP_STATES0; i++)
+    {
+      E += SP_STATE_E(sp_info[in_sp[i]]);
+    }
+
+  return E;
+}
+
+int mp_state_in_M(int *in_sp)
+{
+  int i;
+
+  int M = 0;
+
+  for (i = 0; i < CFG_NUM_SP_STATES0; i++)
+    {
+      M += sp_info[in_sp[i]]._m;
+    }
+
+  return M;
+}
+
 void annihilate_states(int *in_sp_other,
 		       int *in_sp)
 {

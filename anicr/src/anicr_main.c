@@ -17,10 +17,55 @@
 #include <string.h>
 #include <assert.h>
 
+void packed_to_int_list(int *list, const uint64_t *packed);
+void int_list2_to_packed(uint64_t *packed, const int *list0, const int *list1);
+
 int compare_packed_mp_state(const void *p1, const void *p2)
 {
   const uint64_t *s1 = (const uint64_t *) p1;
   const uint64_t *s2 = (const uint64_t *) p2;
+
+  int i;
+
+  for (i = 0; i < CFG_PACK_WORDS; i++)
+    {
+      if (*s1 < *s2)
+	return -1;
+      if (*s1 > *s2)
+	return 1;
+
+      s1++;
+      s2++;
+    }
+
+  return 0;
+}
+
+int mp_state_in_E(int *in_sp);
+int mp_state_in_M(int *in_sp);
+
+int compare_packed_mp_state_E_M(const void *p1, const void *p2)
+{
+  const uint64_t *s1 = (const uint64_t *) p1;
+  const uint64_t *s2 = (const uint64_t *) p2;
+
+  int list1[CFG_NUM_SP_STATES0 + CFG_NUM_SP_STATES1];
+  int list2[CFG_NUM_SP_STATES0 + CFG_NUM_SP_STATES1];
+
+  packed_to_int_list(list1, s1);
+  packed_to_int_list(list2, s2);
+
+  int E1 = mp_state_in_E(list1);
+  int E2 = mp_state_in_E(list2);
+
+  if (E1 != E2)
+    return E1 - E2;
+
+  int M1 = mp_state_in_M(list1);
+  int M2 = mp_state_in_M(list2);
+
+  if (M1 != M2)
+    return M1 - M2;
 
   int i;
 
@@ -49,6 +94,104 @@ uint64_t _lookups = 0;
 uint64_t _found = 0;
 
 double   _cur_val;
+
+size_t sort_mp_by_E_M(size_t num_mp)
+{
+  /* First, remove all 'other' particles from the states, as we
+   * only care about one kind of particles when building tables.
+   *
+   * Then, sort them by E and M.
+   *
+   * Finally, squeeze out all duplicates.
+   */
+
+  size_t i;
+
+  uint64_t *mp = _mp;
+
+  int list0[CFG_NUM_SP_STATES1];
+  memset(list0, 0, sizeof (list0));
+
+  for (i = 0; i < num_mp; i++)
+    {
+      int list[CFG_NUM_SP_STATES0 + CFG_NUM_SP_STATES1];
+
+      uint64_t *packed = mp;
+
+      packed_to_int_list(list, packed);
+
+      int_list2_to_packed(packed, list, list0 /* other */);
+
+      mp += CFG_PACK_WORDS;     
+    }  
+  
+  qsort (_mp, num_mp, sizeof (uint64_t) * CFG_PACK_WORDS,
+	 compare_packed_mp_state_E_M);
+  
+  printf ("Sorted %zd mp states.\n", num_mp);
+
+  size_t reduced_num_mp = 1;
+
+  uint64_t *mp_in  = _mp + CFG_PACK_WORDS;
+  uint64_t *mp_out = _mp;
+
+  for (i = 1; i < num_mp; i++)
+    {
+      int diff = 0;
+      int j;
+
+      for (j = 0; j < CFG_PACK_WORDS; j++)      
+	diff |= (mp_in[j] != mp_out[j]);
+
+      if (diff)
+	{
+	  reduced_num_mp++;
+	  mp_out += CFG_PACK_WORDS;
+
+	  for (j = 0; j < CFG_PACK_WORDS; j++)
+	    mp_out[j] = mp_in[j];
+	}
+
+      mp_in += CFG_PACK_WORDS;
+    }
+
+  mp_out += CFG_PACK_WORDS;
+
+  printf ("Reduced %zd mp states.\n", reduced_num_mp);
+
+  if (1)
+    {
+      mp = _mp;
+
+      for (i = 0; i < reduced_num_mp; i++)
+	{
+	  int list[CFG_NUM_SP_STATES0 + CFG_NUM_SP_STATES1];
+
+	  uint64_t *packed = mp;
+
+	  packed_to_int_list(list, packed);
+
+	  int E = mp_state_in_E(list);
+	  int M = mp_state_in_M(list);
+
+	  printf ("%2d %3d : ", E, M);
+
+	  int j;
+
+	  for (j = 0; j < CFG_NUM_SP_STATES0; j++)
+	    {
+	      printf (" %5d", list[j]);
+     
+	    }
+
+	  printf ("\n");
+
+	  mp += CFG_PACK_WORDS;
+	}
+    }
+
+  return reduced_num_mp;
+}
 
 void setup_hash_table(size_t num_mp)
 {
@@ -202,6 +345,10 @@ int main(int argc, char *argv[])
   close (fd);
 
   printf ("Read %zd wf coeffs.\n", num_mp);
+#endif
+
+#if CFG_CONN_TABLES
+  sort_mp_by_E_M(num_mp);
 #endif
 
   setup_hash_table(num_mp);
