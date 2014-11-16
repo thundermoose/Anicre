@@ -119,28 +119,37 @@ print sprintf ("\n".
 	       $total_mp_states,
 	       $max_mp_block);
 
-my %E_M_E_M_use = ();
+my %E_M_E_M_use_1n = ();
+my %E_M_E_M_use_2n = ();
+my %E_M_E_M_use_3n = ();
 
-sub account_conn_use($)
+sub account_conn_use($$)
 {
     my $key = shift;
+    my $nforce = shift;
 
-    my $old = $E_M_E_M_use{$key};
-
-    if (!$old)
-    {
-	$E_M_E_M_use{$key} = 1;
+    if ($nforce <= 1) {
+	my $old = $E_M_E_M_use_1n{$key};
+	if (!$old) { $E_M_E_M_use_1n{$key} = 1; }
+	else       { $E_M_E_M_use_1n{$key} = $old + 1; }
     }
-    else
-    {
-	$E_M_E_M_use{$key} = $old + 1;
+    if ($nforce <= 2) {
+	my $old = $E_M_E_M_use_2n{$key};
+	if (!$old) { $E_M_E_M_use_2n{$key} = 1; }
+	else       { $E_M_E_M_use_2n{$key} = $old + 1; }
+    }
+    if ($nforce <= 3) {
+	my $old = $E_M_E_M_use_3n{$key};
+	if (!$old) { $E_M_E_M_use_3n{$key} = 1; }
+	else       { $E_M_E_M_use_3n{$key} = $old + 1; }
     }
 }
 
-sub pn_conn($$)
+sub pn_conn($$$)
 {
     my $ptype = shift;
     my $ntype = shift;
+    my $nforce = shift;
 
     my $total_conn = 0;
 
@@ -205,8 +214,8 @@ sub pn_conn($$)
 
 		$total_conn += $conn_p * $conn_n;
 
-		account_conn_use($keyp);
-		account_conn_use($keyn);
+		account_conn_use($keyp, $nforce);
+		account_conn_use($keyn, $nforce);
 	    }
 	}    
     }
@@ -217,14 +226,15 @@ sub pn_conn($$)
 		   $ptype, $ntype, $total_conn);
 }
 
-pn_conn("p","n");
+pn_conn("p","n",2);
 
-pn_conn("pp","n");
-pn_conn("p","nn");
+pn_conn("pp","n",3);
+pn_conn("p","nn",3);
 
-sub dia_conn($)
+sub dia_conn($$)
 {
     my $xtype = shift;
+    my $nforce = shift;
 
     my $total_conn = 0;
 
@@ -287,7 +297,7 @@ sub dia_conn($)
 
 	    $total_conn += $conn_x * $states_y;
 
-	    account_conn_use($keyx);
+	    account_conn_use($keyx, $nforce);
 	}    
     }
 
@@ -297,35 +307,54 @@ sub dia_conn($)
 		   $xtype, $total_conn);
 }
 
-dia_conn("p");
-dia_conn("n");
+dia_conn("p",1);
+dia_conn("n",1);
 
-dia_conn("pp");
-dia_conn("nn");
+dia_conn("pp",2);
+dia_conn("nn",2);
 
-my $max_conn_len = 0;
-my $sum_conn_len = 0;
+my $max_conn_len_1n = 0;
+my $sum_conn_len_1n = 0;
 
-foreach my $key (sort keys %E_M_E_M_use)
+foreach my $key (sort keys %E_M_E_M_use_1n)
 {
-    #print sprintf ("%s %d\n",
-    #		   $key,
-    #		   $E_M_E_M_use{$key});
-
     my $len = $E_M_E_M_conn{$key};
+    $sum_conn_len_1n += $len;
+    if ($len > $max_conn_len_1n) { $max_conn_len_1n = $len; }
+}
 
-    $sum_conn_len += $len;
+my $max_conn_len_2n = 0;
+my $sum_conn_len_2n = 0;
 
-    if ($len > $max_conn_len)
-    {
-	$max_conn_len = $len;
-    }
+foreach my $key (sort keys %E_M_E_M_use_2n)
+{
+    my $len = $E_M_E_M_conn{$key};
+    $sum_conn_len_2n += $len;
+    if ($len > $max_conn_len_2n) { $max_conn_len_2n = $len; }
+}
+
+my $max_conn_len_3n = 0;
+my $sum_conn_len_3n = 0;
+
+foreach my $key (sort keys %E_M_E_M_use_3n)
+{
+    my $len = $E_M_E_M_conn{$key};
+    $sum_conn_len_3n += $len;
+    if ($len > $max_conn_len_3n) { $max_conn_len_3n = $len; }
 }
 
 printf sprintf("\n".
-	       "SUM-CONN-LEN: %d\n".
-	       "MAX-CONN-LEN: %d\n".
+	       "SUM-CONN-LEN-1N: %d\n".
+	       "MAX-CONN-LEN-1N: %d\n".
+	       "SUM-CONN-LEN-2N: %d\n".
+	       "MAX-CONN-LEN-2N: %d\n".
+	       "SUM-CONN-LEN-3N: %d\n".
+	       "MAX-CONN-LEN-3N: %d\n".
 	       "\n",
-	       $sum_conn_len,
-	       $max_conn_len);
+	       $sum_conn_len_1n,
+	       $max_conn_len_1n,
+	       $sum_conn_len_2n,
+	       $max_conn_len_2n,
+	       $sum_conn_len_3n,
+	       $max_conn_len_3n);
 
