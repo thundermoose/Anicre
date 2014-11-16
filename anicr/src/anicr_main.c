@@ -276,7 +276,7 @@ size_t sort_mp_by_E_M(size_t num_mp)
 			 mp_states,
 			 0);
 
-      printf ("%2d %3d : %10zd\n",
+      printf ("E_M_PAIR  %2d %3d : %10zd\n",
 	      _mp_cut_E_M[i]._E,
 	      _mp_cut_E_M[i]._M,
 	      mp_states);
@@ -557,7 +557,7 @@ int main(int argc, char *argv[])
 	      mp += CFG_PACK_WORDS;
 	    }
 
-	  printf ("%2d %3d  ->  %2d %3d  :  dE=%2d dM=%3d  : %10zd %10zd : "
+	  printf ("CONN %2d %3d  ->  %2d %3d  :  dE=%2d dM=%3d  : %10zd %10zd : "
 		  "%10" PRIu64 "\n",
 		  cut_ini->_E,
 		  cut_ini->_M,
@@ -572,9 +572,10 @@ int main(int argc, char *argv[])
 
 	  tot_ini_states += mp_states;
 
-	  printf ("anicr %zd : %zd / %zd\r",
-		  cut_ini_i, cut_fin_i, _num_mp_cut_E_M);
-          fflush (stdout);
+	  fprintf (stderr,
+		   "anicr %zd : %zd / %zd\r",
+		   cut_ini_i, cut_fin_i, _num_mp_cut_E_M);
+          fflush (stderr);
 	}
 
     }
