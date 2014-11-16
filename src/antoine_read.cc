@@ -1445,10 +1445,12 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
     { "pp", false, false, 2, 0, 1 },
     { "np", false, true,  2, 1, 2 },
 
-    { "n_tables",  true,  true,  1, 0, -1 },
-    { "p_tables",  true,  false, 1, 0, -1 },
-    { "nn_tables", true,  true,  2, 0, 0 },
-    { "pp_tables", true,  false, 2, 0, 1 },
+    { "n_tables",   true,  true,  1, 0, -1 },
+    { "p_tables",   true,  false, 1, 0, -1 },
+    { "nn_tables",  true,  true,  2, 0, 0 },
+    { "pp_tables",  true,  false, 2, 0, 1 },
+    { "nnn_tables", true,  true,  3, 0, 0 },
+    { "ppp_tables", true,  false, 3, 0, 1 },
   };
 
   
@@ -1576,6 +1578,8 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
 			   cfg._num_change);
 	out_config.fprintf("#define CFG_ANICR_TWO                  %d\n",
 			   (cfg._num_change == 2 ? 1 : 0));
+	out_config.fprintf("#define CFG_ANICR_THREE                %d\n",
+			   (cfg._num_change == 3 ? 1 : 0));
 	out_config.fprintf("#define CFG_ANICR_NP                   %d\n",
 			   (cfg._change_pn_at ? 1 : 0));
       }
