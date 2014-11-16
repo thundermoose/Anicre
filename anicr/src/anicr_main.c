@@ -276,7 +276,7 @@ size_t sort_mp_by_E_M(size_t num_mp)
 			 mp_states,
 			 0);
 
-      printf ("E_M_PAIR  %2d %3d : %10zd\n",
+      printf (TABLE_PREFIX "_" "E_M_PAIR  %2d %3d : %10zd\n",
 	      _mp_cut_E_M[i]._E,
 	      _mp_cut_E_M[i]._M,
 	      mp_states);
@@ -384,6 +384,12 @@ int main(int argc, char *argv[])
   /* size_t num_sp = CFG_NUM_SP_STATES0 + CFG_NUM_SP_STATES1; */
 
   assert(sizeof (uint64_t) == sizeof (double));
+
+#if CFG_CONN_TABLES
+  printf ("CFG_MAX_E: %d\n", CFG_MAX_SUM_E);
+  printf ("CFG_M:     %d\n", CFG_SUM_M);
+  printf ("CFG_P:     %d\n", CFG_PARITY_INITIAL);
+#endif
 
   size_t mp_sz = sizeof (uint64_t) * (CFG_PACK_WORDS) * num_mp;
 #if !CFG_CONN_TABLES
@@ -557,7 +563,8 @@ int main(int argc, char *argv[])
 	      mp += CFG_PACK_WORDS;
 	    }
 
-	  printf ("CONN %2d %3d  ->  %2d %3d  :  dE=%2d dM=%3d  : %10zd %10zd : "
+	  printf (TABLE_PREFIX "_" "CONN "
+		  "%2d %3d  ->  %2d %3d  :  dE=%2d dM=%3d  : %10zd %10zd : "
 		  "%10" PRIu64 "\n",
 		  cut_ini->_E,
 		  cut_ini->_M,
@@ -573,7 +580,7 @@ int main(int argc, char *argv[])
 	  tot_ini_states += mp_states;
 
 	  fprintf (stderr,
-		   "anicr %zd : %zd / %zd\r",
+		   "anicr %zd : %zd / %zd   \r",
 		   cut_ini_i, cut_fin_i, _num_mp_cut_E_M);
           fflush (stderr);
 	}
