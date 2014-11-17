@@ -313,6 +313,9 @@ dia_conn("n",1);
 dia_conn("pp",2);
 dia_conn("nn",2);
 
+dia_conn("ppp",3);
+dia_conn("nnn",3);
+
 my $max_conn_len_1n = 0;
 my $sum_conn_len_1n = 0;
 

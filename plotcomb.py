@@ -98,7 +98,8 @@ plt.subplots_adjust(wspace = 0.35, hspace = 0.3);
 
 plt.subplot(3, 3, 1)
 
-p3, = plt.semilogy(Nmax, (conns_ppn + conns_pnn) / 1e12, 'r-o');
+p3, = plt.semilogy(Nmax, (conns_ppn + conns_pnn +
+                          conns_ppp + conns_nnn) / 1e12, 'r-o');
 
 p2, = plt.semilogy(Nmax, (conns_pp + conns_pn + conns_nn) / 1e12, 'r--o');
 
@@ -121,8 +122,10 @@ ax.set_xticks(xticks);
 
 plt.subplot(3, 3, 4)
 
-p6, = plt.semilogy(Nmax, conns_ppn / 1e12, 'm-o');
-p7, = plt.semilogy(Nmax, conns_pnn / 1e12, 'm-o');
+p8, = plt.semilogy(Nmax, conns_ppn / 1e12, 'm-o');
+p9, = plt.semilogy(Nmax, conns_pnn / 1e12, 'm-o');
+p6, = plt.semilogy(Nmax, conns_ppp / 1e12, 'b-o');
+p7, = plt.semilogy(Nmax, conns_nnn / 1e12, 'g-o');
 
 p3, = plt.semilogy(Nmax, conns_pn / 1e12, 'm--o');
 p4, = plt.semilogy(Nmax, conns_pp / 1e12, 'b--o');
@@ -131,8 +134,8 @@ p5, = plt.semilogy(Nmax, conns_nn / 1e12, 'g--o');
 p1, = plt.semilogy(Nmax, conns_p  / 1e12, 'b:o');
 p2, = plt.semilogy(Nmax, conns_n  / 1e12, 'g:o');
 
-plt.legend([p6, p7, p3, p4, p5, p1, p2],
-           ['ppn','pnn','pn','pp','nn','p','n'],
+plt.legend([p8, p9, p6, p7, p3, p4, p5, p1, p2],
+           ['ppn','pnn','ppp','nnn','pn','pp','nn','p','n'],
            loc=4,prop={'size':9})
 
 plt.xlabel('Nmax')
@@ -148,12 +151,13 @@ ax.set_xticks(xticks);
 plt.subplot(3, 3, 2)
 p1, = plt.semilogy(Nmax, sum_conn_len_3n * 12 / 1e12, 'r-o');
 p2, = plt.semilogy(Nmax, sum_conn_len_2n * 12 / 1e12, 'r--o');
+p2, = plt.semilogy(Nmax, sum_conn_len_1n * 12 / 1e12, 'r:o');
 
 plt.plot([0, 22],[32, 32],'k-');
 plt.text(1,32*1.5,'scr.munin (HDD)')
 
-plt.legend([p1, p2],
-           ['idx-lists 3N','idx-lists 2N',],
+plt.legend([p1, p2, p3],
+           ['idx-lists 3N','idx-lists 2N','idx-lists 1N'],
            loc=4,prop={'size':9})
 
 plt.xlabel('Nmax')
