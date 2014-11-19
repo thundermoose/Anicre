@@ -541,11 +541,7 @@ int main(int argc, char *argv[])
     {
       mp_cut_E_M *cut_ini = _mp_cut_E_M + cut_ini_i;
 
-#if CFG_ANICR_THREE
-      cut_fin_i = cut_ini_i;
-#else
       for (cut_fin_i = 0; cut_fin_i < _num_mp_cut_E_M; cut_fin_i++)
-#endif
 	{
 	  mp_cut_E_M *cut_fin = _mp_cut_E_M + cut_fin_i;
 
@@ -558,6 +554,11 @@ int main(int argc, char *argv[])
 
 	  int diff_E = cut_fin->_E - cut_ini->_E;
 	  int diff_M = cut_fin->_M - cut_ini->_M;
+
+#if CFG_ANICR_THREE
+	  if (diff_M != 0)
+	    continue;
+#endif
 
 	  for (i = 0; i < mp_states; i++)
 	    {

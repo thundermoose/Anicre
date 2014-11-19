@@ -159,7 +159,7 @@ ax.set_xticks(xticks);
 plt.subplot(3, 3, 2)
 p1, = plt.semilogy(Nmax, sum_conn_len_3n * 12 / 1e12, 'r-o');
 p2, = plt.semilogy(Nmax, sum_conn_len_2n * 12 / 1e12, 'r--o');
-p2, = plt.semilogy(Nmax, sum_conn_len_1n * 12 / 1e12, 'r:o');
+p3, = plt.semilogy(Nmax, sum_conn_len_1n * 12 / 1e12, 'r:o');
 
 plt.plot([0, 22],[32, 32],'k-');
 plt.text(1,32*1.5,'scr.munin (HDD)')

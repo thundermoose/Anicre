@@ -158,8 +158,8 @@ sub pn_conn($$$)
     print sprintf ("\n".
 		   "*** Connections $ptype-$ntype ***\n".
 		   "\n");
-    print sprintf ("%3s %3s  %3s %3s   ".
-		   "%3s %3s  %3s %3s   ".
+    print sprintf ("%3s %3s   %3s %3s   ".
+		   "%3s %3s   %3s %3s   ".
 		   "%8s %8s  ".
 		   "%8s %8s  %12s\n".
 		   "\n",
@@ -211,8 +211,8 @@ sub pn_conn($$$)
 	    {
 		# print "$key1  $key2  $dMp  $dMn  $conn_p  $conn_n\n";
 
-		print sprintf ("%3d %3d  %3d %3d   ".
-			       "%3d %3d  %3d %3d   ".
+		print sprintf ("%3d %3d   %3d %3d   ".
+			       "%3d %3d   %3d %3d   ".
 			       "%8d %8d  ".
 			       "%8d %8d  %12d\n",
 			       $Ep1, $Mp1, $En1, $Mn1,
@@ -254,11 +254,14 @@ sub dia_conn($$)
     print sprintf ("\n".
 		   "*** Connections dia-$xtype ***\n".
 		   "\n");
-    print sprintf ("%3s %3s  %3s %3s   ".
+    print sprintf ("%3s %3s   %3s %3s   ".
+		   "%3s %3s   ".
 		   "%8s  ".
 		   "%8s %8s  %12s\n".
 		   "\n",
-		   "Ep1", "Mp1", "En1", "Mn1",
+		   "Ep1", "Mp1",
+		   "Ep2", "Mp2",
+		   "En", "Mn",
 		   "#mp1",
 		   "#conn-$xtype", "#mp-$ytype",
 		   "conn");
@@ -274,44 +277,66 @@ sub dia_conn($$)
 
 	my $states1 = $E_M_E_M_states{$key1};
 
-	my $conn_x;
-	my $states_y;
-
-	my $keyx;
-
-	if ($xtype =~ /^p+$/)
+      key2iter:
+	foreach my $key2 (@E_M_E_M_states)
 	{
-	    $keyx = "${xtype}${Ep1},${Mp1},${Ep1},${Mp1}";
-	    $states_y = $E_M_states{"n${En1},${Mn1}"};
+	    my @EMEM2 = split /,/,$key2;
+
+	    my $Ep2 = $EMEM2[0];
+	    my $Mp2 = $EMEM2[1];
+	    my $En2 = $EMEM2[2];
+	    my $Mn2 = $EMEM2[3];
+
+	    my $states2 = $E_M_E_M_states{$key2};
+
+	    my $conn_x;
+	    my $states_y;
+
+	    my $keyx;
+
+	    if ($xtype =~ /^p+$/)
+	    {
+		# n states must match
+		if ($En1 != $En2 || $Mn1 != $Mn2) { next key2iter; }
+		#
+		$keyx = "${xtype}${Ep1},${Mp1},${Ep2},${Mp2}";
+		$states_y = $E_M_states{"n${En1},${Mn1}"};
+	    }
+	    else
+	    {
+		# p states must match
+		if ($Ep1 != $Ep2 || $Mp1 != $Mp2) { next key2iter; }
+		#
+		$keyx = "${xtype}${En1},${Mn1},${En2},${Mn2}";
+		$states_y = $E_M_states{"p${Ep1},${Mp1}"};
+	    }
+
+	    $conn_x = $E_M_E_M_conn{$keyx};
+
+	    if (!defined($conn_x)) {
+		die "Connections $keyx undefined.";
+	    }
+
+	    if ($conn_x)
+	    {
+		# print "$key1  $key2  $dMp  $dMn  $conn_p  $conn_n\n";
+
+		print sprintf ("%3d %3d   %3d %3d   ".
+			       "%3s %3s   ".
+			       "%8d  ".
+			       "%8d %8d  %12d\n",
+			       $Ep1, $Mp1,
+			       $Ep2, $Mp2,
+			       $En1, $Mn1,
+			       $states1,
+			       $conn_x, $states_y,
+			       $conn_x);
+
+		$total_conn += $conn_x * $states_y;
+
+		account_conn_use($keyx, $nforce);
+	    }
 	}
-	else
-	{
-	    $keyx = "${xtype}${En1},${Mn1},${En1},${Mn1}";
-	    $states_y = $E_M_states{"p${Ep1},${Mp1}"};
-	}
-
-	$conn_x = $E_M_E_M_conn{$keyx};
-
-	if (!defined($conn_x)) {
-	    die "Connections $keyx undefined.";
-	}
-
-	if ($conn_x)
-	{
-	    # print "$key1  $key2  $dMp  $dMn  $conn_p  $conn_n\n";
-
-	    print sprintf ("%3d %3d  %3d %3d   ".
-			   "%8d  ".
-			   "%8d %8d  %12d\n",
-			   $Ep1, $Mp1, $En1, $Mn1,
-			   $states1,
-			   $conn_x, $states_y,
-			   $conn_x);
-
-	    $total_conn += $conn_x * $states_y;
-
-	    account_conn_use($keyx, $nforce);
-	}    
     }
 
     print sprintf ("\n".
