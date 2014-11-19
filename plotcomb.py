@@ -3,6 +3,12 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import re
+import sys
+
+nucleus = "6Li";
+
+if (len(sys.argv) > 1):
+    nucleus = sys.argv[1]
 
 Nmax = np.array([0, 2, 4, 6, 8, 10, 12]);
 
@@ -36,7 +42,7 @@ for i in range(0,len(Nmax)):
     nmax = Nmax[i]
     print nmax
 
-    filename = "6Li_nmax%d.td/comb.txt" % nmax
+    filename = nucleus+"_nmax%d.td/comb.txt" % nmax
 
     try:
         with open(filename) as f:
@@ -105,7 +111,8 @@ p2, = plt.semilogy(Nmax, (conns_pp + conns_pn + conns_nn) / 1e12, 'r--o');
 
 p1, = plt.semilogy(Nmax, (conns_p + conns_n) / 1e12, 'r:o');
 
-plt.semilogy(22, 5.53e14 / 1e12, 'rx');
+if (nucleus == "6Li"):
+    plt.semilogy(22, 5.53e14 / 1e12, 'rx');
 
 plt.legend([p3, p2, p1],
            ['conn 3N', 'conn 2N', 'conn 1N'],
@@ -113,6 +120,7 @@ plt.legend([p3, p2, p1],
 
 plt.xlabel('Nmax')
 plt.ylabel('Mult (T ~ core-h/iter)')
+plt.title(nucleus)
 
 ax = plt.gca()
 ax.set_xlim(xlimits)
@@ -242,7 +250,8 @@ plt.subplot(3, 3, 7)
 p1, = plt.semilogy(Nmax, total_mp_states, 'm-o');
 p2, = plt.semilogy(Nmax, max_mp_block,    'g-o');
 
-plt.semilogy(22, 25038471440, 'mx');
+if (nucleus == "6Li"):
+    plt.semilogy(22, 25038471440, 'mx');
 
 plt.legend([p1, p2],
            ['all mp-states', 'max mp-block'],
