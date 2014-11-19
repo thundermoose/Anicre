@@ -145,6 +145,8 @@ sub account_conn_use($$)
     }
 }
 
+my @E_M_E_M_states = sort keys %E_M_E_M_states;
+
 sub pn_conn($$$)
 {
     my $ptype = shift;
@@ -167,7 +169,7 @@ sub pn_conn($$$)
 		   "#conn-$ptype", "#conn-$ntype",
 		   "conn");
 
-    foreach my $key1 (sort keys %E_M_E_M_states)
+    foreach my $key1 (@E_M_E_M_states)
     {
 	my @EMEM1 = split /,/,$key1;
 
@@ -178,7 +180,7 @@ sub pn_conn($$$)
 
 	my $states1 = $E_M_E_M_states{$key1};
 
-	foreach my $key2 (sort keys %E_M_E_M_states)
+	foreach my $key2 (@E_M_E_M_states)
 	{
 	    my @EMEM2 = split /,/,$key2;
 
@@ -197,6 +199,13 @@ sub pn_conn($$$)
 
 	    my $conn_p = $E_M_E_M_conn{$keyp};
 	    my $conn_n = $E_M_E_M_conn{$keyn};
+
+	    if (!defined($conn_p)) {
+		die "Connections $keyp undefined.";
+	    }
+	    if (!defined($conn_n)) {
+		die "Connections $keyp undefined.";
+	    }
 
 	    if ($conn_p && $conn_n)
 	    {
@@ -254,7 +263,7 @@ sub dia_conn($$)
 		   "#conn-$xtype", "#mp-$ytype",
 		   "conn");
 
-    foreach my $key1 (sort keys %E_M_E_M_states)
+    foreach my $key1 (@E_M_E_M_states)
     {
 	my @EMEM1 = split /,/,$key1;
 
@@ -282,6 +291,10 @@ sub dia_conn($$)
 	}
 
 	$conn_x = $E_M_E_M_conn{$keyx};
+
+	if (!defined($conn_x)) {
+	    die "Connections $keyx undefined.";
+	}
 
 	if ($conn_x)
 	{
