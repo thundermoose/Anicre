@@ -169,8 +169,9 @@ sub pn_conn($$$)
 		   "#conn-$ptype", "#conn-$ntype",
 		   "conn");
 
-    foreach my $key1 (@E_M_E_M_states)
+    for (my $i1 = 0; $i1 <= $#E_M_E_M_states; $i1++)
     {
+	my $key1 = $E_M_E_M_states[$i1];
 	my @EMEM1 = split /,/,$key1;
 
 	my $Ep1 = $EMEM1[0];
@@ -180,8 +181,9 @@ sub pn_conn($$$)
 
 	my $states1 = $E_M_E_M_states{$key1};
 
-	foreach my $key2 (@E_M_E_M_states)
+	for (my $i2 = $i1; $i2 <= $#E_M_E_M_states; $i2++)
 	{
+	    my $key2 = $E_M_E_M_states[$i2];
 	    my @EMEM2 = split /,/,$key2;
 
 	    my $Ep2 = $EMEM2[0];
@@ -211,6 +213,8 @@ sub pn_conn($$$)
 	    {
 		# print "$key1  $key2  $dMp  $dMn  $conn_p  $conn_n\n";
 
+		my $conn = $conn_p * $conn_n;
+
 		print sprintf ("%3d %3d   %3d %3d   ".
 			       "%3d %3d   %3d %3d   ".
 			       "%8d %8d  ".
@@ -219,9 +223,9 @@ sub pn_conn($$$)
 			       $Ep2, $Mp2, $En2, $Mn2,
 			       $states1, $states2,
 			       $conn_p, $conn_n,
-			       $conn_p * $conn_n);
+			       $conn);
 
-		$total_conn += $conn_p * $conn_n;
+		$total_conn += $conn * ($i1 == $i2 ? 1 : 2);
 
 		account_conn_use($keyp, $nforce);
 		account_conn_use($keyn, $nforce);
@@ -266,8 +270,9 @@ sub dia_conn($$)
 		   "#conn-$xtype", "#mp-$ytype",
 		   "conn");
 
-    foreach my $key1 (@E_M_E_M_states)
+    for (my $i1 = 0; $i1 <= $#E_M_E_M_states; $i1++)
     {
+	my $key1 = $E_M_E_M_states[$i1];
 	my @EMEM1 = split /,/,$key1;
 
 	my $Ep1 = $EMEM1[0];
@@ -278,8 +283,9 @@ sub dia_conn($$)
 	my $states1 = $E_M_E_M_states{$key1};
 
       key2iter:
-	foreach my $key2 (@E_M_E_M_states)
+	for (my $i2 = $i1; $i2 <= $#E_M_E_M_states; $i2++)
 	{
+	    my $key2 = $E_M_E_M_states[$i2];
 	    my @EMEM2 = split /,/,$key2;
 
 	    my $Ep2 = $EMEM2[0];
@@ -321,6 +327,8 @@ sub dia_conn($$)
 	    {
 		# print "$key1  $key2  $dMp  $dMn  $conn_p  $conn_n\n";
 
+		my $conn = $conn_x * $states_y;
+
 		print sprintf ("%3d %3d   %3d %3d   ".
 			       "%3s %3s   ".
 			       "%8d  ".
@@ -330,9 +338,9 @@ sub dia_conn($$)
 			       $En1, $Mn1,
 			       $states1,
 			       $conn_x, $states_y,
-			       $conn_x);
+			       $conn_x * $states_y);
 
-		$total_conn += $conn_x * $states_y;
+		$total_conn += $conn * ($i1 == $i2 ? 1 : 2);
 
 		account_conn_use($keyx, $nforce);
 	    }
