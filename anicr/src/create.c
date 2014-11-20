@@ -159,7 +159,7 @@ void annihilate_states_2nd(int *in_sp_other,
 			   int phase_i,
 			   int miss_parity, int miss_m,
 #if CFG_CONN_TABLES
-			   int miss_E
+			   int miss_E, int depth
 #else
 			   int E
 #endif
@@ -171,7 +171,7 @@ void annihilate_states_3rd(int *in_sp_other,
 			   int phase_i,
 			   int miss_parity, int miss_m,
 #if CFG_CONN_TABLES
-			   int miss_E
+			   int miss_E, int depth
 #else
 			   int E
 #endif
@@ -180,7 +180,8 @@ void annihilate_states_3rd(int *in_sp_other,
 void annihilate_packed_states(uint64_t *packed
 #if CFG_CONN_TABLES
 			      ,
-			      int miss_parity, int miss_m, int miss_E
+			      int miss_parity, int miss_m, int miss_E,
+			      int depth
 #endif
 )
 {
@@ -191,7 +192,8 @@ void annihilate_packed_states(uint64_t *packed
   annihilate_states(list + CFG_NUM_SP_STATES0, list
 #if CFG_CONN_TABLES
 		    ,
-		    miss_parity, miss_m, miss_E
+		    miss_parity, miss_m, miss_E,
+		    depth
 #endif
 		    );
 }
@@ -228,7 +230,8 @@ void annihilate_states(int *in_sp_other,
 		       int *in_sp
 #if CFG_CONN_TABLES
 		       ,
-		       int miss_parity, int miss_m, int miss_E
+		       int miss_parity, int miss_m, int miss_E,
+		       int depth
 #endif
 		       )
 {
@@ -297,31 +300,41 @@ void annihilate_states(int *in_sp_other,
 
   /* The out_sp list is missing sp state 0. */
 
+#if CFG_CONN_TABLES
+# if CFG_ANICR_TWO || CFG_ANICR_THREE
+  if (SP_STATE_E(sp_info[in_sp[0]]) <= depth)
+# else
+  if (SP_STATE_E(sp_info[in_sp[0]]) == depth)
+# endif
+#endif
+    {
 #if CFG_ANICR_TWO || CFG_ANICR_THREE
-  annihilate_states_2nd(in_sp_other,
-			out_sp, in_sp[0],
-			0,
-			(sp_info[in_sp[0]]._l ^ miss_parity) & 1,
-			miss_m + sp_info[in_sp[0]]._m,
+      annihilate_states_2nd(in_sp_other,
+			    out_sp, in_sp[0],
+			    0,
+			    (sp_info[in_sp[0]]._l ^ miss_parity) & 1,
+			    miss_m + sp_info[in_sp[0]]._m,
 #if CFG_CONN_TABLES
-			miss_E + SP_STATE_E(sp_info[in_sp[0]])
+			    miss_E + SP_STATE_E(sp_info[in_sp[0]]),
+			    depth - SP_STATE_E(sp_info[in_sp[0]])
 #else
-			E
+			    E
 #endif
-			);
+			    );
 #else
-  create_states(in_sp_other,
-		out_sp,
-		in_sp[0], 0,
-		(sp_info[in_sp[0]]._l ^ miss_parity) & 1,
-		miss_m + sp_info[in_sp[0]]._m,
+      create_states(in_sp_other,
+		    out_sp,
+		    in_sp[0], 0,
+		    (sp_info[in_sp[0]]._l ^ miss_parity) & 1,
+		    miss_m + sp_info[in_sp[0]]._m,
 #if CFG_CONN_TABLES
-		miss_E + SP_STATE_E(sp_info[in_sp[0]])
+		    miss_E + SP_STATE_E(sp_info[in_sp[0]])
 #else
-		E
+		    E
 #endif
-		);
+		    );
 #endif
+    }
 
 #if !CFG_CONN_TABLES
   E += SP_STATE_E(sp_info[in_sp[0]]);
@@ -336,31 +349,41 @@ void annihilate_states(int *in_sp_other,
 
       out_sp[i+1] = in_sp[i];
 
+#if CFG_CONN_TABLES
+# if CFG_ANICR_TWO || CFG_ANICR_THREE
+      if (SP_STATE_E(sp_info[in_sp[i+1]]) <= depth)
+# else
+      if (SP_STATE_E(sp_info[in_sp[i+1]]) == depth)
+# endif
+#endif
+	{
 #if CFG_ANICR_TWO || CFG_ANICR_THREE
-      annihilate_states_2nd(in_sp_other,
-			    out_sp, in_sp[i+1],
-			    i+1,
-			    (sp_info[in_sp[i+1]]._l ^ miss_parity) & 1,
-			    miss_m + sp_info[in_sp[i+1]]._m,
+	  annihilate_states_2nd(in_sp_other,
+				out_sp, in_sp[i+1],
+				i+1,
+				(sp_info[in_sp[i+1]]._l ^ miss_parity) & 1,
+				miss_m + sp_info[in_sp[i+1]]._m,
 #if CFG_CONN_TABLES
-			    miss_E + SP_STATE_E(sp_info[in_sp[i+1]])
+				miss_E + SP_STATE_E(sp_info[in_sp[i+1]]),
+				depth - SP_STATE_E(sp_info[in_sp[i+1]])
 #else
-			    E - SP_STATE_E(sp_info[in_sp[i+1]])
+				E - SP_STATE_E(sp_info[in_sp[i+1]])
 #endif
-			    );
+				);
 #else
-      create_states(in_sp_other,
-		    out_sp, 
-		    in_sp[i+1], i+1,
-		    (sp_info[in_sp[i+1]]._l ^ miss_parity) & 1,
-		    miss_m + sp_info[in_sp[i+1]]._m,
+	  create_states(in_sp_other,
+			out_sp, 
+			in_sp[i+1], i+1,
+			(sp_info[in_sp[i+1]]._l ^ miss_parity) & 1,
+			miss_m + sp_info[in_sp[i+1]]._m,
 #if CFG_CONN_TABLES
-		    miss_E + SP_STATE_E(sp_info[in_sp[i+1]])
+			miss_E + SP_STATE_E(sp_info[in_sp[i+1]])
 #else
-		    E - SP_STATE_E(sp_info[in_sp[i+1]])
+			E - SP_STATE_E(sp_info[in_sp[i+1]])
 #endif
-		    );
+			);
 #endif
+	}
     }
 }
 
@@ -370,7 +393,7 @@ void annihilate_states_2nd(int *in_sp_other,
 			   int phase_i,
 			   int miss_parity, int miss_m,
 #if CFG_CONN_TABLES
-			   int miss_E
+			   int miss_E, int depth
 #else
 			   int E
 #endif
@@ -413,21 +436,28 @@ void annihilate_states_2nd(int *in_sp_other,
   /* The out_sp list is missing sp state 0 and 1. */
 
   if (sp_anni1 < in_sp[1])
+    {
 #if CFG_ANICR_THREE
-    annihilate_states_3rd
+      if (SP_STATE_E(sp_info[in_sp[1]]) <= depth)
+	annihilate_states_3rd
 #else
-    create_states_1st
+      if (SP_STATE_E(sp_info[in_sp[1]]) == depth)
+	create_states_1st
 #endif
-      /**/	     (in_sp_other,
-		      out_sp, sp_anni1, in_sp[1], phase_i ^ 1,
-		      (sp_info[in_sp[1]]._l ^ miss_parity) & 1,
-		      miss_m + sp_info[in_sp[1]]._m,
+	/**/             (in_sp_other,
+			  out_sp, sp_anni1, in_sp[1], phase_i ^ 1,
+			  (sp_info[in_sp[1]]._l ^ miss_parity) & 1,
+			  miss_m + sp_info[in_sp[1]]._m,
 #if CFG_CONN_TABLES
-		      miss_E + SP_STATE_E(sp_info[in_sp[1]])
-#else
-		      E - SP_STATE_E(sp_info[in_sp[1]])
+			  miss_E + SP_STATE_E(sp_info[in_sp[1]])
+#if CFG_ANICR_THREE
+			  ,depth - SP_STATE_E(sp_info[in_sp[1]])
 #endif
-		      );
+#else
+			  E - SP_STATE_E(sp_info[in_sp[1]])
+#endif
+			  );
+    }
 
   /* And now try with all other missing ones. */
 
@@ -438,10 +468,13 @@ void annihilate_states_2nd(int *in_sp_other,
       out_sp[i+1] = in_sp[i];
 
       if (sp_anni1 < in_sp[i+1])
+	{
 #if CFG_ANICR_THREE
-	annihilate_states_3rd
+	  if (SP_STATE_E(sp_info[in_sp[i+1]]) <= depth)
+	    annihilate_states_3rd
 #else
-	create_states_1st
+	  if (SP_STATE_E(sp_info[in_sp[i+1]]) == depth)
+	    create_states_1st
 #endif
       /**/               (in_sp_other,
 			  out_sp, sp_anni1, in_sp[i+1], phase_i ^ (i+1),
@@ -449,10 +482,14 @@ void annihilate_states_2nd(int *in_sp_other,
 			  miss_m + sp_info[in_sp[i+1]]._m,
 #if CFG_CONN_TABLES
 			  miss_E + SP_STATE_E(sp_info[in_sp[i+1]])
+#if CFG_ANICR_THREE
+			  ,depth - SP_STATE_E(sp_info[in_sp[i+1]])
+#endif
 #else
 			  E - SP_STATE_E(sp_info[in_sp[i+1]])
 #endif
 			  );
+	}
     }
 #else
   /* Delete 1 state. */
@@ -497,7 +534,7 @@ void annihilate_states_3rd(int *in_sp_other,
 			   int phase_i,
 			   int miss_parity, int miss_m,
 #if CFG_CONN_TABLES
-			   int miss_E
+			   int miss_E, int depth
 #else
 			   int E
 #endif
@@ -539,17 +576,20 @@ void annihilate_states_3rd(int *in_sp_other,
   /* The out_sp list is missing sp state 0 and 1. */
 
   if (sp_anni2 < in_sp[2])
-    create_states_2nd(in_sp_other,
-		      out_sp, 
-		      sp_anni1, sp_anni2, in_sp[2], phase_i ^ 1,
-		      (sp_info[in_sp[2]]._l ^ miss_parity) & 1,
-		      miss_m + sp_info[in_sp[2]]._m,
+    {
+      if (SP_STATE_E(sp_info[in_sp[2]]) == depth)
+	create_states_2nd(in_sp_other,
+			  out_sp, 
+			  sp_anni1, sp_anni2, in_sp[2], phase_i ^ 1,
+			  (sp_info[in_sp[2]]._l ^ miss_parity) & 1,
+			  miss_m + sp_info[in_sp[2]]._m,
 #if CFG_CONN_TABLES
-		      miss_E + SP_STATE_E(sp_info[in_sp[2]])
+			  miss_E + SP_STATE_E(sp_info[in_sp[2]])
 #else
-		      E - SP_STATE_E(sp_info[in_sp[2]])
+			  E - SP_STATE_E(sp_info[in_sp[2]])
 #endif
-		      );
+			  );
+    }
 
   /* And now try with all other missing ones. */
 
@@ -560,17 +600,20 @@ void annihilate_states_3rd(int *in_sp_other,
       out_sp[i+1] = in_sp[i];
 
       if (sp_anni2 < in_sp[i+1])
-	create_states_2nd(in_sp_other,
-			  out_sp,
-			  sp_anni1, sp_anni2, in_sp[i+1], phase_i ^ (i+1),
-			  (sp_info[in_sp[i+1]]._l ^ miss_parity) & 1,
-			  miss_m + sp_info[in_sp[i+1]]._m,
+	{
+	  if (SP_STATE_E(sp_info[in_sp[i+1]]) == depth)
+	    create_states_2nd(in_sp_other,
+			      out_sp,
+			      sp_anni1, sp_anni2, in_sp[i+1], phase_i ^ (i+1),
+			      (sp_info[in_sp[i+1]]._l ^ miss_parity) & 1,
+			      miss_m + sp_info[in_sp[i+1]]._m,
 #if CFG_CONN_TABLES
-			  miss_E + SP_STATE_E(sp_info[in_sp[i+1]])
+			      miss_E + SP_STATE_E(sp_info[in_sp[i+1]])
 #else
-			  E - SP_STATE_E(sp_info[in_sp[i+1]])
+			      E - SP_STATE_E(sp_info[in_sp[i+1]])
 #endif
-			  );
+			      );
+	}
     }
 }
 #endif

@@ -7,14 +7,16 @@ void annihilate_states(int *in_sp_other,
 		       int *in_sp
 #if CFG_CONN_TABLES
 		       ,
-		       int miss_parity, int miss_m, int miss_E
+		       int miss_parity, int miss_m, int miss_E,
+		       int depth
 #endif
 		       );
 
 void annihilate_packed_states(uint64_t *packed
 #if CFG_CONN_TABLES
 			      ,
-			      int miss_parity, int miss_m, int miss_E
+			      int miss_parity, int miss_m, int miss_E,
+			      int depth
 #endif
 			      );
 

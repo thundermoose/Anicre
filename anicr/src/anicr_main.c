@@ -545,7 +545,6 @@ int main(int argc, char *argv[])
 	{
 	  mp_cut_E_M *cut_fin = _mp_cut_E_M + cut_fin_i;
 
-	  uint64_t *mp = _mp + cut_ini->_start * CFG_PACK_WORDS;
 	  size_t mp_states = (cut_ini+1)->_start - cut_ini->_start;
 
 	  _hashed_mp = cut_fin->_hashed_mp;
@@ -555,39 +554,52 @@ int main(int argc, char *argv[])
 	  int diff_E = cut_fin->_E - cut_ini->_E;
 	  int diff_M = cut_fin->_M - cut_ini->_M;
 
+	  int max_depth =
+	    cut_ini->_E;
+
 #if CFG_ANICR_THREE
 	  if (diff_M != 0)
 	    continue;
 #endif
 
-	  for (i = 0; i < mp_states; i++)
+	  int depth;
+
+	  for (depth = 0; depth <= max_depth; depth++)
 	    {
-	      annihilate_packed_states(mp,
-				       diff_E & 1, diff_M, diff_E);
+	      uint64_t *mp = _mp + cut_ini->_start * CFG_PACK_WORDS;
 
-	      mp += CFG_PACK_WORDS;
+	      for (i = 0; i < mp_states; i++)
+		{
+		  annihilate_packed_states(mp,
+					   diff_E & 1, diff_M, diff_E,
+					   depth);
+
+		  mp += CFG_PACK_WORDS;
+		}
+
+	      printf (TABLE_PREFIX "_" "CONN "
+		      "%2d %3d  ->  %2d %3d  : %2d :  "
+		      "dE=%2d dM=%3d  : %10zd %10zd : "
+		      "%10" PRIu64 "\n",
+		      cut_ini->_E,
+		      cut_ini->_M,
+		      cut_fin->_E,
+		      cut_fin->_M,
+		      depth,
+		      diff_E, diff_M,
+		      mp_states,
+		      (cut_fin+1)->_start - cut_fin->_start,
+		      _found - prev_found);
+
+	      prev_found = _found;
+
+	      tot_ini_states += mp_states;
 	    }
-
-	  printf (TABLE_PREFIX "_" "CONN "
-		  "%2d %3d  ->  %2d %3d  :  dE=%2d dM=%3d  : %10zd %10zd : "
-		  "%10" PRIu64 "\n",
-		  cut_ini->_E,
-		  cut_ini->_M,
-		  cut_fin->_E,
-		  cut_fin->_M,
-		  diff_E, diff_M,
-		  mp_states,
-		  (cut_fin+1)->_start - cut_fin->_start,
-		  _found - prev_found);
-
-	  prev_found = _found;
-
-	  tot_ini_states += mp_states;
 
 	  fprintf (stderr,
 		   "anicr %zd : %zd / %zd   \r",
 		   cut_ini_i, cut_fin_i, _num_mp_cut_E_M);
-          fflush (stderr);
+	  fflush (stderr);
 	}
 
     }
