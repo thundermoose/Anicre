@@ -226,6 +226,48 @@ int mp_state_in_M(int *in_sp)
   return M;
 }
 
+int sp_comb_E(uint64_t sp)
+{
+  int E = 0;
+
+  int sp1 = ((sp >>  0) & 0xffff);
+  E  = SP_STATE_E(sp_info[sp1]);
+
+#if CFG_ANICR_TWO || CFG_ANICR_THREE
+  int sp2 = ((sp >> 16) & 0xffff);
+  E += SP_STATE_E(sp_info[sp2]);
+
+#if CFG_ANICR_THREE
+  int sp3 = ((sp >> 32) & 0xffff);
+  E += SP_STATE_E(sp_info[sp3]);
+#endif
+#endif
+
+  return E;
+}
+
+int sp_comb_M(uint64_t sp)
+{
+  int M = 0;
+
+  int sp1 = ((sp >>  0) & 0xffff);
+  M  = sp_info[sp1]._m;
+
+#if CFG_ANICR_TWO || CFG_ANICR_THREE
+  int sp2 = ((sp >> 16) & 0xffff);
+  M += sp_info[sp2]._m;
+
+#if CFG_ANICR_THREE
+  int sp3 = ((sp >> 32) & 0xffff);
+  M += sp_info[sp3]._m;
+#endif
+#endif
+
+  return M;
+}
+
+
+
 void annihilate_states(int *in_sp_other,
 		       int *in_sp
 #if CFG_CONN_TABLES

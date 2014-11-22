@@ -83,10 +83,25 @@ int compare_packed_mp_state_E_M(const void *p1, const void *p2)
   return 0;
 }
 
-int compare_sp_comb(const void *p1, const void *p2)
+int sp_comb_E(uint64_t sp);
+int sp_comb_M(uint64_t sp);
+
+int compare_sp_comb_E_M(const void *p1, const void *p2)
 {
   const uint64_t *s1 = (const uint64_t *) p1;
   const uint64_t *s2 = (const uint64_t *) p2;
+
+  int E1 = sp_comb_E(*s1);
+  int E2 = sp_comb_E(*s2);
+
+  if (E1 != E2)
+    return E1 - E2;
+
+  int M1 = sp_comb_M(*s1);
+  int M2 = sp_comb_M(*s2);
+
+  if (M1 != M2)
+    return M1 - M2;
 
   if (*s1 < *s2)
     return -1;
@@ -290,7 +305,7 @@ size_t sort_mp_by_E_M(size_t num_mp)
 
   _mp_cut_E_M[cut_E_M]._start = reduced_num_mp;
 
-  printf ("%zd E-M pairs\n", _num_mp_cut_E_M);
+  printf ("%zd mp state E-M pairs\n", _num_mp_cut_E_M);
 
   for (i = 0; i < _num_mp_cut_E_M; i++)
     {
@@ -313,6 +328,17 @@ size_t sort_mp_by_E_M(size_t num_mp)
 
 uint64_t  *_sp_comb = NULL;
 size_t _num_sp_comb = 0;
+
+typedef struct sp_comb_cut_E_M_t
+{
+  int    _E, _M;
+  size_t _start;
+
+  /* hash_sp_comb_wf *_hashed_sp_comb; */
+} sp_comb_cut_E_M;
+
+sp_comb_cut_E_M    *_sp_comb_cut_E_M;
+size_t          _num_sp_comb_cut_E_M;
 
 #if CFG_CONN_TABLES
 void find_sp_comb(size_t num_mp)
@@ -402,7 +428,7 @@ void find_sp_comb(size_t num_mp)
   printf ("%zd sp combinations\n", max_num_sp_comb);
 
   qsort (_sp_comb, max_num_sp_comb, sizeof (uint64_t),
-	 compare_sp_comb);
+	 compare_sp_comb_E_M);
   
   printf ("Sorted %zd sp combinations.\n", num_mp);
 
@@ -432,14 +458,86 @@ void find_sp_comb(size_t num_mp)
 
   printf ("Reduced %zd sp combinations.\n", reduced_num_sp_comb);
 
+  _num_sp_comb_cut_E_M = 0;
 
+  mp_cut_E_M tmp_E_M;
 
+  tmp_E_M._E = -1;
+  tmp_E_M._M = 0; /* does not matter */
 
+  sp_comb = _sp_comb;
 
+  for (i = 0; i < reduced_num_sp_comb; i++)
+    {
+      int E = sp_comb_E(*sp_comb);
+      int M = sp_comb_M(*sp_comb);
 
+      if (E != tmp_E_M._E || M != tmp_E_M._M)
+        {
+          tmp_E_M._E = E;
+          tmp_E_M._M = M;
+          _num_sp_comb_cut_E_M++;
+        }
 
+      sp_comb++;
+    }
 
+  _sp_comb_cut_E_M =
+    (sp_comb_cut_E_M *) malloc ((_num_sp_comb_cut_E_M + 1) * sizeof (sp_comb_cut_E_M));
 
+  if (!_sp_comb_cut_E_M)
+    {
+      fprintf (stderr, "Memory allocation error (%zd bytes).\n",
+	       _num_sp_comb_cut_E_M * sizeof (sp_comb_cut_E_M));     
+    }
+
+  tmp_E_M._E = -1;
+  tmp_E_M._M = 0; /* does not matter */
+
+  size_t cut_E_M = 0;
+
+  sp_comb = _sp_comb;
+
+  for (i = 0; i < reduced_num_sp_comb; i++)
+    {
+      int E = sp_comb_E(*sp_comb);
+      int M = sp_comb_M(*sp_comb);
+
+      if (E != tmp_E_M._E || M != tmp_E_M._M)
+        {
+	  _sp_comb_cut_E_M[cut_E_M]._E = E;
+          _sp_comb_cut_E_M[cut_E_M]._M = M;
+          _sp_comb_cut_E_M[cut_E_M]._start = i;
+
+          tmp_E_M._E = E;
+          tmp_E_M._M = M;
+          cut_E_M++;
+        }
+
+      sp_comb++;
+    }
+
+  _sp_comb_cut_E_M[cut_E_M]._start = reduced_num_sp_comb;
+
+  printf ("%zd sp comb E-M pairs\n", _num_sp_comb_cut_E_M);
+
+  for (i = 0; i < _num_sp_comb_cut_E_M; i++)
+    {
+      size_t sp_combs =
+	_sp_comb_cut_E_M[i+1]._start - _sp_comb_cut_E_M[i]._start;
+
+      /*
+      _sp_comb_cut_E_M[i]._hashed_sp_comb =
+        setup_hash_table(_sp_comb + _sp_comb_cut_E_M[i]._start * CFG_PACK_WORDS,
+                         sp_combs,
+                         0);
+      */
+
+      printf (TABLE_PREFIX "_" "V_E_M_PAIR  %2d %3d : %10zd\n",
+              _sp_comb_cut_E_M[i]._E,
+              _sp_comb_cut_E_M[i]._M,
+              sp_combs);
+    }
 
 }
 #endif
