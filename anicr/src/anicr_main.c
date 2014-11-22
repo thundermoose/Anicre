@@ -83,6 +83,18 @@ int compare_packed_mp_state_E_M(const void *p1, const void *p2)
   return 0;
 }
 
+int compare_sp_comb(const void *p1, const void *p2)
+{
+  const uint64_t *s1 = (const uint64_t *) p1;
+  const uint64_t *s2 = (const uint64_t *) p2;
+
+  if (*s1 < *s2)
+    return -1;
+  if (*s1 > *s2)
+    return 1;
+  return 0;
+}
+
 uint64_t *_mp = NULL;
 #if !CFG_CONN_TABLES
 double   *_wf = NULL;
@@ -195,6 +207,19 @@ size_t sort_mp_by_E_M(size_t num_mp)
 
       packed_to_int_list(list, packed);
 
+#if 0
+      {
+	size_t i1;
+
+	printf ("%5zd:", i);
+	for (i1 = 0; i1 < CFG_NUM_SP_STATES0; i1++)
+	  {
+	    printf (" %3d", list[i1]);
+	  }
+	printf ("\n");
+      }
+#endif
+
       int E = mp_state_in_E(list);
       int M = mp_state_in_M(list);
 
@@ -283,6 +308,139 @@ size_t sort_mp_by_E_M(size_t num_mp)
     }
 
   return reduced_num_mp;
+}
+#endif
+
+uint64_t  *_sp_comb = NULL;
+size_t _num_sp_comb = 0;
+
+#if CFG_CONN_TABLES
+void find_sp_comb(size_t num_mp)
+{
+  /* For each mp state, we can find 
+   * 1: CFG_NUM_SP_STATES0
+   * 2: CFG_NUM_SP_STATES0 * (CFG_NUM_SP_STATES0 - 1) / 2
+   * 3: CFG_NUM_SP_STATES0 * (CFG_NUM_SP_STATES0 - 1) / 2 *
+   *    (CFG_NUM_SP_STATES0 - 2) / 3
+   * combinations.  Let's simply allocate for them all,
+   * and sort at the end...
+   */
+
+  size_t max_num_sp_comb = num_mp * CFG_NUM_SP_STATES0;
+#if CFG_ANICR_TWO || CFG_ANICR_THREE
+  max_num_sp_comb = ((max_num_sp_comb) * (CFG_NUM_SP_STATES0 - 1)) / 2;
+#endif
+#if CFG_ANICR_THREE
+  max_num_sp_comb = ((max_num_sp_comb) * (CFG_NUM_SP_STATES0 - 2)) / 3;
+#endif
+
+  _sp_comb = (uint64_t *) malloc (max_num_sp_comb * sizeof (uint64_t));
+
+  if (!_sp_comb)
+    {
+      fprintf (stderr, "Memory allocation error (%zd bytes).\n",
+               max_num_sp_comb * sizeof (uint64_t));
+    }
+
+  size_t i;
+
+  uint64_t *mp = _mp;
+  uint64_t *sp_comb = _sp_comb;
+
+  for (i = 0; i < num_mp; i++)
+    {
+      int list[CFG_NUM_SP_STATES0 + CFG_NUM_SP_STATES1];
+
+      uint64_t *packed = mp;
+
+      packed_to_int_list(list, packed);
+
+      size_t i1;
+      uint64_t comb1;
+#if CFG_ANICR_TWO || CFG_ANICR_THREE
+      size_t i2;
+      uint64_t comb2;
+#endif
+#if CFG_ANICR_THREE
+      size_t i3;
+      uint64_t comb3;
+#endif
+      uint64_t comb;
+
+      for (i1 = 0; i1 < CFG_NUM_SP_STATES0; i1++)
+	{
+	  comb1 = ((uint64_t) list[i1]) << 0;
+
+#if CFG_ANICR_TWO || CFG_ANICR_THREE
+	  for (i2 = i1+1; i2 < CFG_NUM_SP_STATES0; i2++)
+	    {
+	      comb2 = comb1 | (((uint64_t) list[i2]) << 16);
+#endif
+
+#if CFG_ANICR_THREE
+	      for (i3 = i2+1; i3 < CFG_NUM_SP_STATES0; i3++)
+		{
+		  comb3 = comb2 | (((uint64_t) list[i3]) << 32);
+		  comb = comb3;
+#elif CFG_ANICR_TWO
+		  comb = comb2;
+#else
+		  comb = comb1;
+#endif
+		  *(sp_comb++) = comb;
+#if CFG_ANICR_THREE
+		}
+#endif
+#if CFG_ANICR_TWO || CFG_ANICR_THREE
+	    }
+#endif
+	}
+
+      mp += CFG_PACK_WORDS;
+    }
+
+  printf ("%zd sp combinations\n", max_num_sp_comb);
+
+  qsort (_sp_comb, max_num_sp_comb, sizeof (uint64_t),
+	 compare_sp_comb);
+  
+  printf ("Sorted %zd sp combinations.\n", num_mp);
+
+  size_t reduced_num_sp_comb = 1;
+
+  uint64_t *sp_comb_in  = _sp_comb + 1;
+  uint64_t *sp_comb_out = _sp_comb;
+
+  for (i = 1; i < max_num_sp_comb; i++)
+    {
+      int diff = 0;
+
+      diff = (*sp_comb_in != *sp_comb_out);
+
+      if (diff)
+	{
+	  reduced_num_sp_comb++;
+	  sp_comb_out++;
+
+	  *sp_comb_out = *sp_comb_in;
+	}
+
+      sp_comb_in++;
+    }
+
+  sp_comb_out++;
+
+  printf ("Reduced %zd sp combinations.\n", reduced_num_sp_comb);
+
+
+
+
+
+
+
+
+
+
 }
 #endif
 
@@ -450,7 +608,9 @@ int main(int argc, char *argv[])
 #endif
 
 #if CFG_CONN_TABLES
-  sort_mp_by_E_M(num_mp);
+  num_mp = sort_mp_by_E_M(num_mp);
+
+  find_sp_comb(num_mp);
 #endif
 
 #if !CFG_CONN_TABLES /* lets not even set it up... */
