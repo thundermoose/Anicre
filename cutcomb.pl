@@ -5,6 +5,8 @@ use warnings;
 
 my %E_M_states = ();
 
+my %V_E_M_combs = ();
+
 my %E_M_E_M_conn = ();
 
 my $maxE = ();
@@ -21,6 +23,17 @@ while (my $line = <>)
 	my $states = $4;
 
 	$E_M_states{"${pn}${E},${M}"} = $states;
+    }
+    elsif ($line =~ /^([pn]*)_V_E_M_PAIR\s+([-\d]*)\s+([-\d]*)\s*:\s*([-\d]*)\s*$/)
+    {
+	my $pn     = $1;
+	my $E      = $2;
+	my $M      = $3;
+	my $combs  = $4;
+
+	$V_E_M_combs{"${pn}${E},${M}"} = $combs;
+
+	# printf "xx ${pn}${E},${M}\n";
     }
     elsif ($line =~ /^([pn]*)_CONN\s+([-\d]*)\s+([-\d]*)\s*->\s*([-\d]*)\s+([-\d]*)\s*:\s*([-\d]*)\s*:\s*dE=\s*([-\d]*)\s*dM=\s*([-\d]*)\s*:\s*([-\d]*)\s+([-\d]*)\s*:\s*([-\d]*)\s*$/)
     {
@@ -148,6 +161,9 @@ sub account_conn_use($$)
 
 my @E_M_E_M_states = sort keys %E_M_E_M_states;
 
+my %V_E_M_E_M_use = ();
+my %V_E_M_use = ();
+
 sub pn_conn($$$)
 {
     my $ptype = shift;
@@ -194,6 +210,9 @@ sub pn_conn($$$)
 
 	    my $states2 = $E_M_E_M_states{$key2};
 
+	    my $dEp = $Ep2 - $Ep1;
+	    my $dEn = $En2 - $En1;
+
 	    my $dMp = $Mp2 - $Mp1;
 	    my $dMn = $Mn2 - $Mn1;
 
@@ -216,6 +235,9 @@ sub pn_conn($$$)
 
 		    if ($conn_p && $conn_n)
 		    {
+			my $Vkeyp = "${ptype}${dEp},${dMp},${Dp1}";
+			my $Vkeyn = "${ntype}${dEn},${dMn},${Dn1}";
+
 			# print "$key1  $key2  $dMp  $dMn  $conn_p  $conn_n\n";
 
 			my $conn = $conn_p * $conn_n;
@@ -234,6 +256,8 @@ sub pn_conn($$$)
 
 			account_conn_use($keyp, $nforce);
 			account_conn_use($keyn, $nforce);
+
+			$V_E_M_E_M_use{$Vkeyp."_".$Vkeyn} = 1;
 		    }
 		}
 	    }
@@ -303,11 +327,18 @@ sub dia_conn($$)
 
 	    my $states2 = $E_M_E_M_states{$key2};
 
+	    my $dEp = $Ep2 - $Ep1;
+	    my $dEn = $En2 - $En1;
+
+	    my $dMp = $Mp2 - $Mp1;
+	    my $dMn = $Mn2 - $Mn1;
+
 	    my $conn_x;
 	    my $states_y;
 	    my $Dxmax;
 
 	    my $keyx_1;
+	    my $Vkeyx_1;
 
 	    if ($xtype =~ /^p+$/)
 	    {
@@ -317,6 +348,7 @@ sub dia_conn($$)
 		$keyx_1 = "${xtype}${Ep1},${Mp1},${Ep2},${Mp2}";
 		$states_y = $E_M_states{"n${En1},${Mn1}"};
 		$Dxmax = ${Ep1};
+		$Vkeyx_1 = "${xtype}${dEp},${dMp}";
 	    }
 	    else
 	    {
@@ -326,6 +358,7 @@ sub dia_conn($$)
 		$keyx_1 = "${xtype}${En1},${Mn1},${En2},${Mn2}";
 		$states_y = $E_M_states{"p${Ep1},${Mp1}"};
 		$Dxmax = ${En1};
+		$Vkeyx_1 = "${xtype}${dEn},${dMn}";
 	    }
 
 	    for (my $Dx1 = 0; $Dx1 <= $Dxmax; $Dx1++)
@@ -340,6 +373,8 @@ sub dia_conn($$)
 
 		if ($conn_x)
 		{
+		    my $Vkeyx = $Vkeyx_1.",${Dx1}";
+
 		    # print "$key1  $key2  $dMp  $dMn  $conn_p  $conn_n\n";
 
 		    my $conn = $conn_x * $states_y;
@@ -359,6 +394,8 @@ sub dia_conn($$)
 		    $total_conn += $conn * ($i1 == $i2 ? 1 : 2);
 
 		    account_conn_use($keyx, $nforce);
+
+		    $V_E_M_use{$Vkeyx} = 1;
 		}
 	    }
 	}
@@ -424,3 +461,107 @@ printf sprintf("\n".
 	       $sum_conn_len_3n,
 	       $max_conn_len_3n);
 
+sub num_V_ani_cre($)
+{
+    my $Vkey = shift;
+
+    if (!($Vkey =~ /([pn]*)([-\d]*),([-\d]*),([-\d]*)/)) {
+	die "Bad Vkey $Vkey";
+    }
+
+    my $xtype = $1;
+    my $dEx = $2;
+    my $dMx = $3;
+    my $Dx  = $4;
+
+    printf sprintf ("%-3s %3d %3d %3d\n",
+		    $xtype, $dEx, $dMx, $Dx);
+
+    # so we want do do dEx, dMx in total, by going Dx down
+
+    my $sumcomb = 0;
+
+    for (my $Mani = -20; $Mani <= 20; $Mani++)
+    {
+	my $Eani = $Dx;
+
+	my $Ecre = $Dx   + $dEx;
+	my $Mcre = $Mani + $dMx;
+
+	my $keyani = "${xtype}${Eani},${Mani}";
+	my $keycre = "${xtype}${Ecre},${Mcre}";
+
+	my $comb_ani = $V_E_M_combs{$keyani};
+	my $comb_cre = $V_E_M_combs{$keycre};
+
+	# printf "  $keyani  $keycre\n";
+
+	if (defined($comb_ani) && defined($comb_cre))
+	{
+	    my $comb = $comb_ani * $comb_cre;
+
+	    printf sprintf ("%3d %3d  %3d %3d : %10d %10d : %10d\n",
+			    $Eani, $Mani, $Ecre, $Mcre,
+			    $comb_ani, $comb_cre, $comb);
+
+	    $sumcomb += $comb;
+	}
+    }
+
+    return (length($xtype),$sumcomb);
+}
+
+my @sum_Vc_size = (0, 0, 0);
+my @max_Vc_size = (0, 0, 0);
+
+foreach my $Vkey (sort keys %V_E_M_E_M_use)
+{
+    my @EMEM = split /_/,$Vkey;
+
+    my ($nump,$numVp) = num_V_ani_cre($EMEM[0]);
+    my ($numn,$numVn) = num_V_ani_cre($EMEM[1]);
+
+    my $sizeV = $numVp * $numVn;
+    my $order = $nump+$numn;
+
+    printf sprintf("%-20s  %d  %10d %10d  %10d\n",
+		   $Vkey, $order, $numVp, $numVn, $sizeV);
+
+    $sum_Vc_size[$order-1] += $sizeV;
+    if ($sizeV > $max_Vc_size[$order-1]) {
+	$max_Vc_size[$order-1] = $sizeV;
+    }
+}
+
+my @sum_Vx_size = (0, 0, 0);
+my @max_Vx_size = (0, 0, 0);
+
+foreach my $Vkey (sort keys %V_E_M_use)
+{
+    my ($numx,$numVx) = num_V_ani_cre($Vkey);
+
+    my $sizeV = $numVx;
+    my $order = $numx;
+
+    printf sprintf("%-20s  %d  %10d\n",
+		   $Vkey, $order, $sizeV);
+
+    $sum_Vx_size[$order-1] += $sizeV;
+    if ($sizeV > $max_Vx_size[$order-1]) {
+	$max_Vx_size[$order-1] = $sizeV;
+    }
+}
+
+print "\n";
+for (my $order = 1; $order <= 3; $order++)
+{
+    print sprintf ("SUM-Vc-SIZE-%dN: %d\n".
+		   "MAX-Vc-SIZE-%dN: %d\n",
+		   $order, $sum_Vc_size[$order-1],
+		   $order, $max_Vc_size[$order-1]);
+    print sprintf ("SUM-Vx-SIZE-%dN: %d\n".
+		   "MAX-Vx-SIZE-%dN: %d\n",
+		   $order, $sum_Vx_size[$order-1],
+		   $order, $max_Vx_size[$order-1]);
+}
+print "\n";
