@@ -474,8 +474,8 @@ sub num_V_ani_cre($)
     my $dMx = $3;
     my $Dx  = $4;
 
-    printf sprintf ("%-3s %3d %3d %3d\n",
-		    $xtype, $dEx, $dMx, $Dx);
+    #printf sprintf ("%-3s %3d %3d %3d\n",
+    #                $xtype, $dEx, $dMx, $Dx);
 
     # so we want do do dEx, dMx in total, by going Dx down
 
@@ -500,32 +500,51 @@ sub num_V_ani_cre($)
 	{
 	    my $comb = $comb_ani * $comb_cre;
 
-	    printf sprintf ("%3d %3d  %3d %3d : %10d %10d : %10d\n",
-			    $Eani, $Mani, $Ecre, $Mcre,
-			    $comb_ani, $comb_cre, $comb);
+	    #printf sprintf ("%3d %3d  %3d %3d : %10d %10d : %10d\n",
+	    #		    $Eani, $Mani, $Ecre, $Mcre,
+	    #		    $comb_ani, $comb_cre, $comb);
 
 	    $sumcomb += $comb;
 	}
     }
 
-    return (length($xtype),$sumcomb);
+    return (length($xtype),$sumcomb,($xtype,$dEx,$dMx,$Dx));
 }
 
 my @sum_Vc_size = (0, 0, 0);
 my @max_Vc_size = (0, 0, 0);
 
+print sprintf ("\n".
+	       "*** Matrix-elements V (cross p-n) ***\n".
+	       "\n");
+print sprintf ("%-3s %3s %3s  %3s   ".
+	       "%-3s %3s %3s  %3s   ".
+	       "%8s %8s  %12s\n".
+	       "\n",
+	       "prt", "dEp", "dMp", "Dp",
+	       "prt", "dEn", "dMn", "Dn",
+	       "#comb-p", "#comb-n",
+	       "#comb");
+
 foreach my $Vkey (sort keys %V_E_M_E_M_use)
 {
     my @EMEM = split /_/,$Vkey;
 
-    my ($nump,$numVp) = num_V_ani_cre($EMEM[0]);
-    my ($numn,$numVn) = num_V_ani_cre($EMEM[1]);
+    my ($nump,$numVp,@vectp) = num_V_ani_cre($EMEM[0]);
+    my ($numn,$numVn,@vectn) = num_V_ani_cre($EMEM[1]);
 
     my $sizeV = $numVp * $numVn;
     my $order = $nump+$numn;
 
-    printf sprintf("%-20s  %d  %10d %10d  %10d\n",
-		   $Vkey, $order, $numVp, $numVn, $sizeV);
+    printf sprintf("%-3s %3d %3d  %3d   ".
+		   "%-3s %3d %3d  %3d   ".
+		   "%8d %8d  %12d\n",
+		   $vectp[0],$vectp[1],$vectp[2],$vectp[3],
+		   $vectn[0],$vectn[1],$vectn[2],$vectn[3],
+		   $numVp, $numVn, $sizeV);
+
+    #printf sprintf("%-20s  %d  %10d %10d  %10d\n",
+    #		   $Vkey, $order, $numVp, $numVn, $sizeV);
 
     $sum_Vc_size[$order-1] += $sizeV;
     if ($sizeV > $max_Vc_size[$order-1]) {
@@ -536,15 +555,30 @@ foreach my $Vkey (sort keys %V_E_M_E_M_use)
 my @sum_Vx_size = (0, 0, 0);
 my @max_Vx_size = (0, 0, 0);
 
+print sprintf ("\n".
+	       "*** Matrix-elements V (same p/n) ***\n".
+	       "\n");
+print sprintf ("%-3s %3s %3s  %3s   ".
+	       "%8s  %12s\n".
+	       "\n",
+	       "prt", "dEx", "dMx", "Dx",
+	       "#comb-x",
+	       "#comb");
+
 foreach my $Vkey (sort keys %V_E_M_use)
 {
-    my ($numx,$numVx) = num_V_ani_cre($Vkey);
+    my ($numx,$numVx,@vectx) = num_V_ani_cre($Vkey);
 
     my $sizeV = $numVx;
     my $order = $numx;
 
-    printf sprintf("%-20s  %d  %10d\n",
-		   $Vkey, $order, $sizeV);
+    printf sprintf("%-3s %3d %3d  %3d   ".
+		   "%8d  %12d\n",
+		   $vectx[0],$vectx[1],$vectx[2],$vectx[3],
+		   $numVx, $sizeV);
+
+    #printf sprintf("%-20s  %d  %10d\n",
+    #		   $Vkey, $order, $sizeV);
 
     $sum_Vx_size[$order-1] += $sizeV;
     if ($sizeV > $max_Vx_size[$order-1]) {
