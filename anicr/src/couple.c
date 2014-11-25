@@ -196,14 +196,14 @@ void couple_accumulate()
 	      sp_state_info *sp_c1 = &_table_sp_states[sp_crea1];
 	      sp_state_info *sp_c2 = &_table_sp_states[sp_crea2];
 
-#if DEBUG_ACCUMULATE
+	      //#if DEBUG_ACCUMULATE
 	      printf ("a: %3d,%3d  c %3d,%3d"
 		      " : %2d %2d,%2d %2d - %2d %2d,%2d %2d [%10.6f]",
 		      sp_anni1+1, sp_anni2+1, sp_crea1+1, sp_crea2+1,
 		      sp_a1->_j, sp_a1->_m, sp_a2->_j, sp_a2->_m, 
 		      sp_c1->_j, sp_c1->_m, sp_c2->_j, sp_c2->_m,
 		      _accumulate[acc_i]);
-#endif
+	      //#endif
 
 	      /* We need to connect the annihilated and created states.
 	       */

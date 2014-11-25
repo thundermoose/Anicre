@@ -255,7 +255,7 @@ int main()
 	  }
 	int sign = 1 - ((CFG_2J_INITIAL/* - jtrans*/ + CFG_2M_FINAL) & 2);
        
-	mult = 1 / (result.val) * sign;
+	mult = 1.0 / (result.val) * sign;  //Second time?
       }
       
  
@@ -306,7 +306,7 @@ int main()
 		    twob2++;
 		    double value_nn=findState(_nlj_items_nn, _num_nlj_items_nn, i1, i2,  j1, j2, Jab,Jcd,jtrans);
 		    double value_pp=findState(_nlj_items_pp, _num_nlj_items_pp, i1, i2,  j1, j2, Jab,Jcd,jtrans);
-		    double value_np=findState(_nlj_items_np, _num_nlj_items_np, i1, i2,  j1, j2, Jab,Jcd,jtrans);
+		    double value_np=2.0*findState(_nlj_items_np, _num_nlj_items_np, i1, i2,  j1, j2, Jab,Jcd,jtrans);
 		    //		    printf("testst %d %d %d %d %d %d %d %d %f \n",i1,i2,j1,j2,Jab, Tab,Jcd,Tcd,value_nn);
 		      
 		    double j3nnab=0.0;
