@@ -245,7 +245,7 @@ sub pn_conn($$$)
 			print sprintf ("%3d %3d   %3d %3d   %3d   ".
 				       "%3d %3d   %3d %3d   %3d   ".
 				       "%8d %8d  ".
-				       "%8d %8d  %12d\n",
+				       "%8d %8d  %12d X\n",
 				       $Ep1, $Mp1, $En1, $Mn1, $Dp1,
 				       $Ep2, $Mp2, $En2, $Mn2, $Dn1,
 				       $states1, $states2,
@@ -382,7 +382,7 @@ sub dia_conn($$)
 		    print sprintf ("%3d %3d   %3d %3d   ".
 				   "%3d %3d   %3d".
 				   "%8d  ".
-				   "%8d %8d  %12d\n",
+				   "%8d %8d  %12d X\n",
 				   $Ep1, $Mp1,
 				   $Ep2, $Mp2,
 				   $En1, $Mn1,
