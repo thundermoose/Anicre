@@ -257,7 +257,10 @@ sub pn_conn($$$)
 			account_conn_use($keyp, $nforce);
 			account_conn_use($keyn, $nforce);
 
-			$V_E_M_E_M_use{$Vkeyp."_".$Vkeyn} = 1;
+			if (!$V_E_M_E_M_use{$Vkeyp."_".$Vkeyn}) {
+			    $V_E_M_E_M_use{$Vkeyp."_".$Vkeyn} = 0;
+			}
+			$V_E_M_E_M_use{$Vkeyp."_".$Vkeyn} += 1;
 		    }
 		}
 	    }
@@ -395,7 +398,10 @@ sub dia_conn($$)
 
 		    account_conn_use($keyx, $nforce);
 
-		    $V_E_M_use{$Vkeyx} = 1;
+		    if (!$V_E_M_use{$Vkeyx}) {
+			$V_E_M_use{$Vkeyx} = 0;
+		    }
+		    $V_E_M_use{$Vkeyx} += 1;
 		}
 	    }
 	}
@@ -418,48 +424,60 @@ dia_conn("nnn",3);
 
 my $max_conn_len_1n = 0;
 my $sum_conn_len_1n = 0;
+my $load_conn_len_1n = 0;
 
 foreach my $key (sort keys %E_M_E_M_use_1n)
 {
     my $len = $E_M_E_M_conn{$key};
     $sum_conn_len_1n += $len;
+    $load_conn_len_1n += $len * $E_M_E_M_use_1n{$key};
     if ($len > $max_conn_len_1n) { $max_conn_len_1n = $len; }
 }
 
 my $max_conn_len_2n = 0;
 my $sum_conn_len_2n = 0;
+my $load_conn_len_2n = 0;
 
 foreach my $key (sort keys %E_M_E_M_use_2n)
 {
     my $len = $E_M_E_M_conn{$key};
     $sum_conn_len_2n += $len;
+    $load_conn_len_2n += $len * $E_M_E_M_use_2n{$key};
     if ($len > $max_conn_len_2n) { $max_conn_len_2n = $len; }
 }
 
 my $max_conn_len_3n = 0;
 my $sum_conn_len_3n = 0;
+my $load_conn_len_3n = 0;
 
 foreach my $key (sort keys %E_M_E_M_use_3n)
 {
     my $len = $E_M_E_M_conn{$key};
     $sum_conn_len_3n += $len;
+    $load_conn_len_3n += $len * $E_M_E_M_use_3n{$key};
     if ($len > $max_conn_len_3n) { $max_conn_len_3n = $len; }
 }
 
 printf sprintf("\n".
 	       "SUM-CONN-LEN-1N: %d\n".
 	       "MAX-CONN-LEN-1N: %d\n".
+	       "LOAD-CONN-LEN-1N: %d\n".
 	       "SUM-CONN-LEN-2N: %d\n".
 	       "MAX-CONN-LEN-2N: %d\n".
+	       "LOAD-CONN-LEN-2N: %d\n".
 	       "SUM-CONN-LEN-3N: %d\n".
 	       "MAX-CONN-LEN-3N: %d\n".
+	       "LOAD-CONN-LEN-3N: %d\n".
 	       "\n",
 	       $sum_conn_len_1n,
 	       $max_conn_len_1n,
+	       $load_conn_len_1n,
 	       $sum_conn_len_2n,
 	       $max_conn_len_2n,
+	       $load_conn_len_2n,
 	       $sum_conn_len_3n,
-	       $max_conn_len_3n);
+	       $max_conn_len_3n,
+	       $load_conn_len_3n);
 
 sub num_V_ani_cre($)
 {
@@ -513,6 +531,8 @@ sub num_V_ani_cre($)
 
 my @sum_Vc_size = (0, 0, 0);
 my @max_Vc_size = (0, 0, 0);
+my @load_Vc_size = (0, 0, 0);
+
 
 print sprintf ("\n".
 	       "*** Matrix-elements V (cross p-n) ***\n".
@@ -547,6 +567,7 @@ foreach my $Vkey (sort keys %V_E_M_E_M_use)
     #		   $Vkey, $order, $numVp, $numVn, $sizeV);
 
     $sum_Vc_size[$order-1] += $sizeV;
+    $load_Vc_size[$order-1] += $sizeV * $V_E_M_E_M_use{$Vkey};
     if ($sizeV > $max_Vc_size[$order-1]) {
 	$max_Vc_size[$order-1] = $sizeV;
     }
@@ -554,6 +575,7 @@ foreach my $Vkey (sort keys %V_E_M_E_M_use)
 
 my @sum_Vx_size = (0, 0, 0);
 my @max_Vx_size = (0, 0, 0);
+my @load_Vx_size = (0, 0, 0);
 
 print sprintf ("\n".
 	       "*** Matrix-elements V (same p/n) ***\n".
@@ -581,6 +603,7 @@ foreach my $Vkey (sort keys %V_E_M_use)
     #		   $Vkey, $order, $sizeV);
 
     $sum_Vx_size[$order-1] += $sizeV;
+    $load_Vx_size[$order-1] += $sizeV * $V_E_M_use{$Vkey};
     if ($sizeV > $max_Vx_size[$order-1]) {
 	$max_Vx_size[$order-1] = $sizeV;
     }
@@ -590,12 +613,16 @@ print "\n";
 for (my $order = 1; $order <= 3; $order++)
 {
     print sprintf ("SUM-Vc-SIZE-%dN: %d\n".
-		   "MAX-Vc-SIZE-%dN: %d\n",
+		   "MAX-Vc-SIZE-%dN: %d\n".
+		   "LOAD-Vc-SIZE-%dN: %d\n",
 		   $order, $sum_Vc_size[$order-1],
-		   $order, $max_Vc_size[$order-1]);
+		   $order, $max_Vc_size[$order-1],
+		   $order, $load_Vc_size[$order-1]);
     print sprintf ("SUM-Vx-SIZE-%dN: %d\n".
-		   "MAX-Vx-SIZE-%dN: %d\n",
+		   "MAX-Vx-SIZE-%dN: %d\n".
+		   "LOAD-Vx-SIZE-%dN: %d\n",
 		   $order, $sum_Vx_size[$order-1],
-		   $order, $max_Vx_size[$order-1]);
+		   $order, $max_Vx_size[$order-1],
+		   $order, $load_Vx_size[$order-1]);
 }
 print "\n";
