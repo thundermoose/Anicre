@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
+#include <assert.h>
 
 struct array_t;
 struct cblock_t;
@@ -30,6 +31,14 @@ struct array_t
   uint64_t        _size;
   set_cblock_ptr  _users;
 };
+
+struct array_ptr_size_t
+{
+  array_t *_ptr;
+  uint64_t _size;
+};
+
+typedef std::vector<array_ptr_size_t> vect_array_ptr_size;
 
 struct cblock_t
 {
@@ -198,12 +207,17 @@ int main()
       /* Now try to find a block which reuses some information.
        */
 
+      vect_array_ptr_size curarrays;
+
       for ( ; ; )
 	{
-	  set_array_ptr curarrays;
+#define MAX_CUR_ARRAYS 10
 
-	  curarrays.insert(currentid->_arrays.begin(),
-			   currentid->_arrays.end());
+	  array_ptr_size_t curarrays[MAX_CUR_ARRAYS];
+
+	  size_t ncur = currentid->_arrays.size();
+
+	  assert(MAX_CUR_ARRAYS >= ncur);
 
 	  /* First remove us from the list of siblings.
 	   */
@@ -214,7 +228,10 @@ int main()
 
 	      /* We are no longer a user.*/
 
-	      array->_users.erase(currentid);	      
+	      array->_users.erase(currentid);
+
+	      curarrays[i]._ptr = array;
+	      curarrays[i]._size = array->_size;
 	    }
 
 	  /* Instead of first creating a combined list with all
@@ -248,19 +265,30 @@ int main()
 		   * merge-sort style loop over the arrays.
 		   */
 
+		  size_t nsib = siblingid->_arrays.size();
+		  array_t **sibarrays = &siblingid->_arrays[0];
 
+		  size_t isib = 0, icur = 0;
 
-		  for (size_t i = 0; i < siblingid->_arrays.size(); i++)
+		  while (isib < nsib && icur < ncur)
 		    {
-		      array_t *array = siblingid->_arrays[i];
-
-		      /* Does the current know about this array? */
-
-		      if (curarrays.find(array) != curarrays.end())
+		      if (sibarrays[isib] < curarrays[icur]._ptr)
 			{
-			  reusesz += array->_size;
+			  isib++;
+			}
+		      else if (sibarrays[isib] > curarrays[icur]._ptr)
+			{
+			  icur++;			  
+			}
+		      else // equal!
+			{
+			  reusesz += curarrays[icur]._size;
+
+			  isib++;
+			  icur++;
 			}
 		    }
+		  // any remaining isib or icur cannot match!
 		  
 		  uint64_t loadsz   = siblingid->_tot_size - reusesz;
 		  uint64_t unloadsz = currentid->_tot_size - reusesz;
