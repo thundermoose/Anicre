@@ -7,6 +7,7 @@
 #include <vector>
 #include <set>
 #include <map>
+#include <algorithm>
 #include <stdint.h>
 #include <string.h>
 #include <stdlib.h>
@@ -138,6 +139,8 @@ int main()
 	  array->_users.insert(cblock);
 	}
 
+      std::sort(cblock->_arrays.begin(), cblock->_arrays.end());
+
       if (cblock->_tot_size > maxblocksize)
 	maxblocksize = cblock->_tot_size;
     }
@@ -202,16 +205,12 @@ int main()
 	  curarrays.insert(currentid->_arrays.begin(),
 			   currentid->_arrays.end());
 
-	  /* First find all siblings.
+	  /* First remove us from the list of siblings.
 	   */
-
-	  uint64_t cursz = 0;
 
 	  for (size_t i = 0; i < currentid->_arrays.size(); i++)
 	    {
 	      array_t *array = currentid->_arrays[i];
-
-	      cursz += array->_size;
 
 	      /* We are no longer a user.*/
 
@@ -243,7 +242,6 @@ int main()
 		    continue;
 		  siblingid->_checked = currentid;
 		  
-		  uint64_t reusesz = 0;
 		  uint64_t loadsz = 0;
 
 		  for (size_t i = 0; i < siblingid->_arrays.size(); i++)
@@ -252,17 +250,14 @@ int main()
 
 		      /* Does the current know about this array? */
 
-		      if (curarrays.find(array) != curarrays.end())
-			{
-			  reusesz += array->_size;
-			}
-		      else
+		      if (curarrays.find(array) == curarrays.end())
 			{
 			  loadsz += array->_size;
 			}
 		    }
-
-		  uint64_t unloadsz = cursz - reusesz;
+		  
+		  uint64_t reusesz = siblingid->_tot_size - loadsz;
+		  uint64_t unloadsz = currentid->_tot_size - reusesz;
 
 		  if (!bestblockid ||
 		      loadsz < bestloadsz)
