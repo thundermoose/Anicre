@@ -13,6 +13,9 @@ my $maxE = ();
 my $totM = ();
 my $totP = ();
 
+my %arraykey = ();
+my $numarray = 0;
+
 while (my $line = <>)
 {
     if ($line =~ /^([pn])_E_M_PAIR\s+([-\d]*)\s+([-\d]*)\s*:\s*([-\d]*)\s*$/)
@@ -106,11 +109,15 @@ for (my $Ep = 0; $Ep <= $maxE; $Ep++)
 		{
 		    my $mp_states = $states_p * $states_n;
 
+		    $arraykey{"$key_p,$key_n"} = ++$numarray;
+
 		    print sprintf ("%3d %3d  %3d %3d   ".
-				   "%8d %8d  %8d\n",
+				   "%8d %8d  %8d  ".
+				   "# ARRAY:%4d=%8d\n",
 				   $Ep, $Mp, $En, $Mn,
 				   $states_p, $states_n,
-				   $mp_states);
+				   $mp_states,
+				   $numarray, $mp_states * 8);
 
 		    $total_mp_states += $mp_states;
 
@@ -137,6 +144,8 @@ my %E_M_E_M_use_1n = ();
 my %E_M_E_M_use_2n = ();
 my %E_M_E_M_use_3n = ();
 
+my %E_M_E_M_array = ();
+
 sub account_conn_use($$)
 {
     my $key = shift;
@@ -157,12 +166,53 @@ sub account_conn_use($$)
 	if (!$old) { $E_M_E_M_use_3n{$key} = 1; }
 	else       { $E_M_E_M_use_3n{$key} = $old + 1; }
     }
-}
 
-my @E_M_E_M_states = sort keys %E_M_E_M_states;
+    if (!$E_M_E_M_array{$key}) {
+	$E_M_E_M_array{$key} = ++$numarray;
+    }
+
+    return $E_M_E_M_array{$key};
+}
 
 my %V_E_M_E_M_use = ();
 my %V_E_M_use = ();
+
+my %V_E_M_E_M_array = ();
+my %V_E_M_array = ();
+
+sub account_Vc_use($)
+{
+    my $key = shift;
+
+    if (!$V_E_M_E_M_use{$key}) {
+	$V_E_M_E_M_use{$key} = 0;
+    }
+    $V_E_M_E_M_use{$key} += 1;
+
+    if (!$V_E_M_E_M_array{$key}) {
+	$V_E_M_E_M_array{$key} = ++$numarray;
+    }
+
+    return $V_E_M_E_M_array{$key};
+}
+
+sub account_Vx_use($)
+{
+    my $key = shift;
+
+    if (!$V_E_M_use{$key}) {
+	$V_E_M_use{$key} = 0;
+    }
+    $V_E_M_use{$key} += 1;
+
+    if (!$V_E_M_array{$key}) {
+	$V_E_M_array{$key} = ++$numarray;
+    }
+
+    return $V_E_M_array{$key};
+}
+
+my @E_M_E_M_states = sort keys %E_M_E_M_states;
 
 sub pn_conn($$$)
 {
@@ -242,25 +292,28 @@ sub pn_conn($$$)
 
 			my $conn = $conn_p * $conn_n;
 
+			my $array1 = $arraykey{"${Ep1},${Mp1},${En1},${Mn1}"};
+			my $array2 = $arraykey{"${Ep2},${Mp2},${En2},${Mn2}"};
+
+			my $parray = account_conn_use($keyp, $nforce);
+			my $narray = account_conn_use($keyn, $nforce);
+
+			my $Varray = account_Vc_use($Vkeyp."_".$Vkeyn);
+
 			print sprintf ("%3d %3d   %3d %3d   %3d   ".
 				       "%3d %3d   %3d %3d   %3d   ".
 				       "%8d %8d  ".
-				       "%8d %8d  %12d X\n",
+				       "%8d %8d  %12d  ".
+				       "# CALCBLOCK:%4d,%4d,%6d,%6d,%6d\n",
 				       $Ep1, $Mp1, $En1, $Mn1, $Dp1,
 				       $Ep2, $Mp2, $En2, $Mn2, $Dn1,
 				       $states1, $states2,
 				       $conn_p, $conn_n,
-				       $conn);
+				       $conn,
+				       $array1, $array2,
+				       $parray, $narray, $Varray);
 
 			$total_conn += $conn * ($i1 == $i2 ? 1 : 2);
-
-			account_conn_use($keyp, $nforce);
-			account_conn_use($keyn, $nforce);
-
-			if (!$V_E_M_E_M_use{$Vkeyp."_".$Vkeyn}) {
-			    $V_E_M_E_M_use{$Vkeyp."_".$Vkeyn} = 0;
-			}
-			$V_E_M_E_M_use{$Vkeyp."_".$Vkeyn} += 1;
 		    }
 		}
 	    }
@@ -382,26 +435,29 @@ sub dia_conn($$)
 
 		    my $conn = $conn_x * $states_y;
 
+		    my $array1 = $arraykey{"${Ep1},${Mp1},${En1},${Mn1}"};
+		    my $array2 = $arraykey{"${Ep2},${Mp2},${En2},${Mn2}"};
+
+		    my $xarray = account_conn_use($keyx, $nforce);
+
+		    my $Varray = account_Vx_use($Vkeyx);
+
 		    print sprintf ("%3d %3d   %3d %3d   ".
 				   "%3d %3d   %3d".
 				   "%8d  ".
-				   "%8d %8d  %12d X\n",
+				   "%8d %8d  %12d  ".
+				   "# CALCBLOCK:%4d,%4d,%6d,%6d\n",
 				   $Ep1, $Mp1,
 				   $Ep2, $Mp2,
 				   $En1, $Mn1,
 				   $Dx1,
 				   $states1,
 				   $conn_x, $states_y,
-				   $conn_x * $states_y);
+				   $conn_x * $states_y,
+				   $array1, $array2,
+				   $xarray, $Varray);
 
 		    $total_conn += $conn * ($i1 == $i2 ? 1 : 2);
-
-		    account_conn_use($keyx, $nforce);
-
-		    if (!$V_E_M_use{$Vkeyx}) {
-			$V_E_M_use{$Vkeyx} = 0;
-		    }
-		    $V_E_M_use{$Vkeyx} += 1;
 		}
 	    }
 	}
@@ -478,6 +534,36 @@ printf sprintf("\n".
 	       $sum_conn_len_3n,
 	       $max_conn_len_3n,
 	       $load_conn_len_3n);
+
+print sprintf ("\n".
+	       "*** Conn lists ***\n".
+	       "\n");
+print sprintf ("%4s %3s %3s  %3s %3s  %3s  %10s\n".
+	       "\n",
+	       "type",
+	       "E1", "M1",
+	       "E2", "M2",
+	       "D1", "len");
+
+for my $key (sort keys %E_M_E_M_array)
+{
+    if (!($key =~ /([pn]*)([-\d]*),([-\d]*),([-\d]*),([-\d]*),([-\d]*)/)) {
+	die "Bad conn key $key";
+    }
+
+    my $type = $1;
+    my $E1   = $2;
+    my $M1   = $3;
+    my $E2   = $4;
+    my $M2   = $5;
+    my $D1   = $6;
+
+    print sprintf ("%-4s %3d %3d  %3d %3d  %3d  %10d  ".
+		   "# ARRAY:%6d=%10d\n",
+		   $type,
+		   $E1, $M1, $E2, $M2, $D1, $E_M_E_M_conn{$key},
+		   $E_M_E_M_array{$key}, $E_M_E_M_conn{$key} * 12);
+}
 
 sub num_V_ani_cre($)
 {
@@ -558,10 +644,12 @@ foreach my $Vkey (sort keys %V_E_M_E_M_use)
 
     printf sprintf("%-3s %3d %3d  %3d   ".
 		   "%-3s %3d %3d  %3d   ".
-		   "%8d %8d  %12d\n",
+		   "%8d %8d  %12d  ".
+		   "# ARRAY:%6d=%12d\n",
 		   $vectp[0],$vectp[1],$vectp[2],$vectp[3],
 		   $vectn[0],$vectn[1],$vectn[2],$vectn[3],
-		   $numVp, $numVn, $sizeV);
+		   $numVp, $numVn, $sizeV,
+		   $V_E_M_E_M_array{$Vkey}, $sizeV * 8);
 
     #printf sprintf("%-20s  %d  %10d %10d  %10d\n",
     #		   $Vkey, $order, $numVp, $numVn, $sizeV);
@@ -595,9 +683,11 @@ foreach my $Vkey (sort keys %V_E_M_use)
     my $order = $numx;
 
     printf sprintf("%-3s %3d %3d  %3d   ".
-		   "%8d  %12d\n",
+		   "%8d  %12d  ".
+		   "# ARRAY:%6d=%12d\n",
 		   $vectx[0],$vectx[1],$vectx[2],$vectx[3],
-		   $numVx, $sizeV);
+		   $numVx, $sizeV,
+		   $V_E_M_array{$Vkey}, $sizeV * 8);
 
     #printf sprintf("%-20s  %d  %10d\n",
     #		   $Vkey, $order, $sizeV);
