@@ -34,6 +34,7 @@ struct cblock_t
 {
   vect_array_id   _aids;
   vect_array_ptr  _arrays;  
+  cblock_t       *_checked; // temporary while checking siblings
 };
 
 typedef std::map<int,array_t *> map_array_ptr;
@@ -90,6 +91,7 @@ int main()
 		{
 		  cblock->_aids.push_back(a[i]);
 		}
+	      cblock->_checked = NULL;
 
 	      _cblockids.insert(cblock);
 	    }
@@ -194,8 +196,6 @@ int main()
 	  /* First find all siblings.
 	   */
 
-	  set_cblock_ptr siblings;
-
 	  uint64_t cursz = 0;
 
 	  for (size_t i = 0; i < currentid->_arrays.size(); i++)
@@ -206,55 +206,62 @@ int main()
 
 	      /* We are no longer a user.*/
 
-	      array->_users.erase(currentid);
-
-	      siblings.insert(array->_users.begin(),
-			      array->_users.end());
+	      array->_users.erase(currentid);	      
 	    }
+
+	  /* Instead of first creating a combined list with all
+	   * siblings, it is much faster to just go through all the
+	   * lists.
+	   */
 
 	  cblock_t *bestblockid = NULL;
 	  uint64_t bestunloadsz = 0;
 	  uint64_t bestloadsz = 0;
 
-	  for (set_cblock_ptr::iterator scbiter = _cblockids.begin();
-	       scbiter != _cblockids.end(); ++scbiter)
+	  for (size_t i = 0; i < currentid->_arrays.size(); i++)
 	    {
-	      cblock_t *siblingid = *scbiter;
-	      /*
-	      if (_cblockids.find(siblingid) == _cblockids.end())
+	      array_t *array = currentid->_arrays[i];
+
+	      set_cblock_ptr &siblings = array->_users;
+
+	      for (set_cblock_ptr::iterator scbiter = siblings.begin();
+		   scbiter != siblings.end(); ++scbiter)
 		{
-		  // Already handled.  (we should remove from users
-		  // lists insetad)
-		  continue;
-		}
-	      */
-	      uint64_t reusesz = 0;
-	      uint64_t loadsz = 0;
+		  cblock_t *siblingid = *scbiter;
+		  
+		  /* This does not improve things too much.  even negative? */
+		  if (siblingid->_checked == currentid)
+		    continue;
+		  siblingid->_checked = currentid;
+		  
+		  uint64_t reusesz = 0;
+		  uint64_t loadsz = 0;
 
-	      for (size_t i = 0; i < siblingid->_arrays.size(); i++)
-		{
-		  array_t *array = siblingid->_arrays[i];
-
-		  /* Does the current know about this array? */
-
-		  if (curarrays.find(array) != curarrays.end())
+		  for (size_t i = 0; i < siblingid->_arrays.size(); i++)
 		    {
-		      reusesz += array->_size;
+		      array_t *array = siblingid->_arrays[i];
+
+		      /* Does the current know about this array? */
+
+		      if (curarrays.find(array) != curarrays.end())
+			{
+			  reusesz += array->_size;
+			}
+		      else
+			{
+			  loadsz += array->_size;
+			}
 		    }
-		  else
+
+		  uint64_t unloadsz = cursz - reusesz;
+
+		  if (!bestblockid ||
+		      loadsz < bestloadsz)
 		    {
-		      loadsz += array->_size;
+		      bestblockid = siblingid;
+		      bestunloadsz = unloadsz;
+		      bestloadsz = loadsz;
 		    }
-		}
-
-	      uint64_t unloadsz = cursz - reusesz;
-
-	      if (!bestblockid ||
-		  loadsz < bestloadsz)
-		{
-		  bestblockid = siblingid;
-		  bestunloadsz = unloadsz;
-		  bestloadsz = loadsz;
 		}
 	    }
 
