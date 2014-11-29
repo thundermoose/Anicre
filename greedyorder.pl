@@ -3,9 +3,12 @@ use strict;
 use warnings;
 
 my @arraysz = ();
-my %cblocks = ();
+my %cblockids = ();
 
 my @arrayblocks = ();
+my @cblockarrays = ();
+
+my $numcblock = 0;
 
 while (my $line = <>)
 {
@@ -20,31 +23,34 @@ while (my $line = <>)
 
 	my @block = split /\s*,\s*/,$block;
 
-	$cblocks{join(',',@block)} = 1;
+	$numcblock++;
+
+	$cblockarrays[$numcblock] = \@block;
+	$cblockids{$numcblock} = 1;
     }
 }
 
 print sprintf ("NUM-ARRAYS: %d\n", $#arraysz);
-print sprintf ("NUM-BLOCKS: %d\n", scalar keys %cblocks);
+print sprintf ("NUM-BLOCKS: %d\n", scalar keys %cblockids);
 
 my $sumraworder = 0;
 
-foreach my $cblock (keys %cblocks)
+foreach my $cblockid (keys %cblockids)
 {
     # print join(',',@{$cblock})."\n";
 
-    my @cblock = split /,/,$cblock;
+    my $cblockref = $cblockarrays[$cblockid];
 
-    for (my $i = 0; $i <= $#cblock; $i++)
+    for (my $i = 0; $i <= $#{$cblockref}; $i++)
     {
-	my $array = $cblock[$i];
+	my $array = $cblockref->[$i];
 	# print "$i : $array : $arraysz[$array]\n";
 
 	$sumraworder += $arraysz[$array];
 
 	my $href = $arrayblocks[$array];
 
-	$href->{$cblock} = 1;
+	$href->{$cblockid} = 1;
     }
 }
 
@@ -59,55 +65,55 @@ print sprintf ("RAW-LOAD-SIZE: %d\n", $sumraworder);
 
 my $sumgreedyload = 0;
 
-while (scalar keys %cblocks)
+while (scalar keys %cblockids)
 {
     # We are at start, or have no better idea.  Find largest one.
     # Expensive to evaluate
 
-    my $largest = ();
+    my $largestid = ();
     my $largestsz = 0;
 
-    foreach my $cblock (keys %cblocks)
+    foreach my $cblockid (keys %cblockids)
     {
-	my @cblock = split /,/,$cblock;
+	my $cblockref = $cblockarrays[$cblockid];
 
 	my $sz = 0;
 
-	for (my $i = 0; $i <= $#cblock; $i++)
+	for (my $i = 0; $i <= $#{$cblockref}; $i++)
 	{
-	    my $array = $cblock[$i];
+	    my $array = $cblockref->[$i];
 	    $sz += $arraysz[$array];
 	}
 
 	if ($sz > $largestsz)
 	{
-	    $largest = $cblock;
+	    $largestid = $cblockid;
 	    $largestsz = $sz;
 	}
     }
 
-    print "$largest : $largestsz\n";
+    print "$largestid : $largestsz\n";
 
-    my $current = $largest;
+    my $currentid = $largestid;
 
     $sumgreedyload += $largestsz;
 
-    delete $cblocks{$current};
+    delete $cblockids{$currentid};
 
     # Now try to find a block which reuses some information
 
   find_sibling:
     for ( ; ; )
     {
-	my @curblock = split /,/,$current;
+	my $curblockref = $cblockarrays[$currentid];
 
 	my @siblings = ();
 
 	my $cursz = 0;
 
-	for (my $i = 0; $i <= $#curblock; $i++)
+	for (my $i = 0; $i <= $#{$curblockref}; $i++)
         {
-	    my $array = $curblock[$i];
+	    my $array = $curblockref->[$i];
 
 	    $cursz += $arraysz[$array];
 
@@ -130,28 +136,28 @@ while (scalar keys %cblocks)
 	# Now, for each sibling, find which arrays are actually common,
 	# and sum up the size of those.
 
-	my %curarrays = map { $_, 1 } @curblock;
+	my %curarrays = map { $_, 1 } @{$curblockref};
 
-	my $bestblock = ();
+	my $bestblockid = ();
 	my $bestunloadsz = 0;
 	my $bestloadsz = 0;
 
       try_sibling:
-	foreach my $sibling (@siblings)
+	foreach my $siblingid (@siblings)
 	{
-	    if (!$cblocks{$sibling}) {
+	    if (!$cblockids{$siblingid}) {
 		# already handled
 		next try_sibling;
 	    }
 
-	    my @sibblock = split /,/,$sibling;
+	    my $sibblockref = $cblockarrays[$siblingid];
 
 	    my $reusesz = 0;
 	    my $loadsz = 0;
 
-	    for (my $i = 0; $i <= $#sibblock; $i++)
+	    for (my $i = 0; $i <= $#{$sibblockref}; $i++)
 	    {
-		my $array = $sibblock[$i];
+		my $array = $sibblockref->[$i];
 
 		if ($curarrays{$array})
 		{
@@ -166,43 +172,43 @@ while (scalar keys %cblocks)
 
 	    my $unloadsz = $cursz - $reusesz;
 
-	    if (0 && (!$bestblock ||
-		      $unloadsz <= $bestunloadsz))
-	    {
-		if (!$bestblock ||
-		    ($unloadsz > $bestunloadsz) ||
-		    ($unloadsz == $bestunloadsz &&
-		     $loadsz > $bestloadsz))
-		{
-		    $bestblock = $sibling;
-		    $bestunloadsz = $unloadsz;
-		    $bestloadsz = $loadsz;
-		}
-	    }
+#	    if (!$bestblockid ||
+#		$unloadsz <= $bestunloadsz)
+#	    {
+#		if (!$bestblockid ||
+#		    ($unloadsz > $bestunloadsz) ||
+#		    ($unloadsz == $bestunloadsz &&
+#		     $loadsz > $bestloadsz))
+#		{
+#		    $bestblockid = $siblingid;
+#		    $bestunloadsz = $unloadsz;
+#		    $bestloadsz = $loadsz;
+#		}
+#	    }
 
-	    if (1 && (!$bestblock ||
-		      $loadsz <$bestloadsz))
+	    if (!$bestblockid ||
+		$loadsz <$bestloadsz)
 	    {
-		$bestblock = $sibling;
+		$bestblockid = $siblingid;
 		$bestunloadsz = $unloadsz;
 		$bestloadsz = $loadsz;
 	    }
 	}
 
-	if (!$bestblock) {
+	if (!$bestblockid) {
 	    last find_sibling;
 	}
 
-	# print "$bestblock : $bestunloadsz : $bestloadsz\n";
+	# print "$bestblockid : $bestunloadsz : $bestloadsz\n";
 
-	$current = $bestblock;
+	$currentid = $bestblockid;
 
-	delete $cblocks{$current};
+	delete $cblockids{$currentid};
 
 	$sumgreedyload += $bestloadsz;
 
-	if ((scalar keys %cblocks) % 500 == 0) {
-	    print sprintf ("%d\n", scalar keys %cblocks);
+	if ((scalar keys %cblockids) % 500 == 0) {
+	    print sprintf ("%d\n", scalar keys %cblockids);
 	}
     }
 }
