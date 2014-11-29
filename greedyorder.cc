@@ -242,7 +242,13 @@ int main()
 		    continue;
 		  siblingid->_checked = currentid;
 		  
-		  uint64_t loadsz = 0;
+		  uint64_t reusesz = 0;
+
+		  /* We figure out which items we need to load by a
+		   * merge-sort style loop over the arrays.
+		   */
+
+
 
 		  for (size_t i = 0; i < siblingid->_arrays.size(); i++)
 		    {
@@ -250,13 +256,13 @@ int main()
 
 		      /* Does the current know about this array? */
 
-		      if (curarrays.find(array) == curarrays.end())
+		      if (curarrays.find(array) != curarrays.end())
 			{
-			  loadsz += array->_size;
+			  reusesz += array->_size;
 			}
 		    }
 		  
-		  uint64_t reusesz = siblingid->_tot_size - loadsz;
+		  uint64_t loadsz   = siblingid->_tot_size - reusesz;
 		  uint64_t unloadsz = currentid->_tot_size - reusesz;
 
 		  if (!bestblockid ||
