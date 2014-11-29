@@ -29,7 +29,7 @@ typedef std::vector<int> vect_array_id;
 struct array_t
 {
   uint64_t        _size;
-  set_cblock_ptr  _users;
+  vect_cblock_ptr  _users;
 };
 
 struct array_ptr_size_t
@@ -145,7 +145,7 @@ int main()
 	  sumraworder += array->_size;
 	  cblock->_tot_size += array->_size;
 
-	  array->_users.insert(cblock);
+	  array->_users.push_back(cblock);
 	}
 
       std::sort(cblock->_arrays.begin(), cblock->_arrays.end());
@@ -202,6 +202,7 @@ int main()
 
       sumgreedyload += largestsz;
 
+      currentid->_tot_size = 0;
       _cblockids.erase(currentid);
 
       /* Now try to find a block which reuses some information.
@@ -219,16 +220,9 @@ int main()
 
 	  assert(MAX_CUR_ARRAYS >= ncur);
 
-	  /* First remove us from the list of siblings.
-	   */
-
 	  for (size_t i = 0; i < currentid->_arrays.size(); i++)
 	    {
 	      array_t *array = currentid->_arrays[i];
-
-	      /* We are no longer a user.*/
-
-	      array->_users.erase(currentid);
 
 	      curarrays[i]._ptr = array;
 	      curarrays[i]._size = array->_size;
@@ -247,13 +241,15 @@ int main()
 	    {
 	      array_t *array = currentid->_arrays[i];
 
-	      set_cblock_ptr &siblings = array->_users;
+	      vect_cblock_ptr &siblings = array->_users;
 
-	      for (set_cblock_ptr::iterator scbiter = siblings.begin();
+	      for (vect_cblock_ptr::iterator scbiter = siblings.begin();
 		   scbiter != siblings.end(); ++scbiter)
 		{
 		  cblock_t *siblingid = *scbiter;
 		  
+		  if (!siblingid->_tot_size) // already handled
+		    continue;
 		  /* This does not improve things too much.  even negative? */
 		  if (siblingid->_checked == currentid)
 		    continue;
@@ -315,6 +311,7 @@ int main()
 
 	  sumgreedyload += bestloadsz;
 
+	  currentid->_tot_size = 0;
 	  _cblockids.erase(currentid);
 
 	  if (_cblockids.size() % 500 == 0)
