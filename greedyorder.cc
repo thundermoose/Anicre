@@ -27,14 +27,15 @@ typedef std::vector<int> vect_array_id;
 struct array_t
 {
   uint64_t        _size;
-  set_cblock_ptr _users;
+  set_cblock_ptr  _users;
 };
 
 struct cblock_t
 {
-  vect_array_id   _aids;
-  vect_array_ptr  _arrays;  
   cblock_t       *_checked; // temporary while checking siblings
+  uint64_t        _tot_size;
+  vect_array_id   _aids;
+  vect_array_ptr  _arrays; 
 };
 
 typedef std::map<int,array_t *> map_array_ptr;
@@ -109,11 +110,14 @@ int main()
   printf ("NUM-BLOCKS: %zd\n", _cblockids.size());
 
   uint64_t sumraworder = 0;
+  uint64_t maxblocksize = 0;
 
   for (set_cblock_ptr::iterator cbiter = _cblockids.begin();
        cbiter != _cblockids.end(); ++cbiter)
     {
       cblock_t *cblock = *cbiter;
+
+      cblock->_tot_size = 0;
 
       for (size_t i = 0; i < cblock->_aids.size(); i++)
 	{
@@ -129,12 +133,17 @@ int main()
 	  cblock->_arrays.push_back(iter->second);
 
 	  sumraworder += array->_size;
+	  cblock->_tot_size += array->_size;
 
 	  array->_users.insert(cblock);
 	}
+
+      if (cblock->_tot_size > maxblocksize)
+	maxblocksize = cblock->_tot_size;
     }
 
   printf ("RAW-LOAD-SIZE: %" PRIu64 "\n", sumraworder);
+  printf ("MAX-BLOCK-SIZE: %" PRIu64 "\n", maxblocksize);
 
   /* We employ a greedy approach to choosing blocks to calculate.
    * When nothing else applies, (and at startup) we begin with the
