@@ -54,9 +54,18 @@ typedef std::map<int,array_t *> map_array_ptr;
 map_array_ptr  _arrayids;
 set_cblock_ptr _cblockids;
 
-int main()
+int main(int argc, char *argv[])
 {
+  int maxforce = 0;
+  int blocksize = 1;
 
+  if (argc < 3)
+    {
+      fprintf (stderr, "  %s <maxforce> <blocksize>\n", argv[0]);
+      exit(1);
+    }
+  maxforce = atoi(argv[1]);
+  blocksize = atoi(argv[2]);
 
   while (!feof(stdin))
     {
@@ -65,17 +74,30 @@ int main()
       fgets (line, sizeof (line), stdin);
 
       char *start = strstr(line, "ARRAY:");
+      char *startmp = strstr(line, "ARRAYMP:");
 
-      if (start)
+      if (start || startmp)
 	{
 	  int array_no;
 	  uint64_t array_sz;
+	  bool mparray = false;
 
-	  int n = sscanf(start+6, "%d=%" SCNu64 "", &array_no, &array_sz);
+	  if (start)
+	    start += 6;
+	  else
+	    {
+	      start = startmp + 8;
+	      mparray = true;
+	    }
+
+	  int n = sscanf(start, "%d=%" SCNu64 "", &array_no, &array_sz);
 
 	  if (n == 2)
 	    {
 	      array_t *array = new array_t;
+
+	      if (mparray)
+		array_sz *= blocksize;
 
 	      array->_size = array_sz;
 	      array->_used = false;
@@ -90,17 +112,22 @@ int main()
 
       if (start)
 	{
+	  int nforce;
 	  int a[5];
 
 	  int n = sscanf(start+10,
-			 "%d,%d,%d,%d,%d",
+			 "%d:%d,%d,%d,%d,%d",
+			 &nforce,
 			 &a[0], &a[1], &a[2], &a[3], &a[4]);
 
-	  if (n == 4 || n == 5)
+	  if (nforce > maxforce)
+	    continue;
+
+	  if (n == 5 || n == 6)
 	    {
 	      cblock_t *cblock = new cblock_t;
 
-	      for (int i = 0; i < n; i++)
+	      for (int i = 0; i < n-1; i++)
 		{
 		  cblock->_aids.push_back(a[i]);
 		}
@@ -118,8 +145,9 @@ int main()
       exit(1);
     }
 
-  printf ("NUM-ARRAYS: %zd\n", _arrayids.size());
-  printf ("NUM-BLOCKS: %zd\n", _cblockids.size());
+  printf ("NUM-BLOCKS-%d-%d: %zd\n",
+	  maxforce, blocksize,
+	  _cblockids.size());
 
   uint64_t sumraworder = 0;
   uint64_t maxblocksize = 0;
@@ -157,10 +185,15 @@ int main()
 	maxblocksize = cblock->_tot_size;
     }
 
-  printf ("RAW-LOAD-SIZE: %" PRIu64 "\n", sumraworder);
-  printf ("MAX-BLOCK-SIZE: %" PRIu64 "\n", maxblocksize);
+  printf ("RAW-LOAD-SIZE-%d-%d: %" PRIu64 "\n",
+	  maxforce, blocksize,
+	  sumraworder);
+  printf ("MAX-BLOCK-SIZE-%d-%d: %" PRIu64 "\n",
+	  maxforce, blocksize,
+	  maxblocksize);
 
   uint64_t sumarraysize = 0;
+  size_t usedarrays = 0;
 
   for (map_array_ptr::iterator iter = _arrayids.begin();
        iter != _arrayids.end(); ++iter)
@@ -168,10 +201,18 @@ int main()
       array_t *array = iter->second;
 
       if (array->_used)
-	sumarraysize += array->_size;
+	{
+	  sumarraysize += array->_size;
+	  usedarrays++;
+	}
     }
 
-  printf ("SUM-ARRAY-SIZE: %" PRIu64 "\n", sumarraysize);
+  printf ("NUM-ARRAYS-%d-%d: %zd\n",
+	  maxforce, blocksize,
+	  usedarrays);
+  printf ("SUM-ARRAY-SIZE-%d-%d: %" PRIu64 "\n",
+	  maxforce, blocksize,
+	  sumarraysize);
 
   /* We employ a greedy approach to choosing blocks to calculate.
    * When nothing else applies, (and at startup) we begin with the
@@ -211,9 +252,9 @@ int main()
 	      largestsz = sz;
 	    }
 	}
-
+      /*
       printf ("%p : %" PRIu64 "\n", largestid, largestsz);
-
+      */
       cblock_t *currentid = largestid;
 
       sumgreedyload += largestsz;
@@ -337,7 +378,9 @@ int main()
 	}
     }
 
-  printf ("GREEDY-LOAD-SIZE: %" PRIu64 "\n", sumgreedyload);
+  printf ("GREEDY-LOAD-SIZE-%d-%d: %" PRIu64 "\n",
+	  maxforce, blocksize,
+	  sumgreedyload);
 
 #if 0
 
