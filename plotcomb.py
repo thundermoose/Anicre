@@ -71,6 +71,20 @@ regex = re.compile("(TOTAL-MP-STATES|MAX-MP-BLOCK|"+\
                        "CONNECTIONS-(p-n|pp-n|p-nn|DIA-(p|n|pp|nn|ppp|nnn)))"+\
                        ":\s*([0-9]+)")
 
+gr = Nmax * np.nan;
+gr = [[gr, gr, gr], [gr, gr, gr], [gr, gr, gr]];
+
+num_blocks = gr;
+raw_load_size = gr;
+max_block_size = gr;
+num_arrays = gr;
+sum_array_size = gr;
+greedy_load_size = gr;
+
+gregex = re.compile("(NUM-BLOCKS|RAW-LOAD-SIZE|MAX-BLOCK-SIZE|"+\
+                        "NUM-ARRAYS|SUM-ARRAY-SIZE|GREEDY-LOAD-SIZE)"+\
+                        "-([0-9]+)-([0-9]+):\s*([0-9]+)")
+
 for i in range(0,len(Nmax)):
     nmax = Nmax[i]
     print nmax
@@ -171,6 +185,51 @@ for i in range(0,len(Nmax)):
                         conns_pnn[i] = int(match[0][3])
     except:
         print "Could not open / handle '%s'" % filename;
+
+    for nforce in [1, 2, 3]:
+        for blocksz in [1, 8, 16]:
+
+            if (nforce == 1):
+                nforcei = 0;
+            if (nforce == 2):
+                nforcei = 1;
+            if (nforce == 3):
+                nforcei = 2;
+            if (blocksz == 1):
+                blockszi = 0;
+            if (blocksz == 8):
+                blockszi = 1;
+            if (blocksz == 16):
+                blockszi = 2;
+
+            filename = nucleus+"_nmax%d.td/greedy_%d_%d.txt" % \
+                (nmax, nforce, blocksz)
+
+            try:
+                with open(filename) as f:
+                    for line in f:
+                        match = gregex.findall(line)
+                        if match:
+                            if (int(match[0][1]) != nforce or
+                                int(match[0][2]) != blocksz):
+                                print "(%d,%d) (%s,%s)" % (nforce, blocksz, match[0][1], match[0][2]);
+                                raise "File nforce / blocksz mismatch";
+                            
+                            if (match[0][0] == "NUM-BLOCKS"):
+                                num_blocks[nforcei][blockszi][i] = int(match[0][3])
+                            if (match[0][0] == "RAW-LOAD-SIZE"):
+                                raw_load_size[nforcei][blockszi][i] = int(match[0][3])
+                            if (match[0][0] == "MAX-BLOCK-SIZE"):
+                                max_block_size[nforcei][blockszi][i] = int(match[0][3])
+                            if (match[0][0] == "NUM-ARRAYS"):
+                                num_arrays[nforcei][blockszi][i] = int(match[0][3])
+                            if (match[0][0] == "SUM-ARRAY-SIZE"):
+                                sum_array_size[nforcei][blockszi][i] = int(match[0][3])
+                            if (match[0][0] == "GREEDY-LOAD-SIZE"):
+                                greedy_load_size[nforcei][blockszi][i] = int(match[0][3])
+
+            except:
+                print "Could not open / handle '%s'" % filename;
 
 ### Prepare plotting
 
