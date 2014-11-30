@@ -28,8 +28,9 @@ typedef std::vector<int> vect_array_id;
 
 struct array_t
 {
-  uint64_t        _size;
+  uint64_t         _size;
   vect_cblock_ptr  _users;
+  bool             _used;
 };
 
 struct array_ptr_size_t
@@ -77,6 +78,7 @@ int main()
 	      array_t *array = new array_t;
 
 	      array->_size = array_sz;
+	      array->_used = false;
 	      
 	      _arrayids.insert(map_array_ptr::value_type(array_no, array));
 	    }
@@ -146,6 +148,7 @@ int main()
 	  cblock->_tot_size += array->_size;
 
 	  array->_users.push_back(cblock);
+	  array->_used = true;
 	}
 
       std::sort(cblock->_arrays.begin(), cblock->_arrays.end());
@@ -156,6 +159,19 @@ int main()
 
   printf ("RAW-LOAD-SIZE: %" PRIu64 "\n", sumraworder);
   printf ("MAX-BLOCK-SIZE: %" PRIu64 "\n", maxblocksize);
+
+  uint64_t sumarraysize = 0;
+
+  for (map_array_ptr::iterator iter = _arrayids.begin();
+       iter != _arrayids.end(); ++iter)
+    {
+      array_t *array = iter->second;
+
+      if (array->_used)
+	sumarraysize += array->_size;
+    }
+
+  printf ("SUM-ARRAY-SIZE: %" PRIu64 "\n", sumarraysize);
 
   /* We employ a greedy approach to choosing blocks to calculate.
    * When nothing else applies, (and at startup) we begin with the
@@ -234,8 +250,8 @@ int main()
 	   */
 
 	  cblock_t *bestblockid = NULL;
-	  uint64_t bestunloadsz = 0;
-	  uint64_t bestloadsz = 0;
+	  /* uint64_t bestunloadsz = 0; */
+	  uint64_t bestloadsz = (uint64_t) -1;
 
 	  for (size_t i = 0; i < currentid->_arrays.size(); i++)
 	    {
@@ -287,13 +303,12 @@ int main()
 		  // any remaining isib or icur cannot match!
 		  
 		  uint64_t loadsz   = siblingid->_tot_size - reusesz;
-		  uint64_t unloadsz = currentid->_tot_size - reusesz;
+		  /* uint64_t unloadsz = currentid->_tot_size - reusesz; */
 
-		  if (!bestblockid ||
-		      loadsz < bestloadsz)
+		  if (loadsz < bestloadsz)
 		    {
 		      bestblockid = siblingid;
-		      bestunloadsz = unloadsz;
+		      /* bestunloadsz = unloadsz; */
 		      bestloadsz = loadsz;
 		    }
 		}
@@ -305,7 +320,7 @@ int main()
 	  printf ("%p : %" PRIu64 " : %" PRIu64 "\n",
 		  bestblockid, bestunloadsz, bestloadsz);
 	  */
-	  (void) bestunloadsz;
+	  /* (void) bestunloadsz; */
 
 	  currentid = bestblockid;
 

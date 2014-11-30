@@ -117,7 +117,7 @@ for (my $Ep = 0; $Ep <= $maxE; $Ep++)
 				   $Ep, $Mp, $En, $Mn,
 				   $states_p, $states_n,
 				   $mp_states,
-				   $numarray, $mp_states * 8);
+				   $numarray, $mp_states * 8 * 8);
 
 		    $total_mp_states += $mp_states;
 
