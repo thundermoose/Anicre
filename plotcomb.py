@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import re
 import sys
+import copy
 
 nucleus = "6Li";
 
@@ -72,14 +73,14 @@ regex = re.compile("(TOTAL-MP-STATES|MAX-MP-BLOCK|"+\
                        ":\s*([0-9]+)")
 
 gr = Nmax * np.nan;
-gr = [[gr, gr, gr], [gr, gr, gr], [gr, gr, gr]];
+gr = [[gr * np.nan, gr * np.nan, gr * np.nan], [gr * np.nan, gr * np.nan, gr * np.nan], [gr * np.nan, gr * np.nan, gr * np.nan]];
 
-num_blocks = gr;
-raw_load_size = gr;
-max_block_size = gr;
-num_arrays = gr;
-sum_array_size = gr;
-greedy_load_size = gr;
+num_blocks = copy.deepcopy(gr);
+raw_load_size = copy.deepcopy(gr);
+max_block_size = copy.deepcopy(gr);
+num_arrays = copy.deepcopy(gr);
+sum_array_size = copy.deepcopy(gr);
+greedy_load_size = copy.deepcopy(gr);
 
 gregex = re.compile("(NUM-BLOCKS|RAW-LOAD-SIZE|MAX-BLOCK-SIZE|"+\
                         "NUM-ARRAYS|SUM-ARRAY-SIZE|GREEDY-LOAD-SIZE)"+\
@@ -235,6 +236,8 @@ for i in range(0,len(Nmax)):
 
 xlimits=[-.5,23];
 xticks=range(0,23,2);
+
+### ### ### ### ### ###
 
 ### Do plotting
 
@@ -551,6 +554,103 @@ ax = plt.gca()
 ax.set_xlim(xlimits)
 ax.set_xticks(xticks);
 
+### ### ### ### ### ###
+
+fig2 = plt.figure(figsize=(20, 10))
+
+plt.subplots_adjust(wspace = 0.35, hspace = 0.3);
+
 ###
+
+nforcelinestyles = [':', '--', '-']
+
+for blockszi in [0, 1, 2]:
+
+    for nforcei in [0, 1, 2]:
+        nforceline = nforcelinestyles[nforcei]
+        plt.subplot(3, 5, 1+nforcei+5*blockszi)
+
+        p1, = plt.semilogy(Nmax, (raw_load_size[nforcei][blockszi]) / 1e12, 'ro'+nforceline);
+        p2, = plt.semilogy(Nmax, (sum_array_size[nforcei][blockszi]) / 1e12, 'go'+nforceline);
+        p3, = plt.semilogy(Nmax, (greedy_load_size[nforcei][blockszi]) / 1e12, 'mo'+nforceline);
+
+        plt.legend([p2, p3, p1],
+                   ['array size', 'greedy read', 'naive read'],
+                   loc=4,prop={'size':9})
+
+        plt.xlabel('Nmax')
+        plt.ylabel('mtrx list , V load (TB)')
+        if (nforcei == 0 and blockszi == 0):
+            plt.title(nucleus)
+
+        ax = plt.gca()
+        ax.set_xlim(xlimits)
+        ax.set_xticks(xticks);
+        ax.yaxis.set_major_formatter(plt.ScalarFormatter())
+        ax.set_yticks([0.01, 0.1, 1, 10])
+
+    ###
+
+    plt.subplot(3, 5, 4+5*blockszi)
+
+    p = [p1, p1, p1];
+
+    for nforcei in [0, 1, 2]:
+        nforceline = nforcelinestyles[nforcei]
+        if (nforcei == 0): # 1
+            sum_conns = (conns_p + conns_n);
+        if (nforcei == 1): # 2
+            sum_conns = (conns_pp + conns_pn + conns_nn);
+        if (nforcei == 2): # 3
+            sum_conns = (conns_ppn + conns_pnn +
+                         conns_ppp + conns_nnn);
+
+        p[nforcei], = plt.semilogy(Nmax, (greedy_load_size[nforcei][blockszi]) / sum_conns, 'mo'+nforceline);
+
+        if (nucleus == "6Li"):
+            plt.semilogy(22, (26.9e12)/(5.53e14), 'mx');
+
+        plt.legend([p[2], p[1], p[0]],
+                   ['loads 3N', 'loads 2N', 'loads 1N'],
+                   loc=1,prop={'size':9})
+
+        plt.xlabel('Nmax')
+        plt.ylabel('mtrx list , V load (B) / mult')
+        blocksize = [1, 8, 16];
+        plt.title('blocksz %d' % blocksize[blockszi])
+
+
+        ax = plt.gca()
+        ax.set_xlim(xlimits)
+        ax.set_xticks(xticks);
+        ax.yaxis.set_major_formatter(plt.ScalarFormatter())
+        ax.set_yticks([0.01, 0.1, 1, 10])
+        
+    ###
+   
+    plt.subplot(3, 5, 5+5*blockszi)
+
+    p = [p1, p1, p1];
+
+    for nforcei in [0, 1, 2]:
+        nforceline = nforcelinestyles[nforcei]
+
+        p[nforcei], = plt.semilogy(Nmax, (max_block_size[nforcei][blockszi]) / 1.e9, 'bo'+nforceline);
+
+        plt.legend([p[2], p[1], p[0]],
+                   ['max block 3N', 'max block 2N', 'max block 1N'],
+                   loc=4,prop={'size':9})
+
+        plt.xlabel('Nmax')
+        plt.ylabel('max block loaded (GB)')
+        ax = plt.gca()
+        ax.set_xlim(xlimits)
+        ax.set_xticks(xticks);
+        ax.yaxis.set_major_formatter(plt.ScalarFormatter())
+        ax.set_yticks([0.1, 1, 10, 100])
+        
+    ###
+   
+### ### ### ### ### ###
 
 plt.show()
