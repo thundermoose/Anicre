@@ -136,6 +136,27 @@ int compare_nlj_item(const void *p1, const void *p2)
   return 0;
 }
 
+double norm(int na,int la,int ja,int nb,int lb,int jb,int J2)
+{
+  if(na==nb && la==lb && ja==jb)
+    {
+      if ((J2/2)%2==0)
+	{
+	  return sqrt(2.0);
+
+	}
+      else
+	{
+	  return 0.0;
+	}
+    }
+  else
+    {
+      return 1.0;
+    }
+  
+  
+}
 
 void*  readDumpfile(char *filename, size_t *num_nlj_items)
 { 
@@ -253,7 +274,7 @@ int main()
 	    fprintf (stderr,"ERR! %d\n", ret);
 	    exit(1);
 	  }
-	int sign = 1 - ((CFG_2J_INITIAL/* - jtrans*/ + CFG_2M_FINAL) & 2);
+	int sign = 1 - ((CFG_2J_INITIAL - jtrans + CFG_2M_FINAL) & 2);
        
 	mult = 1.0 / (result.val) * sign;  //Second time?
       }
@@ -270,105 +291,90 @@ int main()
 		      {
 			for(int i2 = i1; i2<CFG_NUM_NLJ_STATES; i2++)
 			  { 
-		    int li1=_table_nlj_states[i1]._l;
-		    int li2=_table_nlj_states[i2]._l;
-		    int ni1=_table_nlj_states[i1]._n;
-		    int ni2=_table_nlj_states[i2]._n;
-		    int ji1=_table_nlj_states[i1]._j;
-		    int ji2=_table_nlj_states[i2]._j;
-		    if(ji1+ji2<2*Jab){continue;}
-		    if(abs(ji1-ji2)>2*Jab){continue;}
-		    if(pow(-1,(li1+li2))!=pi1){continue;}
-		    if(i1==i2 && pow(-1,(Jab+Tab))!=-1){continue;}
-		    if(2*ni1+li1+2*ni2+li2>CFG_MAX_SUM_E){continue;}
+			    int li1=_table_nlj_states[i1]._l;
+			    int li2=_table_nlj_states[i2]._l;
+			    int ni1=_table_nlj_states[i1]._n;
+			    int ni2=_table_nlj_states[i2]._n;
+			    int ji1=_table_nlj_states[i1]._j;
+			    int ji2=_table_nlj_states[i2]._j;
+			    if(ji1+ji2<2*Jab){continue;}
+			    if(abs(ji1-ji2)>2*Jab){continue;}
+			    if(pow(-1,(li1+li2))!=pi1){continue;}
+			    if(i1==i2 && pow(-1,(Jab+Tab))!=-1){continue;}
+			    if(2*ni1+li1+2*ni2+li2>CFG_MAX_SUM_E){continue;}
 
-		    twob1++;
-		    twob2=0;
-		    for(int pi2=1;pi2>=-1;pi2=pi2-2){
-		      for(int Jcd=0; Jcd<=CFG_MAX_J;Jcd++){
-			for (int Tcd=0;Tcd<=1;Tcd++){
-			  for (int j1 = 0; j1<CFG_NUM_NLJ_STATES; j1++)
-			    {
-			for(int j2 = j1; j2<CFG_NUM_NLJ_STATES; j2++)
-			  { 
+			    twob1++;
+			    twob2=0;
+			    for(int pi2=1;pi2>=-1;pi2=pi2-2){
+			      for(int Jcd=0; Jcd<=CFG_MAX_J;Jcd++){
+				for (int Tcd=0;Tcd<=1;Tcd++){
+				  for (int j1 = 0; j1<CFG_NUM_NLJ_STATES; j1++)
+				    {
+				      for(int j2 = j1; j2<CFG_NUM_NLJ_STATES; j2++)
+					{ 
 			    //	    printf("%d %d \n",j1,j2);
-		    int lj1=_table_nlj_states[j1]._l;
-		    int lj2=_table_nlj_states[j2]._l;
-		    int nj1=_table_nlj_states[j1]._n;
-		    int nj2=_table_nlj_states[j2]._n;
-		    int jj1=_table_nlj_states[j1]._j;
-		    int jj2=_table_nlj_states[j2]._j;
-		    if(jj1+jj2<2*Jcd){continue;}
-		    if(abs(jj1-jj2)>2*Jcd){continue;}
-		    if(pow(-1,(lj1+lj2))!=pi2){continue;}
-		    if(j1==j2 && pow(-1,(Jcd+Tcd))!=-1){continue;}
-		    if(2*nj1+lj1+2*nj2+lj2>CFG_MAX_SUM_E){continue;}
-		    twob2++;
-		    double value_nn=findState(_nlj_items_nn, _num_nlj_items_nn, i1, i2,  j1, j2, Jab,Jcd,jtrans);
-		    double value_pp=findState(_nlj_items_pp, _num_nlj_items_pp, i1, i2,  j1, j2, Jab,Jcd,jtrans);
-		    double value_np=2.0*findState(_nlj_items_np, _num_nlj_items_np, i1, i2,  j1, j2, Jab,Jcd,jtrans);
+					  int lj1=_table_nlj_states[j1]._l;
+					  int lj2=_table_nlj_states[j2]._l;
+					  int nj1=_table_nlj_states[j1]._n;
+					  int nj2=_table_nlj_states[j2]._n;
+					  int jj1=_table_nlj_states[j1]._j;
+					  int jj2=_table_nlj_states[j2]._j;
+					  if(jj1+jj2<2*Jcd){continue;}
+					  if(abs(jj1-jj2)>2*Jcd){continue;}
+					  if(pow(-1,(lj1+lj2))!=pi2){continue;}
+					  if(j1==j2 && pow(-1,(Jcd+Tcd))!=-1){continue;}
+					  if(2*nj1+lj1+2*nj2+lj2>CFG_MAX_SUM_E){continue;}
+
+					  twob2++;
+					  double value_nn=findState(_nlj_items_nn, _num_nlj_items_nn, i1, i2,  j1, j2, 2*Jab,2*Jcd,2*jtrans);
+					  double value_pp=findState(_nlj_items_pp, _num_nlj_items_pp, i1, i2,  j1, j2, Jab,Jcd,jtrans);
+					  double value_np=findState(_nlj_items_np, _num_nlj_items_np, i1, i2,  j1, j2, Jab,Jcd,jtrans);  //2*
 		    //		    printf("testst %d %d %d %d %d %d %d %d %f \n",i1,i2,j1,j2,Jab, Tab,Jcd,Tcd,value_nn);
 		      
-		    double j3nnab=0.0;
-		    double j3nncd=0.0;
-		    j3nnab=gsl_sf_coupling_3j(1, 1, 2*Tab,-1,-1, 2);
-		    j3nncd=gsl_sf_coupling_3j(1,1,2*Tcd,-1,-1,2);
-		    double clebsch_nn=sqrt(2.0*Tab+1.0)*sqrt(2.0*Tcd+1.0)*j3nnab*j3nncd;
-		    double clebsch_pp=0.0;
-		    if(Tab==1 && Tcd==1){
-		      clebsch_nn=1.0;
-		      clebsch_pp=1.0;
-		    }
-		    else{
-		      clebsch_nn=0.0;
-		      clebsch_pp=0.0;
-		    }
+					  double j3nnab=0.0;
+					  double j3nncd=0.0;
+					  j3nnab=gsl_sf_coupling_3j(1, 1, 2*Tab,-1,-1, 2);
+					  j3nncd=gsl_sf_coupling_3j(1,1,2*Tcd,-1,-1,2);
+					  double clebsch_nn=sqrt(2.0*Tab+1.0)*sqrt(2.0*Tcd+1.0)*j3nnab*j3nncd;
+					  double clebsch_pp=0.0;
+					  if(Tab==1 && Tcd==1){
+					    clebsch_nn=1.0;
+					    clebsch_pp=1.0;
+					  }
+					  else{
+					    clebsch_nn=0.0;
+					    clebsch_pp=0.0;
+					  }
+					 
 
-
-		    //    double j3ppab=0.0;
-		    //double j3ppcd=0.0;
-		    // j3ppab=gsl_sf_coupling_3j(1, 1, 2*Tab,1, 1, -2);
-		    //j3ppcd=gsl_sf_coupling_3j(1,1,2*Tcd,1,1,-2);
-		    //		    double clebsch_pp=sqrt(2.0*Tab+1.0)*sqrt(2.0*Tcd+1.0)*j3ppab*j3ppcd;
-		    //   printf("sqrt %f %f j3: %f %f Tot: %f \n",sqrt(2.0*Tab+1.0),sqrt(2.0*Tab+1.0),j3nnab,j3nncd,sqrt(2.0*Tab+1.0)*sqrt(2.0*Tab+1.0)*j3nnab*j3nncd);
-		    double j3npab=0.0;
-		    double j3npcd=0.0;
-		    j3npab=gsl_sf_coupling_3j(1, 1, 2*Tab,-1, 1, 0);  //Opposite situation? pn-coupling?
-		    j3npcd=gsl_sf_coupling_3j(1,1,2*Tcd,-1,1,0);
-  
-		    double clebsch_np=sqrt(2.0*Tab+1.0)*sqrt(2.*Tcd+1.0)*j3npab*j3npcd;
-
-		    //	    printf("Tab: %d J3: %f Tot:%f\n",Tab, j3nnab,clebsch_nn);
-		    // printf("Tcd: %d J3: %f Tot:%f\n",Tcd, j3nncd,clebsch_nn);
-		    
-		    value_nn=value_nn*clebsch_nn;
-		    value_pp=value_pp*clebsch_pp;
-		    value_np=value_np*clebsch_np;
+		
+					  double j3npab=0.0;
+					  double j3npcd=0.0;
+					  j3npab=gsl_sf_coupling_3j(1, 1, 2*Tab,-1, 1, 0);  //Opposite situation? pn-coupling?
+					  j3npcd=gsl_sf_coupling_3j(1,1,2*Tcd,-1,1,0);
+					  
+					  double clebsch_np=sqrt(2.0*Tab+1.0)*sqrt(2.*Tcd+1.0)*j3npab*j3npcd;
+					  double Nab=norm(ni1,li1,ji1,ni2,li2,ji2,Jab);
+					  double Ncd=norm(nj1,lj1,jj1,nj2,lj2,jj2,Jcd);
+					  value_nn=value_nn*mult*clebsch_nn*Nab*Ncd;
+					  value_pp=value_pp*mult*clebsch_pp;
+					  value_np=value_np*mult*clebsch_np;
 
 		  //Compute Isospin Clebsch. Multiply with value_*
 		  
-		      if (value_np || value_pp || value_nn ){
-	
-			// 			printf("test %d %d %d \n",twob1,twob2,Tab);
-		       
-
-			//	printf ("Create %3d %3d : %2d | Annihilate %3d %3d : %2d = %11.6f %11.6f %11.6f\n",
-			//    i1+1, i2+1, Jab,
-			//    j1+1, j2+1, Jcd,
-			//	mult * value_np, mult*value_pp,mult*value_nn);
-			//	}
-			printf(" (a+a+)J=%5d  (a-a-)J=%5d   td: pn=%10.6f   pp=%10.6f   nn=%10.6f - Jab=%d Tab=%d Jcd=%d Tcd=%d\n",twob1,twob2,mult * value_np, mult*value_pp,mult*value_nn, Jab, Tab, Jcd,Tcd);
-		      }
-	  	  }
-	    }
-	      }
-		      }
-		    }
+					  if (value_np || value_pp || value_nn ){
+					    printf(" (a+a+)J=%5d  (a-a-)J=%5d   td: pn=%10.6f   pp=%10.6f   nn=%10.6f - Jab=%d Tab=%d Jcd=%d Tcd=%d\n",twob1,twob2,mult * value_np, mult*value_pp,mult*value_nn, Jab, Tab, Jcd,Tcd);
+					  }
+					}
+				    }
+				}
+			      }
+			    }
 			  }
 		      }
 		  }
-	}
-	}
+		}
+	      }
     }
 
   free (_nlj_items_nn);
