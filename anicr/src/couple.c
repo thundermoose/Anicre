@@ -903,7 +903,7 @@ void couple_accumulate_2()
 
 		double anni_crea_factor[4];
 
-		double anni_factor = (anni_item->_j & 2) ? 0 : M_SQRT2;
+		double anni_factor = (anni_item->_j & 2) ? 0 : M_SQRT2;        //DS:Move to dumpnlj?
 		double crea_factor = (crea_item->_j & 2) ? 0 : M_SQRT2;  
 
 		anni_crea_factor[0] = 1;
@@ -943,14 +943,13 @@ void couple_accumulate_2()
 		    /* And now, apply this to all items in the list! */
 
 		    couple_item *items;
-		    //	    printf("creat-time, %d, anni-item, %d,%10.6f",crea_item->j, anni_item->j,coupling); 
 		    for (items = _couple_items; items != end_items; items++)
 		      {
 			uint64_t key =
 			  items->_nlj_key | key_jjj;
 
 			double factor =anni_crea_factor[items->_fact_anni_crea];
-			factor=1.0;
+			factor=1.0;   //DS:Moved to dumpnlj
 			nlj_add(key, items->_value * coupling * factor);
 		      }
 		  }
