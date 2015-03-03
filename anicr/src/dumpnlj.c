@@ -136,11 +136,12 @@ int compare_nlj_item(const void *p1, const void *p2)
   return 0;
 }
 
-double norm(int na,int la,int ja,int nb,int lb,int jb,int J2)
+double norm(int na,int la,int ja,int nb,int lb,int jb,int J,int T) //T=0,1
 {
   if(na==nb && la==lb && ja==jb)
     {
-      if ((J2/2)%2==0)
+      
+      if ((J+T)%2==1)
 	{
 	  return sqrt(2.0);
 
@@ -267,7 +268,7 @@ int main()
 	
 	int ret =
 	  gsl_sf_coupling_3j_e(CFG_2J_INITIAL,  jtrans,  CFG_2J_FINAL,
-			       CFG_2M_INITIAL, -mtrans, -CFG_2M_FINAL,
+			       CFG_2M_INITIAL,  mtrans, -CFG_2M_FINAL,
 			       &result);
 	if (ret != GSL_SUCCESS)
 	  {
@@ -326,17 +327,18 @@ int main()
 					  if(2*nj1+lj1+2*nj2+lj2>CFG_MAX_SUM_E){continue;}
 
 					  twob2++;
-					  double value_nn=findState(_nlj_items_nn, _num_nlj_items_nn, i1, i2,  j1, j2, 2*Jab,2*Jcd,2*jtrans);
-					  double value_pp=findState(_nlj_items_pp, _num_nlj_items_pp, i1, i2,  j1, j2, Jab,Jcd,jtrans);
-					  double value_np=findState(_nlj_items_np, _num_nlj_items_np, i1, i2,  j1, j2, Jab,Jcd,jtrans);  //2*
-		    //		    printf("testst %d %d %d %d %d %d %d %d %f \n",i1,i2,j1,j2,Jab, Tab,Jcd,Tcd,value_nn);
+					  double value_nn=findState(_nlj_items_nn, _num_nlj_items_nn, i1, i2,  j1, j2, 2*Jab,2*Jcd,jtrans);
+					  double value_pp=findState(_nlj_items_pp, _num_nlj_items_pp, i1, i2,  j1, j2, 2*Jab,2*Jcd,jtrans);
+					  double value_np=findState(_nlj_items_np, _num_nlj_items_np, i1, i2,  j1, j2, 2*Jab,2*Jcd,jtrans);  
+					  // printf("testst %d %d %d %d %d %d %d %d %f \n",i1,i2,j1,j2,Jab, Tab,Jcd,Tcd,value_nn);
 		      
-					  double j3nnab=0.0;
-					  double j3nncd=0.0;
-					  j3nnab=gsl_sf_coupling_3j(1, 1, 2*Tab,-1,-1, 2);
-					  j3nncd=gsl_sf_coupling_3j(1,1,2*Tcd,-1,-1,2);
-					  double clebsch_nn=sqrt(2.0*Tab+1.0)*sqrt(2.0*Tcd+1.0)*j3nnab*j3nncd;
+					  //double j3nnab=0.0;
+					  //			  double j3nncd=0.0;
+					  // j3nnab=gsl_sf_coupling_3j(1, 1, 2*Tab,-1,-1, 2);
+					  //					  j3nncd=gsl_sf_coupling_3j(1,1,2*Tcd,-1,-1,2);
+					  double clebsch_nn=0.0;//sqrt(2.0*Tab+1.0)*sqrt(2.0*Tcd+1.0)*j3nnab*j3nncd;
 					  double clebsch_pp=0.0;
+					  double clebsch_np=0.0;
 					  if(Tab==1 && Tcd==1){
 					    clebsch_nn=1.0;
 					    clebsch_pp=1.0;
@@ -347,24 +349,25 @@ int main()
 					  }
 					 
 
-		
-					  double j3npab=0.0;
-					  double j3npcd=0.0;
-					  j3npab=gsl_sf_coupling_3j(1, 1, 2*Tab,-1, 1, 0);  //Opposite situation? pn-coupling?
-					  j3npcd=gsl_sf_coupling_3j(1,1,2*Tcd,-1,1,0);
 					  
-					  double clebsch_np=sqrt(2.0*Tab+1.0)*sqrt(2.*Tcd+1.0)*j3npab*j3npcd;
-					  double Nab=norm(ni1,li1,ji1,ni2,li2,ji2,Jab);
-					  double Ncd=norm(nj1,lj1,jj1,nj2,lj2,jj2,Jcd);
-					  value_nn=value_nn*mult*clebsch_nn*Nab*Ncd;
-					  value_pp=value_pp*mult*clebsch_pp;
-					  value_np=value_np*mult*clebsch_np;
+					  // double j3npab=0.0;
+					  // double j3npcd=0.0;
+					  //					  j3npab=gsl_sf_coupling_3j(1, 1, 2*Tab,-1, 1, 0);  //Opposite situation? pn-coupling?
+					  //j3npcd=gsl_sf_coupling_3j(1,1,2*Tcd,-1,1,0);
+					  
+					  // double clebsch_np=sqrt(2.0*Tab+1.0)*sqrt(2.*Tcd+1.0)*j3npab*j3npcd;
+					  double Nab=norm(ni1,li1,ji1,ni2,li2,ji2,Jab,Tab);
+					  double Ncd=norm(nj1,lj1,jj1,nj2,lj2,jj2,Jcd,Tcd);
+					  //	  printf("%d %d %7.2f %7.2f %7.2f %7.2f %7.2f\n",twob1,twob2,value_nn,mult,clebsch_nn,Nab,Ncd);
 
+					  value_nn=value_nn*mult*clebsch_nn*Nab*Ncd;
+					  value_pp=value_pp*mult*clebsch_pp*Nab*Ncd;
+					  value_np=value_np*mult*clebsch_np*Nab*Ncd;
 		  //Compute Isospin Clebsch. Multiply with value_*
 		  
-					  if (value_np || value_pp || value_nn ){
-					    printf(" (a+a+)J=%5d  (a-a-)J=%5d   td: pn=%10.6f   pp=%10.6f   nn=%10.6f - Jab=%d Tab=%d Jcd=%d Tcd=%d\n",twob1,twob2,mult * value_np, mult*value_pp,mult*value_nn, Jab, Tab, Jcd,Tcd);
-					  }
+					    if (value_np || value_pp || value_nn ){
+					   printf(" (a+a+)J=%5d  (a-a-)J=%5d   td: pn=%10.6f   pp=%10.6f   nn=%10.6f - Jab=%d Tab=%d Jcd=%d Tcd=%d\n",twob1,twob2, value_np, value_pp,value_nn, Jab, Tab, Jcd,Tcd);
+					     }
 					}
 				    }
 				}
