@@ -278,6 +278,7 @@ int main()
 	int sign = 1 - ((CFG_2J_INITIAL - jtrans + CFG_2M_FINAL) & 2);
        
 	mult = 1.0 / (result.val) * sign;  //Second time?
+	if(result.val==0.0){continue;}
       }
       
  
