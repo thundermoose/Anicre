@@ -52,7 +52,7 @@ double findState(nlj_hash_item *nlj_items, size_t num_nlj_items,int i1,int i2, i
       key_jtrans = (int) (key >> 58);
       //For nn
       //      printf("TESTING %d %d %d %d %d %f \n", (int)i,nlj_a1,nlj_a2,nlj_c1,nlj_c2,(double)nlj_items[i]._value);
-      if (key_jtrans == jtrans && nlj_c1==i1 && nlj_c2==i2 && nlj_a1==j1 && nlj_a2==j2 && anni_j==J1 && crea_j==J2)
+      if (key_jtrans == jtrans && nlj_c1==i1 && nlj_c2==i2 && nlj_a1==j1 && nlj_a2==j2 && anni_j==J2 && crea_j==J1)
 	{
 	  //  printf("Found state %d %d and %d %d ",i1,i2,j1,j2);
 	  if(foundKey){
