@@ -291,7 +291,7 @@ int main()
 		  for (Tab=0;Tab<=1;Tab++){
 		    for (int i1 = 0; i1<CFG_NUM_NLJ_STATES; i1++)
 		      {
-			for(int i2 = i1; i2<CFG_NUM_NLJ_STATES; i2++)
+			for(int i2 = i1; i2<CFG_NUM_NLJ_STATES; i2++) //i2=i1
 			  { 
 			    int li1=_table_nlj_states[i1]._l;
 			    int li2=_table_nlj_states[i2]._l;
@@ -312,7 +312,7 @@ int main()
 				for (int Tcd=0;Tcd<=1;Tcd++){
 				  for (int j1 = 0; j1<CFG_NUM_NLJ_STATES; j1++)
 				    {
-				      for(int j2 = j1; j2<CFG_NUM_NLJ_STATES; j2++)
+				      for(int j2 = j1; j2<CFG_NUM_NLJ_STATES; j2++)  //j2=j1
 					{ 
 			    //	    printf("%d %d \n",j1,j2);
 					  int lj1=_table_nlj_states[j1]._l;
@@ -331,15 +331,38 @@ int main()
 					  double value_nn=findState(_nlj_items_nn, _num_nlj_items_nn, i1, i2,  j1, j2, 2*Jab,2*Jcd,jtrans);
 					  double value_pp=findState(_nlj_items_pp, _num_nlj_items_pp, i1, i2,  j1, j2, 2*Jab,2*Jcd,jtrans);
 					  double value_np=findState(_nlj_items_np, _num_nlj_items_np, i1, i2,  j1, j2, 2*Jab,2*Jcd,jtrans);  
-					  // printf("testst %d %d %d %d %d %d %d %d %f \n",i1,i2,j1,j2,Jab, Tab,Jcd,Tcd,value_nn);
-		      
-					  //double j3nnab=0.0;
-					  //			  double j3nncd=0.0;
-					  // j3nnab=gsl_sf_coupling_3j(1, 1, 2*Tab,-1,-1, 2);
-					  //					  j3nncd=gsl_sf_coupling_3j(1,1,2*Tcd,-1,-1,2);
+					  double rev1_np=0.0;
+					  double rev2_np=0.0;
+					  double rev3_np=0.0;
+					  
+					  if(i1!=i2){
+					    rev1_np=findState(_nlj_items_np,_num_nlj_items_np,i2,i1,j1,j2,2*Jab,2*Jcd,jtrans);
+					   
+					    if(rev1_np){rev1_np=rev1_np*pow(-1.,-(ji1+ji2)/2+Jab+Tab-1);}
+					  }
+					  if(j2!=j1){  rev2_np=findState(_nlj_items_np,_num_nlj_items_np,i1,i2,j2,j1,2*Jab,2*Jcd,jtrans);
+					    if(rev2_np){rev2_np=rev2_np*pow(-1.,-(jj1+jj2)/2+Jcd+Tcd-1);}
+
+					  }
+					  if(i1!=i2&&j2!=j1){
+					    //   printf("i1 %d i2 %d: j1 %d j2 %d -  %f %d\n", i1,i2,j1,j2,pow(-1.,(ji1+ji2+jj1+jj2)/2-Jab-Jcd-Tab-Tcd),ji2);
+					    rev3_np=findState(_nlj_items_np,_num_nlj_items_np,i2,i1,j2,j1,2*Jab,2*Jcd,jtrans);
+					    if(rev3_np){rev3_np=rev3_np*pow(-1.,-(ji1+ji2+jj1+jj2)/2+Jab+Jcd+Tab+Tcd);}
+
+					  }
+					  //			  if(rev1_np||rev2_np||rev3_np){
+					  //  printf("Value: %f %f %f %f \n",value_np,rev1_np,rev2_np,rev3_np);
+					  // }
+
+					  // if(value_np&&(i1>i2)){
+					  // printf("Changing order:  %d %d -> %d %d phase:%f \n",i1,i2,i2,i1,pow(-1,(lj1+lj2)/2-Jab-Tab)+1);
+					    
+					  // }
+
 					  double clebsch_nn=0.0;//sqrt(2.0*Tab+1.0)*sqrt(2.0*Tcd+1.0)*j3nnab*j3nncd;
 					  double clebsch_pp=0.0;
 					  double clebsch_np=0.0;
+					  
 					  if(Tab==1 && Tcd==1){
 					    clebsch_nn=1.0;
 					    clebsch_pp=1.0;
@@ -349,24 +372,21 @@ int main()
 					    clebsch_pp=0.0;
 					  }
 					 
-
-					  
-					  // double j3npab=0.0;
-					  // double j3npcd=0.0;
-					  //					  j3npab=gsl_sf_coupling_3j(1, 1, 2*Tab,-1, 1, 0);  //Opposite situation? pn-coupling?
-					  //j3npcd=gsl_sf_coupling_3j(1,1,2*Tcd,-1,1,0);
-					  
-					  // double clebsch_np=sqrt(2.0*Tab+1.0)*sqrt(2.*Tcd+1.0)*j3npab*j3npcd;
-					  double Nab=norm(ni1,li1,ji1,ni2,li2,ji2,Jab,Tab);
+					  clebsch_np=gsl_sf_coupling_3j(1,1,2*Tab,1,-1,0)*gsl_sf_coupling_3j(1,1,2*Tcd,1,-1,0)*sqrt(2*Tab+1)*sqrt(2*Tcd+1);
+				       
+				      	  double Nab=norm(ni1,li1,ji1,ni2,li2,ji2,Jab,Tab);
 					  double Ncd=norm(nj1,lj1,jj1,nj2,lj2,jj2,Jcd,Tcd);
-					  //	  printf("%d %d %7.2f %7.2f %7.2f %7.2f %7.2f\n",twob1,twob2,value_nn,mult,clebsch_nn,Nab,Ncd);
-
+					  if(twob1==13 && twob2==13){
+					  printf("%d %d %7.2f %7.2f %7.2f %7.2f %7.2f\n",twob1,twob2,value_np,mult,clebsch_np,Nab,Ncd);
+					  }
 					  value_nn=value_nn*mult*clebsch_nn*Nab*Ncd;
 					  value_pp=value_pp*mult*clebsch_pp*Nab*Ncd;
-					  value_np=value_np*mult*clebsch_np*Nab*Ncd;
+					  //value_np=(rev3_np+value_np)*mult*clebsch_np*Nab*Ncd;
+					  // printf("test %f %f %f %f \n",value_np,rev1_np,rev2_np,rev3_np);
+					  value_np=(value_np+rev1_np+rev2_np+rev3_np)*mult*clebsch_np*Nab*Ncd;
 		  //Compute Isospin Clebsch. Multiply with value_*
-		  
-					    if (value_np || value_pp || value_nn ){
+					  
+					  if (value_np || value_pp || value_nn ){
 					   printf(" (a+a+)J=%5d  (a-a-)J=%5d   td: pn=%10.6f   pp=%10.6f   nn=%10.6f - Jab=%d Tab=%d Jcd=%d Tcd=%d\n",twob1,twob2, value_np, value_pp,value_nn, Jab, Tab, Jcd,Tcd);
 					     }
 					}
