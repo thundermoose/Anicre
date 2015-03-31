@@ -1570,6 +1570,11 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
 			   (cfg._num_change == 2 ? 1 : 0));
 	out_config.fprintf("#define CFG_ANICR_NP                   %d\n",
 			   (cfg._change_pn_at ? 1 : 0));
+	
+#define FILENAME_NLJ "nlj_out-%s.bin"
+
+	out_config.fprintf("#define CFG_FILENAME_NLJ     "
+                           "\"" FILENAME_NLJ "\"\n", cfg._ident); 
       }
     }
 
