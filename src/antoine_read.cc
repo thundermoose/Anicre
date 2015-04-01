@@ -911,58 +911,6 @@ void mr_antoine_reader<header_version_t, fon_version_t>::make_nlj_map()
   printf ("NLJ used: %4d\n", nlj_used);
   printf ("max j used: %4d\n", _max_j);
 }
-template<class header_version_t,class fon_version_t> 
-void mr_antoine_reader<header_version_t,fon_version_t>::make_tbs_map()
-{
-  printf("Testing in make_tbs_map");
-    int Jmax=_max_j;
-    int Jmin=0;
-    printf("/********************************************/\n");
-    //  out.fprintf("/* Table.  nlj_states: %7zd               */\n",
-      //      nljs.size());
-    //   out.fprintf("\n");
-  // out.fprintf("nlj_state_info _table_nlj_states[] =\n");
-  //    out.fprintf("{\n");
-  //  out.fprintf("  /*       i   N        n    l   2j */\n");
-  //    out.fprintf("TWO_BODY\n");
-      int nhommax=_nhomax;
-    int ind=0;
-    for (int pi=0; pi<=1; pi++){
-          printf("%2d",pi);
-        for (int J=Jmin; J<=Jmax; J++)
-          {
-	         printf("J %3d \n",J);
-	      for (int T=0;T<=1;T++)
-	        {
-	    for (size_t ii = 0; ii < _nljs.size(); ii++)
-	        {
-		    for (size_t jj=ii; jj <_nljs.size(); jj++)
-		     
-		        {
-		    const nlj_state &nlj1 = _nljs[ii];
-		    const nlj_state &nlj2 = _nljs[jj];
-		    if((nlj1._l+nlj2._l)%2!=pi){continue;}
-		    
-		    if((nlj1._n*2+nlj1._l+nlj2._n*2+nlj2._l)>nhommax){continue;}
-		    if((nlj1._j-nlj2._j)>J*2 or (nlj2._j-nlj1._j)>2*J){continue;}
-			if((nlj1._j+nlj2._j)<J*2){continue;}
-			//energy
-			  //symmetry i==jj 
-			if(ii==jj && (J+T)%2==0)
-			    {
-			      continue;}
-		        printf("  {%3d, %3lu, %3lu, %3d, %3d, %3d },\n",
-				           ind,ii,jj, J,T,pi);
-
-		        ind++;
-
-			}
-		  }
-	          }
-	    }
-      }
-
-}
 
 template<class header_version_t, class fon_version_t>
 void mr_antoine_reader<header_version_t, fon_version_t>::make_sps_map()
