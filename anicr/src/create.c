@@ -856,9 +856,12 @@ void created_state(int *in_sp_other,
 #if ACC_TABLE
   _accumulate[acc_i] += val * _cur_val * sign;
 #endif
-  
+
+#if DEBUG_COUPLING
   /*Print coefficients for all connections*/
   printf("Coefficients: a1=%4d a2=%4d c1=%4d c2=%4d : bmpi=  %11.8f bmpf=  %11.8f sign= %3d\n",sp_anni1,sp_anni2,sp_crea1,sp_crea2,val,_cur_val,sign);
+#endif
+
   accumulate_advance_add(key, &acc_x);
   accumulate_post_add(acc_x, val * _cur_val * sign);
 
