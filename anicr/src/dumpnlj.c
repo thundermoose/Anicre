@@ -194,6 +194,51 @@ int main()
   _nlj_items_pp=readDumpfile(filename_pp,&_num_nlj_items_pp);
   _nlj_items_np=readDumpfile(filename_np,&_num_nlj_items_np);
 
+  printf("trdens.out:\n");
+  printf(" OBDME calulations\n");
+  printf(" T \n"); //if diagonal elements.
+  printf(" Wave functions read from anto.egv file");
+  printf("\n \n *** Nuclear states ***\n");
+  printf(" Nucleus:\n");
+  int A=6;
+  int Z=2;
+  int N=4;
+  int MT=2;
+  char parity='+';
+  float hw=20.0;
+  int Nhw=10;
+  int dim=10;
+  int nhme=10;
+  int k1max=1;
+  int mxnwd=1;
+  int mxsps=1;
+  int major=2;
+  int iparity=0;
+  float T=0.0;
+  float energy=-25.0;
+  float ex=0.0;
+  int n1max=0;
+  int n12max=0;
+  int nasps=0;
+  int nosp=1;
+  int nnlj=0;
+  int lnlj=1;
+  int j2nlj=1;
+  int num=1;
+  printf(" A=%3d   Z=%3d   N=%3d\n",A,Z,N);
+  printf(" 2*MJ=%3d   2*MT=%3d  parity= %c \n",CFG_2M_INITIAL,MT,parity);
+  printf(" hbar Omega=%8.4f   Nhw=%3d   dimension=%8d   nhme=%10d\n",hw,Nhw,dim,nhme);
+  printf(" k1max=%3d   mxnwd=%3d   mxsps=%8d   major=%2d   iparity=%d\n \n",k1max,mxnwd,mxsps,major,iparity);
+  
+  printf(" J=%7.4f    T=%7.4f     Energy=%12.4f     Ex=%12.4f\n \n",CFG_2J_INITIAL/2.,T,energy,ex);
+  printf(" N1_max=%4d   N12_max=%4d    Nasps=%4d\n \n",n1max,n12max,nasps);
+  printf(" wave functions of the states #  1 -  1 used \n \n");   //Fixed for only gs.
+  printf(" wave functions of the states #  1 -  1 used \n \n");
+  printf(" number of single-nucleon states=%4d\n",nosp);
+  //for-loop
+  printf(" #%4d  n=%3d  l=%3d  j=%2d/2\n",num,nnlj,lnlj,j2nlj);
+
+
 
   int jtrans_min = abs(CFG_2J_INITIAL - CFG_2J_FINAL);
   int jtrans_max = CFG_2J_INITIAL + CFG_2J_FINAL;
