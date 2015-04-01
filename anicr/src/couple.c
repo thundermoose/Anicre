@@ -188,22 +188,23 @@ void couple_accumulate()
 		}
 #endif
 	    }
-
+	    printf("tesssss");  
 	  if (acc_value)
 	    {
 	      sp_state_info *sp_a1 = &_table_sp_states[sp_anni1];
 	      sp_state_info *sp_a2 = &_table_sp_states[sp_anni2];
 	      sp_state_info *sp_c1 = &_table_sp_states[sp_crea1];
 	      sp_state_info *sp_c2 = &_table_sp_states[sp_crea2];
-
-#if DEBUG_ACCUMULATE
+	      printf("TEST! ");
+	      #if DEBUG_ACCUMULATE
+	      printf("test2")
 	      printf ("a: %3d,%3d  c %3d,%3d"
 		      " : %2d %2d,%2d %2d - %2d %2d,%2d %2d [%10.6f]",
 		      sp_anni1+1, sp_anni2+1, sp_crea1+1, sp_crea2+1,
 		      sp_a1->_j, sp_a1->_m, sp_a2->_j, sp_a2->_m, 
 		      sp_c1->_j, sp_c1->_m, sp_c2->_j, sp_c2->_m,
 		      _accumulate[acc_i]);
-#endif
+	     #endif
 
 	      /* We need to connect the annihilated and created states.
 	       */
@@ -330,8 +331,8 @@ void couple_accumulate()
 		  gsl_sf_result result;
 	  
 		  int ret =
-		    gsl_sf_coupling_3j_e(anni_j, jtrans,  crea_j,
-					 anni_m, -sum_m, -crea_m,
+		    gsl_sf_coupling_3j_e(anni_j, jtrans ,crea_j,
+					 anni_m, sum_m, -crea_m,
 					 &result);
 
 		  if (ret != GSL_SUCCESS)
@@ -660,20 +661,20 @@ void couple_accumulate_2()
 	    }
 
 	  int sign =
-	    1 - ((apg->_info._j[0] - apg->_info._j[1] + anni_m + anni_j) & 2);
+	    1 - ((apg->_info._j[0] - apg->_info._j[1] + anni_m) & 2);    //DS
 
 	  mult_anni = result.val * sign;
-	  /*
+	  
 	  if (mult_anni > 10000. || mult_anni < -10000.0)
 	    {
-#if DEBUG_ACCUMULATE
+	    #if DEBUG_ACCUMULATE 
 	      printf ("\n=== {%d %d %d, %d %d %d} [%11.6f %d] ===\n",
 		      sp_a1->_j, sp_a2->_j,  anni_j,
 		      sp_a1->_m, sp_a2->_m, -anni_m,
 		      result.val, sign);
-#endif
+	       #endif
 	    }
-	  */
+	 
 	  /*
 	  val_anni = result.val;
 	  sign_anni = sign;
@@ -836,20 +837,20 @@ void couple_accumulate_2()
 		}
 
 	      int sign =
-		1 - ((cpg->_info._j[0] - cpg->_info._j[1] + 2 * crea_m) & 2);
+		1 - ((cpg->_info._j[0] - cpg->_info._j[1] +  crea_m) & 2);   //DS:Crea_m or 2*Crea_m
 
 	      mult_crea = result.val * sign;
-	  /*
+	  
 	  if (mult_crea > 10000. || mult_crea < -10000.0)
 	    {
-#if DEBUG_ACCUMULATE
+	    #if DEBUG_ACCUMULATE 
 	      printf ("\n=== {%d %d %d, %d %d %d} [%11.6f %d] ===\n",
 		      sp_a1->_j, sp_a2->_j,  crea_j,
 		      sp_a1->_m, sp_a2->_m, -crea_m,
 		      result.val, sign);
-#endif
+	      #endif
 	    }
-	  */
+	  
 	  /*
 	  val_crea = result.val;
 	  sign_crea = sign;
@@ -858,15 +859,14 @@ void couple_accumulate_2()
 	  if (sp_c1->_nlj == sp_c2->_nlj)
 	    mult_crea *= M_SQRT2;
 	  */
-
-	      mult_crea *= sqrt(crea_j + 1); /* sqrt(2*j+1) */
-
-	      end_crea->_j   = crea_j;
-	      end_crea->_val = mult_crea;
-	      end_crea++;
-
-	      assert ((size_t) (end_crea - crea_items) <=
-		      sizeof(crea_items) / sizeof(crea_items[0]));
+	  mult_crea *= sqrt(crea_j + 1); /* sqrt(2*j+1) */
+	      
+	  end_crea->_j   = crea_j;
+	  end_crea->_val = mult_crea;
+	  end_crea++;
+	  
+	  assert ((size_t) (end_crea - crea_items) <=
+		  sizeof(crea_items) / sizeof(crea_items[0]));
 	    }
 	  }
 
@@ -896,17 +896,17 @@ void couple_accumulate_2()
 		  min_j = jtrans_min;
 		if (max_j > jtrans_max)
 		  max_j = jtrans_max;
-
+		/* Move to dumpnlj:
 		double anni_crea_factor[4];
 
-		double anni_factor = (anni_item->_j & 2) ? 0 : M_SQRT2;
-		double crea_factor = (crea_item->_j & 2) ? 0 : M_SQRT2;
+		double anni_factor = (anni_item->_j & 2) ? 0 : M_SQRT2;      
+		double crea_factor = (crea_item->_j & 2) ? 0 : M_SQRT2;  
 
 		anni_crea_factor[0] = 1;
 		anni_crea_factor[1] = anni_factor;
 		anni_crea_factor[2] = crea_factor;
 		anni_crea_factor[3] = anni_factor * crea_factor;
-		
+		*/
 		int jtrans;
 
 		for (jtrans = min_j; jtrans <= max_j; jtrans += 2)
@@ -916,8 +916,8 @@ void couple_accumulate_2()
 		    gsl_sf_result result;
 		    
 		    int ret =
-		      gsl_sf_coupling_3j_e(anni_item->_j,jtrans,crea_item->_j,
-					   anni_m,       -sum_m,-crea_m,
+		      gsl_sf_coupling_3j_e(anni_item->_j,jtrans,crea_item->_j,   //DS:-sum_m=sum_m
+					   anni_m,       sum_m,-crea_m,
 					   &result);
 
 		    if (ret != GSL_SUCCESS)
@@ -926,12 +926,10 @@ void couple_accumulate_2()
 			exit(1);
 		      }
 
-		    int sign = 1/* - ((crea_j - jtrans + anni_m) & 2)*/;
-		    (void) sign;
+		    int sign = 1 - ((anni_item->_j - jtrans + crea_m) & 2);   
 
 		    double coupling =
-		      result.val * anni_item->_val * crea_item->_val;
-
+		      result.val * anni_item->_val * crea_item->_val*sign;
 		    uint64_t key_jjj =
 		      (((uint64_t) anni_item->_j) << 44) |
 		      (((uint64_t) crea_item->_j) << 51) |
@@ -940,16 +938,14 @@ void couple_accumulate_2()
 		    /* And now, apply this to all items in the list! */
 
 		    couple_item *items;
-
 		    for (items = _couple_items; items != end_items; items++)
 		      {
 			uint64_t key =
 			  items->_nlj_key | key_jjj;
 
-			double factor =
-			  anni_crea_factor[items->_fact_anni_crea];
-
-			nlj_add(key, items->_value * coupling * factor);
+			//	double factor =anni_crea_factor[items->_fact_anni_crea];
+		       
+			nlj_add(key, items->_value * coupling);
 		      }
 		  }
 	      }

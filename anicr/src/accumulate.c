@@ -1164,7 +1164,7 @@ void write_nlj()
 
   printf ("%zd nlj pair comb, %zd non-zero.\n", num_nlj_comb, nz);
 
-  int fd = open ("nlj_out.bin",
+  int fd = open (CFG_FILENAME_NLJ,
 		 O_WRONLY | O_CREAT | O_TRUNC
 #ifdef O_LARGEFILE
 		 | O_LARGEFILE
