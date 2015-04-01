@@ -1368,9 +1368,7 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
   find_mp_bit_packing();
   find_energy_dump_states(mp_info);
   if (_config._td_dir)
-    dump_wavefcn();
-  make_tbs_map();   //create two-body states when max_N is computed.
-  
+    dump_wavefcn();  
 }
 
 template<class header_version_t, class fon_version_t>

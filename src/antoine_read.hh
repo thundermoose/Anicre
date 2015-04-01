@@ -140,7 +140,6 @@ protected:
   void info_jm_used();
   void find_nlj_used();
   void make_nlj_map();
-  void make_tbs_map();
   void make_sps_map();
   void find_sp_pairs();
   void find_mp_bit_packing();
