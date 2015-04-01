@@ -480,10 +480,14 @@ void annihilate_states_2nd(int *in_sp_other,
   if (sp_anni1 < in_sp[1])
     {
 #if CFG_ANICR_THREE
+# if CFG_CONN_TABLES
       if (SP_STATE_E(sp_info[in_sp[1]]) <= depth)
+# endif
 	annihilate_states_3rd
 #else
+# if CFG_CONN_TABLES
       if (SP_STATE_E(sp_info[in_sp[1]]) == depth)
+# endif
 	create_states_1st
 #endif
 	/**/             (in_sp_other,
@@ -512,10 +516,14 @@ void annihilate_states_2nd(int *in_sp_other,
       if (sp_anni1 < in_sp[i+1])
 	{
 #if CFG_ANICR_THREE
+# if CFG_CONN_TABLES
 	  if (SP_STATE_E(sp_info[in_sp[i+1]]) <= depth)
+# endif
 	    annihilate_states_3rd
 #else
+# if CFG_CONN_TABLES
 	  if (SP_STATE_E(sp_info[in_sp[i+1]]) == depth)
+# endif
 	    create_states_1st
 #endif
       /**/               (in_sp_other,
