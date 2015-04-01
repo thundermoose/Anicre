@@ -161,6 +161,7 @@ int compare_jm_pair_info_sort_summ_jmjm(const void *p1, const void *p2)
   return compare_jm_pair_info_sort_jmjm(p1, p2);
 }
 
+#if !CFG_CONN_TABLES
 void alloc_accumulate()
 {
 #if ACC_TABLE
@@ -714,7 +715,7 @@ void alloc_accumulate()
           (double) num_accum_comb / ((double) (_acc_hash_mask + 1)),
           (double) sum_coll / (double) num_accum_comb, max_coll);
 }
-
+#endif
 
 
 
@@ -770,6 +771,7 @@ nlj_hash_item *_nlj_hash;
 uint64_t       _nlj_hash_mask = 0;
 
 
+#if !CFG_CONN_TABLES
 void prepare_nlj()
 {
   /* Each nljm state implies an nlj state.
@@ -1067,7 +1069,7 @@ void prepare_nlj()
           (double) sum_coll / (double) num_nlj_comb, max_coll);
 
 }
-
+#endif
 
 
 void nlj_add(uint64_t key, double value)
