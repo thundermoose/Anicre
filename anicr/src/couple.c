@@ -197,7 +197,7 @@ void couple_accumulate()
 	      sp_state_info *sp_c1 = &_table_sp_states[sp_crea1];
 	      sp_state_info *sp_c2 = &_table_sp_states[sp_crea2];
 	      printf("TEST! ");
-	      #if DEBUG_ACCUMULATE
+#if DEBUG_ACCUMULATE
 	      printf("test2")
 	      printf ("a: %3d,%3d  c %3d,%3d"
 		      " : %2d %2d,%2d %2d - %2d %2d,%2d %2d [%10.6f]",
@@ -205,7 +205,7 @@ void couple_accumulate()
 		      sp_a1->_j, sp_a1->_m, sp_a2->_j, sp_a2->_m, 
 		      sp_c1->_j, sp_c1->_m, sp_c2->_j, sp_c2->_m,
 		      _accumulate[acc_i]);
-	     #endif
+#endif
 
 	      /* We need to connect the annihilated and created states.
 	       */
@@ -668,12 +668,12 @@ void couple_accumulate_2()
 	  
 	  if (mult_anni > 10000. || mult_anni < -10000.0)
 	    {
-	    #if DEBUG_ACCUMULATE 
+#if DEBUG_ACCUMULATE 
 	      printf ("\n=== {%d %d %d, %d %d %d} [%11.6f %d] ===\n",
 		      sp_a1->_j, sp_a2->_j,  anni_j,
 		      sp_a1->_m, sp_a2->_m, -anni_m,
 		      result.val, sign);
-	       #endif
+#endif
 	    }
 	 
 	  /*
@@ -844,12 +844,12 @@ void couple_accumulate_2()
 	  
 	  if (mult_crea > 10000. || mult_crea < -10000.0)
 	    {
-	    #if DEBUG_ACCUMULATE 
+#if DEBUG_ACCUMULATE 
 	      printf ("\n=== {%d %d %d, %d %d %d} [%11.6f %d] ===\n",
 		      sp_a1->_j, sp_a2->_j,  crea_j,
 		      sp_a1->_m, sp_a2->_m, -crea_m,
 		      result.val, sign);
-	      #endif
+#endif
 	    }
 	  
 	  /*
