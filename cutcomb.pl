@@ -113,11 +113,11 @@ for (my $Ep = 0; $Ep <= $maxE; $Ep++)
 
 		    print sprintf ("%3d %3d  %3d %3d   ".
 				   "%8d %8d  %8d  ".
-				   "# ARRAY:%4d=%8d\n",
+				   "# ARRAYMP:%4d=%8d\n",
 				   $Ep, $Mp, $En, $Mn,
 				   $states_p, $states_n,
 				   $mp_states,
-				   $numarray, $mp_states * 8 * 8);
+				   $numarray, $mp_states * 8);
 
 		    $total_mp_states += $mp_states;
 
@@ -304,12 +304,13 @@ sub pn_conn($$$)
 				       "%3d %3d   %3d %3d   %3d   ".
 				       "%8d %8d  ".
 				       "%8d %8d  %12d  ".
-				       "# CALCBLOCK:%4d,%4d,%6d,%6d,%6d\n",
+				       "# CALCBLOCK:%d:%4d,%4d,%6d,%6d,%6d\n",
 				       $Ep1, $Mp1, $En1, $Mn1, $Dp1,
 				       $Ep2, $Mp2, $En2, $Mn2, $Dn1,
 				       $states1, $states2,
 				       $conn_p, $conn_n,
 				       $conn,
+				       $nforce,
 				       $array1, $array2,
 				       $parray, $narray, $Varray);
 
@@ -446,7 +447,7 @@ sub dia_conn($$)
 				   "%3d %3d   %3d".
 				   "%8d  ".
 				   "%8d %8d  %12d  ".
-				   "# CALCBLOCK:%4d,%4d,%6d,%6d\n",
+				   "# CALCBLOCK:%d:%4d,%4d,%6d,%6d\n",
 				   $Ep1, $Mp1,
 				   $Ep2, $Mp2,
 				   $En1, $Mn1,
@@ -454,6 +455,7 @@ sub dia_conn($$)
 				   $states1,
 				   $conn_x, $states_y,
 				   $conn_x * $states_y,
+				   $nforce,
 				   $array1, $array2,
 				   $xarray, $Varray);
 
