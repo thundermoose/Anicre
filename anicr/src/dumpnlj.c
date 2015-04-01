@@ -32,10 +32,8 @@ double findState(nlj_hash_item *nlj_items, size_t num_nlj_items,int i1,int i2, i
 {
   uint64_t savedkey=0;
   int foundKey=0;
-    for (size_t i = 0; i < num_nlj_items; i++)
-  //    	       for (size_t i = 0; i <1; i++)
+  for (size_t i = 0; i < num_nlj_items; i++)
     {
-      //   printf("i %d %d\n",(int)i,(int)num_nlj_items);
    
       uint64_t key = nlj_items[i]._key;
       
@@ -50,11 +48,9 @@ double findState(nlj_hash_item *nlj_items, size_t num_nlj_items,int i1,int i2, i
       anni_j = (key >> 44) &  0x7f;
       crea_j = (key >> 51) &  0x7f;
       key_jtrans = (int) (key >> 58);
-      //For nn
-      //      printf("TESTING %d %d %d %d %d %f \n", (int)i,nlj_a1,nlj_a2,nlj_c1,nlj_c2,(double)nlj_items[i]._value);
+
       if (key_jtrans == jtrans && nlj_c1==i1 && nlj_c2==i2 && nlj_a1==j1 && nlj_a2==j2 && anni_j==J2 && crea_j==J1)
-	{
-	  //  printf("Found state %d %d and %d %d ",i1,i2,j1,j2);
+	{	
 	  if(foundKey){
 	    printf("ERROR: More then one key found!");
 	    return 0;
@@ -62,19 +58,16 @@ double findState(nlj_hash_item *nlj_items, size_t num_nlj_items,int i1,int i2, i
 	  savedkey=i;
 	  foundKey=1;
 	}
-      //printf("test2\n");
     }
-    //  printf("Saved key %d /n",(int)savedkey);
   if(!foundKey)
     {
-    return 0;
+      return 0;
     }
   else
     {
-      //    printf("Klart!");
-    return (double)nlj_items[savedkey]._value;
+      return (double)nlj_items[savedkey]._value;
     }
-  }
+ }
 
 int compare_nlj_item(const void *p1, const void *p2)
 {
@@ -140,11 +133,9 @@ double norm(int na,int la,int ja,int nb,int lb,int jb,int J,int T) //T=0,1
 {
   if(na==nb && la==lb && ja==jb)
     {
-      
       if ((J+T)%2==1)
 	{
 	  return sqrt(2.0);
-
 	}
       else
 	{
@@ -155,14 +146,12 @@ double norm(int na,int la,int ja,int nb,int lb,int jb,int J,int T) //T=0,1
     {
       return 1.0;
     }
-  
-  
 }
 
 void*  readDumpfile(char *filename, size_t *num_nlj_items)
 { 
   nlj_hash_item *nlj_items=0;
-  // printf("Address1: %p\n",(void*)nlj_items);
+ 
   int fd = open (filename,O_RDONLY);
   if (fd == -1)
     {
@@ -175,9 +164,7 @@ void*  readDumpfile(char *filename, size_t *num_nlj_items)
   printf ("%zd nlj items.\n", *num_nlj_items);
 
   size_t sz_nlj_items = sizeof (nlj_hash_item) * *num_nlj_items;
-  // printf("test %d",(int)sz_nlj_items);
   nlj_items = (nlj_hash_item *) malloc (sz_nlj_items);
-  //printf("Address1: %p\n",(void*)nlj_items);
 
   if (!nlj_items)
     {
@@ -191,12 +178,7 @@ void*  readDumpfile(char *filename, size_t *num_nlj_items)
 
   close (fd);
  
- qsort (nlj_items, *num_nlj_items, sizeof (nlj_hash_item), compare_nlj_item);
- //for (int i=0;i<(int)*num_nlj_items;i++){
-
-  // printf("test %f",nlj_items[i]._value);
- // }
-// printf("Address1: %p\n",(void*)nlj_items);
+  qsort (nlj_items, *num_nlj_items, sizeof (nlj_hash_item), compare_nlj_item); 
 
   return nlj_items;
 }
@@ -212,7 +194,7 @@ int main()
   _nlj_items_pp=readDumpfile(filename_pp,&_num_nlj_items_pp);
   _nlj_items_np=readDumpfile(filename_np,&_num_nlj_items_np);
 
-  printf("test %d",(int) _num_nlj_items_nn);
+
   int jtrans_min = abs(CFG_2J_INITIAL - CFG_2J_FINAL);
   int jtrans_max = CFG_2J_INITIAL + CFG_2J_FINAL;
 
@@ -228,9 +210,8 @@ int main()
   int Jab;
   int pi1;
   int twob1=0;
-//List two-body states!
   printf("Two-nucleon states\n");
-      //  printf("num %d",CFG_NUM_NLJ_STATES);
+   
   for(pi1=1;pi1>=-1;pi1=pi1-2){
     for(Jab=0; Jab<=CFG_MAX_J;Jab++){
       for (Tab=0;Tab<=1;Tab++){
@@ -257,12 +238,10 @@ int main()
       }
     }
   }
-  for (jtrans = jtrans_min; jtrans <= jtrans_max; jtrans += 2)
+ for (jtrans = jtrans_min; jtrans <= jtrans_max; jtrans += 2)
     {
       printf ("Jtrans=%d\n", jtrans/2);
-
       double mult;
-
       {
 	gsl_sf_result result;
 	
@@ -273,132 +252,111 @@ int main()
 	if (ret != GSL_SUCCESS)
 	  {
 	    fprintf (stderr,"ERR! %d\n", ret);
-	    exit(1);
+	     exit(1); 
 	  }
 	int sign = 1 - ((CFG_2J_INITIAL - jtrans + CFG_2M_FINAL) & 2);
        
-	mult = 1.0 / (result.val) * sign;  //Second time?
+	mult = 1.0 / (result.val) * sign; 
 	if(result.val==0.0){continue;}
       }
-      
- 
-    
+     
       twob1=0;
       int twob2=0;
-      printf("num %d \n",CFG_NUM_NLJ_STATES);
-	      for(pi1=1;pi1>=-1;pi1=pi1-2){
-	        for(Jab=0; Jab<=CFG_MAX_J;Jab++){
-		  for (Tab=0;Tab<=1;Tab++){
-		    for (int i1 = 0; i1<CFG_NUM_NLJ_STATES; i1++)
-		      {
-			for(int i2 = i1; i2<CFG_NUM_NLJ_STATES; i2++) //i2=i1
-			  { 
-			    int li1=_table_nlj_states[i1]._l;
-			    int li2=_table_nlj_states[i2]._l;
-			    int ni1=_table_nlj_states[i1]._n;
-			    int ni2=_table_nlj_states[i2]._n;
-			    int ji1=_table_nlj_states[i1]._j;
-			    int ji2=_table_nlj_states[i2]._j;
-			    if(ji1+ji2<2*Jab){continue;}
-			    if(abs(ji1-ji2)>2*Jab){continue;}
-			    if(pow(-1,(li1+li2))!=pi1){continue;}
-			    if(i1==i2 && pow(-1,(Jab+Tab))!=-1){continue;}
-			    if(2*ni1+li1+2*ni2+li2>CFG_MAX_SUM_E){continue;}
-
-			    twob1++;
-			    twob2=0;
-			    for(int pi2=1;pi2>=-1;pi2=pi2-2){
-			      for(int Jcd=0; Jcd<=CFG_MAX_J;Jcd++){
-				for (int Tcd=0;Tcd<=1;Tcd++){
-				  for (int j1 = 0; j1<CFG_NUM_NLJ_STATES; j1++)
-				    {
-				      for(int j2 = j1; j2<CFG_NUM_NLJ_STATES; j2++)  //j2=j1
-					{ 
-			    //	    printf("%d %d \n",j1,j2);
-					  int lj1=_table_nlj_states[j1]._l;
-					  int lj2=_table_nlj_states[j2]._l;
-					  int nj1=_table_nlj_states[j1]._n;
-					  int nj2=_table_nlj_states[j2]._n;
-					  int jj1=_table_nlj_states[j1]._j;
-					  int jj2=_table_nlj_states[j2]._j;
-					  if(jj1+jj2<2*Jcd){continue;}
-					  if(abs(jj1-jj2)>2*Jcd){continue;}
-					  if(pow(-1,(lj1+lj2))!=pi2){continue;}
-					  if(j1==j2 && pow(-1,(Jcd+Tcd))!=-1){continue;}
-					  if(2*nj1+lj1+2*nj2+lj2>CFG_MAX_SUM_E){continue;}
-
-					  twob2++;
-					  double value_nn=findState(_nlj_items_nn, _num_nlj_items_nn, i1, i2,  j1, j2, 2*Jab,2*Jcd,jtrans);
-					  double value_pp=findState(_nlj_items_pp, _num_nlj_items_pp, i1, i2,  j1, j2, 2*Jab,2*Jcd,jtrans);
-					  double value_np=findState(_nlj_items_np, _num_nlj_items_np, i1, i2,  j1, j2, 2*Jab,2*Jcd,jtrans);  
-					  double rev1_np=0.0;
-					  double rev2_np=0.0;
-					  double rev3_np=0.0;
-					  
-					  if(i1!=i2){
-					    rev1_np=findState(_nlj_items_np,_num_nlj_items_np,i2,i1,j1,j2,2*Jab,2*Jcd,jtrans);
-					   
-					    if(rev1_np){rev1_np=rev1_np*pow(-1.,-(ji1+ji2)/2+Jab+Tab-1);}
-					  }
-					  if(j2!=j1){  rev2_np=findState(_nlj_items_np,_num_nlj_items_np,i1,i2,j2,j1,2*Jab,2*Jcd,jtrans);
-					    if(rev2_np){rev2_np=rev2_np*pow(-1.,-(jj1+jj2)/2+Jcd+Tcd-1);}
-
-					  }
-					  if(i1!=i2&&j2!=j1){
-					    //   printf("i1 %d i2 %d: j1 %d j2 %d -  %f %d\n", i1,i2,j1,j2,pow(-1.,(ji1+ji2+jj1+jj2)/2-Jab-Jcd-Tab-Tcd),ji2);
-					    rev3_np=findState(_nlj_items_np,_num_nlj_items_np,i2,i1,j2,j1,2*Jab,2*Jcd,jtrans);
-					    if(rev3_np){rev3_np=rev3_np*pow(-1.,-(ji1+ji2+jj1+jj2)/2+Jab+Jcd+Tab+Tcd);}
-
-					  }
-					  //			  if(rev1_np||rev2_np||rev3_np){
-					  //  printf("Value: %f %f %f %f \n",value_np,rev1_np,rev2_np,rev3_np);
-					  // }
-
-					  // if(value_np&&(i1>i2)){
-					  // printf("Changing order:  %d %d -> %d %d phase:%f \n",i1,i2,i2,i1,pow(-1,(lj1+lj2)/2-Jab-Tab)+1);
-					    
-					  // }
-
-					  double clebsch_nn=0.0;//sqrt(2.0*Tab+1.0)*sqrt(2.0*Tcd+1.0)*j3nnab*j3nncd;
-					  double clebsch_pp=0.0;
-					  double clebsch_np=0.0;
-					  
-					  if(Tab==1 && Tcd==1){
-					    clebsch_nn=1.0;
-					    clebsch_pp=1.0;
-					  }
-					  else{
-					    clebsch_nn=0.0;
-					    clebsch_pp=0.0;
-					  }
-					 
-					  clebsch_np=gsl_sf_coupling_3j(1,1,2*Tab,1,-1,0)*gsl_sf_coupling_3j(1,1,2*Tcd,1,-1,0)*sqrt(2*Tab+1)*sqrt(2*Tcd+1);
-				       
-				      	  double Nab=norm(ni1,li1,ji1,ni2,li2,ji2,Jab,Tab);
-					  double Ncd=norm(nj1,lj1,jj1,nj2,lj2,jj2,Jcd,Tcd);
-					  if(twob1==13 && twob2==13){
-					  printf("%d %d %7.2f %7.2f %7.2f %7.2f %7.2f\n",twob1,twob2,value_np,mult,clebsch_np,Nab,Ncd);
-					  }
-					  value_nn=value_nn*mult*clebsch_nn*Nab*Ncd;
-					  value_pp=value_pp*mult*clebsch_pp*Nab*Ncd;
-					  //value_np=(rev3_np+value_np)*mult*clebsch_np*Nab*Ncd;
-					  // printf("test %f %f %f %f \n",value_np,rev1_np,rev2_np,rev3_np);
-					  value_np=(value_np+rev1_np+rev2_np+rev3_np)*mult*clebsch_np*Nab*Ncd;
-		  //Compute Isospin Clebsch. Multiply with value_*
-					  
-					  if (value_np || value_pp || value_nn ){
-					   printf(" (a+a+)J=%5d  (a-a-)J=%5d   td: pn=%10.6f   pp=%10.6f   nn=%10.6f - Jab=%d Tab=%d Jcd=%d Tcd=%d\n",twob1,twob2, value_np, value_pp,value_nn, Jab, Tab, Jcd,Tcd);
-					     }
-					}
-				    }
-				}
-			      }
-			    }
+   
+      for(pi1=1;pi1>=-1;pi1=pi1-2){
+	for(Jab=0; Jab<=CFG_MAX_J;Jab++){
+	  for (Tab=0;Tab<=1;Tab++){
+	    for (int i1 = 0; i1<CFG_NUM_NLJ_STATES; i1++){
+	      for(int i2 = i1; i2<CFG_NUM_NLJ_STATES; i2++){
+		int li1=_table_nlj_states[i1]._l;
+		int li2=_table_nlj_states[i2]._l;
+		int ni1=_table_nlj_states[i1]._n;
+		int ni2=_table_nlj_states[i2]._n;
+		int ji1=_table_nlj_states[i1]._j;
+		int ji2=_table_nlj_states[i2]._j;
+		if(ji1+ji2<2*Jab){continue;}
+		if(abs(ji1-ji2)>2*Jab){continue;}
+		if(pow(-1,(li1+li2))!=pi1){continue;}
+		if(i1==i2 && pow(-1,(Jab+Tab))!=-1){continue;}
+		if(2*ni1+li1+2*ni2+li2>CFG_MAX_SUM_E){continue;}
+		
+		twob1++;
+		twob2=0;
+		for(int pi2=1;pi2>=-1;pi2=pi2-2){
+		  for(int Jcd=0; Jcd<=CFG_MAX_J;Jcd++){
+		    for (int Tcd=0;Tcd<=1;Tcd++){
+		      for (int j1 = 0; j1<CFG_NUM_NLJ_STATES; j1++){
+			for(int j2 = j1; j2<CFG_NUM_NLJ_STATES; j2++) {
+			  int lj1=_table_nlj_states[j1]._l;
+			  int lj2=_table_nlj_states[j2]._l;
+			  int nj1=_table_nlj_states[j1]._n;
+			  int nj2=_table_nlj_states[j2]._n;
+			  int jj1=_table_nlj_states[j1]._j;
+			  int jj2=_table_nlj_states[j2]._j;
+			  if(jj1+jj2<2*Jcd){continue;}
+			  if(abs(jj1-jj2)>2*Jcd){continue;}
+			  if(pow(-1,(lj1+lj2))!=pi2){continue;}
+			  if(j1==j2 && pow(-1,(Jcd+Tcd))!=-1){continue;}
+			  if(2*nj1+lj1+2*nj2+lj2>CFG_MAX_SUM_E){continue;}
+			  
+			  twob2++;
+			  double value_nn=findState(_nlj_items_nn, _num_nlj_items_nn, i1, i2,  j1, j2, 2*Jab,2*Jcd,jtrans);
+			  double value_pp=findState(_nlj_items_pp, _num_nlj_items_pp, i1, i2,  j1, j2, 2*Jab,2*Jcd,jtrans);
+			  double value_np=findState(_nlj_items_np, _num_nlj_items_np, i1, i2,  j1, j2, 2*Jab,2*Jcd,jtrans);  
+			  double rev1_np=0.0;
+			  double rev2_np=0.0;
+			  double rev3_np=0.0;
+			  
+			  if(i1!=i2){
+			    rev1_np=findState(_nlj_items_np,_num_nlj_items_np,i2,i1,j1,j2,2*Jab,2*Jcd,jtrans);  
+			    if(rev1_np){rev1_np=rev1_np*pow(-1.,-(ji1+ji2)/2+Jab+Tab-1);}
 			  }
+			  
+			  if(j2!=j1){  
+			    rev2_np=findState(_nlj_items_np,_num_nlj_items_np,i1,i2,j2,j1,2*Jab,2*Jcd,jtrans);
+			    if(rev2_np){rev2_np=rev2_np*pow(-1.,-(jj1+jj2)/2+Jcd+Tcd-1);}
+			  }
+					  
+			  if(i1!=i2&&j2!=j1){
+			    rev3_np=findState(_nlj_items_np,_num_nlj_items_np,i2,i1,j2,j1,2*Jab,2*Jcd,jtrans);
+			    if(rev3_np){rev3_np=rev3_np*pow(-1.,-(ji1+ji2+jj1+jj2)/2+Jab+Jcd+Tab+Tcd); }
+			  }
+		   
+			  double clebsch_nn=0.0;
+			  double clebsch_pp=0.0;
+			  double clebsch_np=0.0;
+					  
+			  if(Tab==1 && Tcd==1){
+			    clebsch_nn=1.0;
+			    clebsch_pp=1.0;
+			  }
+			  else{
+			    clebsch_nn=0.0;
+			    clebsch_pp=0.0;
+			  }
+					 
+			  clebsch_np=gsl_sf_coupling_3j(1,1,2*Tab,1,-1,0)*gsl_sf_coupling_3j(1,1,2*Tcd,1,-1,0)*sqrt(2*Tab+1)*sqrt(2*Tcd+1);
+				       
+			  double Nab=norm(ni1,li1,ji1,ni2,li2,ji2,Jab,Tab);
+			  double Ncd=norm(nj1,lj1,jj1,nj2,lj2,jj2,Jcd,Tcd);
+			 
+			  value_nn=value_nn*mult*clebsch_nn*Nab*Ncd;
+			  value_pp=value_pp*mult*clebsch_pp*Nab*Ncd;
+			  value_np=(value_np+rev1_np+rev2_np+rev3_np)*mult*clebsch_np*Nab*Ncd;
+				  
+			  if (value_np || value_pp || value_nn ){
+			    printf(" (a+a+)J=%5d  (a-a-)J=%5d   td: pn=%10.6f   pp=%10.6f   nn=%10.6f - Jab=%d Tab=%d Jcd=%d Tcd=%d\n",twob1,twob2, value_np, value_pp,value_nn, Jab, Tab, Jcd,Tcd);
+			  }
+			}
 		      }
+		    }
 		  }
 		}
 	      }
+	    }
+	  }
+	}
+      }
     }
 
   free (_nlj_items_nn);
