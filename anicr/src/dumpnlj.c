@@ -316,17 +316,17 @@ int main()
 			  
 			  if(i1!=i2){
 			    rev1_np=findState(_nlj_items_np,_num_nlj_items_np,i2,i1,j1,j2,2*Jab,2*Jcd,jtrans);  
-			    if(rev1_np){rev1_np=rev1_np*pow(-1.,-(ji1+ji2)/2+Jab+Tab-1);}
+			    if(rev1_np){rev1_np=rev1_np*pow(-1.,(ji1+ji2)/2-Jab-Tab);}
 			  }
 			  
 			  if(j2!=j1){  
 			    rev2_np=findState(_nlj_items_np,_num_nlj_items_np,i1,i2,j2,j1,2*Jab,2*Jcd,jtrans);
-			    if(rev2_np){rev2_np=rev2_np*pow(-1.,-(jj1+jj2)/2+Jcd+Tcd-1);}
+			    if(rev2_np){rev2_np=rev2_np*pow(-1.,(jj1+jj2)/2-Jcd-Tcd);}
 			  }
 					  
 			  if(i1!=i2&&j2!=j1){
 			    rev3_np=findState(_nlj_items_np,_num_nlj_items_np,i2,i1,j2,j1,2*Jab,2*Jcd,jtrans);
-			    if(rev3_np){rev3_np=rev3_np*pow(-1.,-(ji1+ji2+jj1+jj2)/2+Jab+Jcd+Tab+Tcd); }
+			    if(rev3_np){rev3_np=rev3_np*pow(-1.,(ji1+ji2+jj1+jj2)/2-Jab-Jcd-Tab-Tcd); }
 			  }
 		   
 			  double clebsch_nn=0.0;
@@ -351,7 +351,7 @@ int main()
 			  value_pp=value_pp*mult*clebsch_pp*Nab*Ncd;
 			  value_np=(value_np+rev1_np+rev2_np+rev3_np)*mult*clebsch_np*Nab*Ncd;
 				  
-			  if (value_np || value_pp || value_nn ){
+			  if (fabs(value_np)>1.0e-7 || fabs(value_pp)>1.0e-7 || fabs(value_nn)>1.0e-7 ){
 #if DEBUG_PN
 			    printf(" (a+a+)J=%5d  (a-a-)J=%5d   td: pn=%10.6f   pp=%10.6f   nn=%10.6f - Jab=%d Tab=%d Jcd=%d Tcd=%d\n",twob1,twob2, value_np, value_pp,value_nn, Jab, Tab, Jcd,Tcd);
 #else
