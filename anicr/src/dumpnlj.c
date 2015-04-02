@@ -14,6 +14,8 @@
 #include <gsl/gsl_errno.h>
 #include "gsl/gsl_sf_coupling.h"
 
+#include "tmp_config.h"
+
 typedef struct nlj_hash_item_t
 {
   uint64_t _key;
@@ -190,10 +192,15 @@ int main()
   char filename_pp[14]="nlj_out-pp.bin";
   char filename_np[14]="nlj_out-np.bin";
 
+#if DEBUG_PN
+  _nlj_items_nn=readDumpfile(filename_pp,&_num_nlj_items_nn);
+  _nlj_items_pp=readDumpfile(filename_nn,&_num_nlj_items_pp);
+  _nlj_items_np=readDumpfile(filename_np,&_num_nlj_items_np);
+#else
   _nlj_items_nn=readDumpfile(filename_nn,&_num_nlj_items_nn);
   _nlj_items_pp=readDumpfile(filename_pp,&_num_nlj_items_pp);
   _nlj_items_np=readDumpfile(filename_np,&_num_nlj_items_np);
-
+#endif
 
   int jtrans_min = abs(CFG_2J_INITIAL - CFG_2J_FINAL);
   int jtrans_max = CFG_2J_INITIAL + CFG_2J_FINAL;
@@ -345,7 +352,11 @@ int main()
 			  value_np=(value_np+rev1_np+rev2_np+rev3_np)*mult*clebsch_np*Nab*Ncd;
 				  
 			  if (value_np || value_pp || value_nn ){
+#if DEBUG_PN
 			    printf(" (a+a+)J=%5d  (a-a-)J=%5d   td: pn=%10.6f   pp=%10.6f   nn=%10.6f - Jab=%d Tab=%d Jcd=%d Tcd=%d\n",twob1,twob2, value_np, value_pp,value_nn, Jab, Tab, Jcd,Tcd);
+#else
+			    printf(" (a+a+)J=%5d  (a-a-)J=%5d   td: np=%10.6f   pp=%10.6f   nn=%10.6f - Jab=%d Tab=%d Jcd=%d Tcd=%d\n",twob1,twob2, value_np, value_pp,value_nn, Jab, Tab, Jcd,Tcd);
+#endif
 			  }
 			}
 		      }

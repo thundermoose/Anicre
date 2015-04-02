@@ -9,3 +9,4 @@
 #define ACC_TABLE         0
 #define NLJ_TABLE         0
 
+#define DEBUG_PN          0
