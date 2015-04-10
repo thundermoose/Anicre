@@ -200,12 +200,21 @@ int main()
   printf(" Wave functions read from anto.egv file");
   printf("\n \n *** Nuclear states ***\n");
   printf(" Nucleus:\n");
-  int A=6;
-  int Z=2;
-  int N=4;
-  int MT=2;
-  char parity='+';
+  int A=CFG_NUM_SP_STATES0+CFG_NUM_SP_STATES1;
+  
+  //check coul! check order!
+  int Z=CFG_NUM_SP_STATES0;
+  int N=CFG_NUM_SP_STATES1;
+  int two_MT=CFG_NUM_SP_STATES0-CFG_NUM_SP_STATES1;
+  char parity;
+  if(CFG_PARITY_INITIAL ==0){
+     parity='+';
+  }
+  else{
+     parity='-';
+  }
   float hw=20.0;
+  
   int Nhw=10;
   int dim=10;
   int nhme=10;
@@ -226,7 +235,7 @@ int main()
   int j2nlj=1;
   int num=1;
   printf(" A=%3d   Z=%3d   N=%3d\n",A,Z,N);
-  printf(" 2*MJ=%3d   2*MT=%3d  parity= %c \n",CFG_2M_INITIAL,MT,parity);
+  printf(" 2*MJ=%3d   2*MT=%3d  parity= %c \n",CFG_2M_INITIAL,two_MT,parity);
   printf(" hbar Omega=%8.4f   Nhw=%3d   dimension=%8d   nhme=%10d\n",hw,Nhw,dim,nhme);
   printf(" k1max=%3d   mxnwd=%3d   mxsps=%8d   major=%2d   iparity=%d\n \n",k1max,mxnwd,mxsps,major,iparity);
   
