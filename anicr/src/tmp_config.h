@@ -6,6 +6,6 @@
 
 #define DEBUG_COUPLING    0
 
-#define ACC_TABLE         0
+#define ACC_TABLE         1
 #define NLJ_TABLE         0
 
