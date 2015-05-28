@@ -1469,7 +1469,7 @@ void created_state(int *in_sp_other,
   (void) acc_i;
 #endif
 #else
-#if 0
+#if 1 //DS
   int acc_i = sp_anni * CFG_NUM_SP_STATES + sp_crea;
 #endif
 #endif

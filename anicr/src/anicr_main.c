@@ -741,11 +741,11 @@ int main(int argc, char *argv[])
   (void) packed;
 
 #if !CFG_CONN_TABLES
-  prepare_accumulate();
+  // prepare_accumulate();
 
-  prepare_nlj();
+  //prepare_nlj();
 
-  alloc_accumulate();
+  //alloc_accumulate();
 
   size_t i;
 
@@ -779,11 +779,11 @@ int main(int argc, char *argv[])
   printf ("Annihilated-created for %zd mp states.\n", num_mp);
 
   printf ("Found %"PRIu64"/%"PRIu64".\n", _found, _lookups);
-  
-  /* couple_accumulate(); */
-
-  couple_accumulate_2();
-
+#if !CFG_ANICR_TWO
+   couple_accumulate(); 
+#else
+   couple_accumulate_2();
+#endif
   write_nlj();
 #endif
 
