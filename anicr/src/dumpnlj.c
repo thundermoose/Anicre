@@ -189,7 +189,34 @@ int main()
   char filename_nn[14]="nlj_out-nn.bin";
   char filename_pp[14]="nlj_out-pp.bin";
   char filename_np[14]="nlj_out-np.bin";
+  char filename_p[14]="nlj_out-p.bin";
+  char filename_n[14]="nlj_out-n.bin";
+ 
+  FILE *fp=NULL;
+  size_t num_nlj_2=CFG_NUM_NLJ_STATES*CFG_NUM_NLJ_STATES;
 
+  double final_p[num_nlj_2];
+  double final_n[num_nlj_2];
+  fp=fopen(filename_p,"rb");
+  if(fp!=NULL){
+    fread(final_p,sizeof(double),num_nlj_2,fp);
+  }
+  else{
+    printf("ERROR reading file\n");
+  }
+  fclose(fp);
+  fp=fopen(filename_n,"rb");
+  if(fp!=NULL){
+    fread(final_n,sizeof(double),num_nlj_2,fp);
+  }
+  else{
+    printf("ERROR reading file\n");
+  }
+  fclose(fp);
+   for( size_t i=0;i<num_nlj_2;i++){
+     printf(" %f %f \n",final_p[i],final_n[i]);
+    }
+  
   _nlj_items_nn=readDumpfile(filename_nn,&_num_nlj_items_nn);
   _nlj_items_pp=readDumpfile(filename_pp,&_num_nlj_items_pp);
   _nlj_items_np=readDumpfile(filename_np,&_num_nlj_items_np);
@@ -220,7 +247,6 @@ int main()
   int n1max=0;
   int n12max=0;
   int nasps=0;
-  int nosp=1;
   int nnlj=0;
   int lnlj=1;
   int j2nlj=1;
@@ -234,10 +260,18 @@ int main()
   printf(" N1_max=%4d   N12_max=%4d    Nasps=%4d\n \n",n1max,n12max,nasps);
   printf(" wave functions of the states #  1 -  1 used \n \n");   //Fixed for only gs.
   printf(" wave functions of the states #  1 -  1 used \n \n");
-  printf(" number of single-nucleon states=%4d\n",nosp);
-  //for-loop
-  printf(" #%4d  n=%3d  l=%3d  j=%2d/2\n",num,nnlj,lnlj,j2nlj);
+  printf(" number of single-nucleon states=%4d\n",CFG_NUM_NLJ_STATES);
+  
+  
 
+  printf(" #%4d  n=%3d  l=%3d  j=%2d/2\n",num,nnlj,lnlj,j2nlj);
+  for(int sp_anni=0;sp_anni<CFG_NUM_NLJ_STATES;sp_anni++){
+    for( int sp_crea=0;sp_crea<CFG_NUM_NLJ_STATES;sp_crea++){
+      if(final_p[sp_anni+sp_crea*CFG_NUM_NLJ_STATES]!=0.0||final_n[sp_anni+sp_crea*CFG_NUM_NLJ_STATES]){
+	printf(" %d   %d  p=%f  n=%f\n",sp_anni,sp_crea,final_p[sp_anni+sp_crea*CFG_NUM_NLJ_STATES],final_n[sp_anni+sp_crea*CFG_NUM_NLJ_STATES]);
+      }
+    }
+  }
 
 
   int jtrans_min = abs(CFG_2J_INITIAL - CFG_2J_FINAL);

@@ -157,7 +157,7 @@ void couple_accumulate()
 		  int fin_i = sp_a->_nlj * CFG_NUM_NLJ_STATES + sp_c->_nlj;
 
 		  final_1b[fin_i] +=
-		    result.val * one_coeff[sp_anni][sp_crea] * sign;
+		    result.val * one_coeff[sp_anni][sp_crea] * sign;   //one_coeff can be hash-table to save memory
 
 		}
 
@@ -178,18 +178,28 @@ void couple_accumulate()
 	  
 	  if (final_1b[fin_i])
 	    {
-	      /*
+	      
 	      printf ("%3d %3d  %11.6f\n",
 		      nlj_a+1, nlj_c+1, mult * final_1b[fin_i]);
-	      */
+	      
 	      nz++;
 	    }
 
 
 	}
     }
+  FILE *fp=NULL;
+  fp=fopen(CFG_FILENAME_NLJ,"wb");
+  if(fp!=NULL){
+    fwrite(final_1b, sizeof(double),CFG_NUM_NLJ_STATES*CFG_NUM_NLJ_STATES,fp);
+    }  
+  else{
+    printf("Couldn't write to file");
+    exit(0);
 
-  printf ("nz nlj items: %zd\n", nz);
+  }
+  fclose(fp);
+printf ("nz nlj items: %zd\n", nz);
 
 #endif
     }
