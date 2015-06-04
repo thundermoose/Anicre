@@ -22,10 +22,11 @@
 extern double *_accumulate;
 #endif
 
+extern double one_coeff[CFG_NUM_MP_STATES][CFG_NUM_MP_STATES];
 #if !CFG_CONN_TABLES
 void couple_accumulate()
 {
-#if 0
+
 #if ACC_TABLE
   size_t num_accum;
   size_t non_zero = 0;
@@ -111,9 +112,9 @@ void couple_accumulate()
     {
       for (sp_crea = 0; sp_crea < CFG_NUM_SP_STATES; sp_crea++)
 	{
-	  int acc_i = sp_anni * CFG_NUM_SP_STATES + sp_crea;
+	  //int acc_i = sp_anni * CFG_NUM_SP_STATES + sp_crea;
 
-	  if (_accumulate[acc_i])
+	  if (one_coeff[sp_anni][sp_crea])
 	    {
 	      sp_state_info *sp_a = &_table_sp_states[sp_anni];
 	      sp_state_info *sp_c = &_table_sp_states[sp_crea];
@@ -121,7 +122,7 @@ void couple_accumulate()
 	      printf ("a: %3d  c %3d : %2d %2d - %2d %2d [%10.6f]",
 		      sp_anni+1, sp_crea+1,
 		      sp_a->_j, sp_a->_m, sp_c->_j, sp_c->_m,
-		      _accumulate[acc_i]);
+		      one_coeff[sp_anni][sp_crea]);
 
 	      /* searching for jtrans */
 
@@ -156,7 +157,7 @@ void couple_accumulate()
 		  int fin_i = sp_a->_nlj * CFG_NUM_NLJ_STATES + sp_c->_nlj;
 
 		  final_1b[fin_i] +=
-		    result.val * _accumulate[acc_i] * sign;
+		    result.val * one_coeff[sp_anni][sp_crea] * sign;
 
 		}
 
@@ -193,7 +194,7 @@ void couple_accumulate()
 #endif
     }
 
-#endif
+  //#endif
 }
 
 

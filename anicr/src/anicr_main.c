@@ -809,8 +809,8 @@ int main(int argc, char *argv[])
    couple_accumulate(); 
 #else
    couple_accumulate_2();
-#endif
   write_nlj();
+#endif
 #endif
 
 #if CFG_CONN_TABLES
