@@ -119,12 +119,12 @@ void couple_accumulate()
 		{
 		  sp_state_info *sp_a = &_table_sp_states[sp_anni];
 		  sp_state_info *sp_c = &_table_sp_states[sp_crea];
-
+#if DEBUG_ANICR
 		  printf ("a: %3d  c %3d : %2d %2d - %2d %2d [%10.6f]",
 			  sp_anni+1, sp_crea+1,
 			  sp_a->_j, sp_a->_m, sp_c->_j, sp_c->_m,
 			  one_coeff[sp_anni][sp_crea]);
-
+#endif
 	      /* searching for jtrans */
 		  
 		  int diff_j = abs(sp_a->_j - sp_c->_j);
@@ -134,8 +134,9 @@ void couple_accumulate()
 		  if (diff_j <= jtrans && sum_j >= jtrans &&
 		      abs(sum_m) <= jtrans)
 		    {
+#if DEBUG_ANICR
 		      printf (" *");
-
+#endif 
 		      gsl_sf_result result;
 	  
 		      int ret =
@@ -149,27 +150,29 @@ void couple_accumulate()
 			  exit(1);
 			}
 
-		      int sign = 1 - ((sp_c->_j/* - jtrans*/ + sp_a->_m) & 2);
-
+		      int sign = 1 - ((sp_c->_j/* - jtrans*/ + sp_a->_m) & 2);   //kontrollerA!
+#if DEBUG_ANICR
 		      printf (" [%10.5f %2d]", result.val, sign);
 		      
 		      printf (" %2d %2d", sp_a->_nlj+1, sp_c->_nlj+1);
-
+#endif
 		      int fin_i = sp_a->_nlj * CFG_NUM_NLJ_STATES + sp_c->_nlj;
 
 		      final_1b[fin_i] +=
 			result.val * one_coeff[sp_anni][sp_crea] * sign;   //one_coeff can be hash-table to save memory
 
 		    }
-
+#if DEBUG_ANICR
 		  printf ("\n");
+#endif
 		}	  
 	    }
 	}
 
-      int nlj_a, nlj_c;
       
       size_t nz = 0;
+#if DEBUG_ANICR
+      int nlj_a, nlj_c;
 
       for (nlj_a = 0; nlj_a < CFG_NUM_NLJ_STATES; nlj_a++)
 	{
@@ -189,8 +192,7 @@ void couple_accumulate()
 
 	    }
 	}
-      //     FILE *fp=NULL;
-      // fp=fopen(CFG_FILENAME_NLJ,"wb");
+#endif
       if(fp!=NULL){
 	fwrite(final_1b, sizeof(double),CFG_NUM_NLJ_STATES*CFG_NUM_NLJ_STATES,fp);
       }  
@@ -199,7 +201,6 @@ void couple_accumulate()
 	exit(0);
 
       }
-      //      fclose(fp);
       printf ("nz nlj items: %zd\n", nz);
 
 #endif

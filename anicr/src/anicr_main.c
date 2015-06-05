@@ -226,7 +226,6 @@ size_t sort_mp_by_E_M(size_t num_mp)
       {
 	size_t i1;
 
-	printf ("%5zd:", i);
 	for (i1 = 0; i1 < CFG_NUM_SP_STATES0; i1++)
 	  {
 	    printf (" %3d", list[i1]);
@@ -712,7 +711,6 @@ int main(int argc, char *argv[])
   find_sp_comb(num_mp);
 #endif
 
-  printf("test1\n");
 #if !CFG_ANICR_TWO  //DS - unused variables
   (void)argv;
   (void)argc;
@@ -729,7 +727,6 @@ int main(int argc, char *argv[])
 				1);
 #endif
 
-  printf("test1.5\n");
 #if 0 
   /* It turns out that lookup is ~ 20 % faster with original states
    * in original antoine order...
@@ -740,11 +737,8 @@ int main(int argc, char *argv[])
   
   printf ("Sorted %zd mp states.\n", num_mp);
 #endif
-  printf("test2\n");
   //#endif  //DS
-  printf("test2.1\n");
   ammend_tables();
-  printf("After ammed\n");
 
   int packed = 0;
 
@@ -752,7 +746,6 @@ int main(int argc, char *argv[])
     packed = 1;
 
   (void) packed;
-  printf("efter packed\n");
 #if !CFG_CONN_TABLES
   
 #if CFG_ANICR_TWO  //DS
@@ -766,7 +759,6 @@ int main(int argc, char *argv[])
 
   uint64_t *mp = _mp;
   double   *wf = _wf;
-  printf("test 3 %zd packed=%d \n",num_mp,packed);
   for (i = 0; i < num_mp; i++)
     {
       printf("i= %zd\n",i);
@@ -795,17 +787,8 @@ int main(int argc, char *argv[])
   printf ("Annihilated-created for %zd mp states.\n", num_mp);
 
   printf ("Found %"PRIu64"/%"PRIu64".\n", _found, _lookups);
+
 #if !CFG_ANICR_TWO
-  printf("MAtrix of nljm-nljm couplings\n");
-  for(int ii=0;ii<CFG_NUM_MP_STATES;ii++){
-    for (int jj=0; jj<CFG_NUM_MP_STATES;jj++){
-      printf(" %f ",one_coeff[ii][jj]);
-    }
-    printf("\n");
-  }
-#endif
-#if !CFG_ANICR_TWO
-  printf("Couple_accumulate");
    couple_accumulate(); 
 #else
    couple_accumulate_2();
