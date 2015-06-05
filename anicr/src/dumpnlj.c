@@ -194,27 +194,38 @@ int main()
  
   FILE *fp=NULL;
   size_t num_nlj_2=CFG_NUM_NLJ_STATES*CFG_NUM_NLJ_STATES;
-
-  double final_p[num_nlj_2];
-  double final_n[num_nlj_2];
+  int jtrans_min = abs(CFG_2J_INITIAL - CFG_2J_FINAL);
+  int jtrans_max = CFG_2J_INITIAL + CFG_2J_FINAL;
+  
+  int num_jtrans=(jtrans_max-jtrans_min)/2;
+  printf("Jtrans Max=%d Min=%d num=%d \n",jtrans_max,jtrans_min,num_jtrans);
+  double final_p[num_jtrans][num_nlj_2];
+  double final_n[num_jtrans][num_nlj_2];
   fp=fopen(filename_p,"rb");
-  if(fp!=NULL){
-    fread(final_p,sizeof(double),num_nlj_2,fp);
-  }
-  else{
-    printf("ERROR reading file\n");
+  FILE *fn=NULL;
+  fn=fopen(filename_n,"rb");
+  int jtrans;
+  int ii=0;
+  for(jtrans=jtrans_min;jtrans<jtrans_max;jtrans=jtrans+2){
+    if(fp!=NULL){
+      fread(final_p[ii],sizeof(double),num_nlj_2,fp);
+      printf("ii=%d\n",ii);
+      ii++;
+    }
+    else{
+      printf("ERROR reading file\n");
+    }
+    if(fn!=NULL){
+      fread(final_n[0],sizeof(double),num_nlj_2,fp);
+    }
+    else{
+      printf("ERROR reading file\n");
+    }
   }
   fclose(fp);
-  fp=fopen(filename_n,"rb");
-  if(fp!=NULL){
-    fread(final_n,sizeof(double),num_nlj_2,fp);
-  }
-  else{
-    printf("ERROR reading file\n");
-  }
-  fclose(fp);
+  fclose(fn);
    for( size_t i=0;i<num_nlj_2;i++){
-     printf(" %f %f \n",final_p[i],final_n[i]);
+     printf(" %f %f \n",final_p[0][i],final_n[0][i]);
     }
   
   _nlj_items_nn=readDumpfile(filename_nn,&_num_nlj_items_nn);
@@ -267,17 +278,17 @@ int main()
   printf(" #%4d  n=%3d  l=%3d  j=%2d/2\n",num,nnlj,lnlj,j2nlj);
   for(int sp_anni=0;sp_anni<CFG_NUM_NLJ_STATES;sp_anni++){
     for( int sp_crea=0;sp_crea<CFG_NUM_NLJ_STATES;sp_crea++){
-      if(final_p[sp_anni+sp_crea*CFG_NUM_NLJ_STATES]!=0.0||final_n[sp_anni+sp_crea*CFG_NUM_NLJ_STATES]){
-	printf(" %d   %d  p=%f  n=%f\n",sp_anni,sp_crea,final_p[sp_anni+sp_crea*CFG_NUM_NLJ_STATES],final_n[sp_anni+sp_crea*CFG_NUM_NLJ_STATES]);
+      if(final_p[0][sp_anni+sp_crea*CFG_NUM_NLJ_STATES]!=0.0||final_n[0][sp_anni+sp_crea*CFG_NUM_NLJ_STATES]){
+	printf(" %d   %d  p=%f  n=%f\n",sp_anni,sp_crea,final_p[0][sp_anni+sp_crea*CFG_NUM_NLJ_STATES],final_n[0][sp_anni+sp_crea*CFG_NUM_NLJ_STATES]);
       }
     }
   }
 
 
-  int jtrans_min = abs(CFG_2J_INITIAL - CFG_2J_FINAL);
-  int jtrans_max = CFG_2J_INITIAL + CFG_2J_FINAL;
+  //  int jtrans_min = abs(CFG_2J_INITIAL - CFG_2J_FINAL);
+  //  int jtrans_max = CFG_2J_INITIAL + CFG_2J_FINAL;
 
-  int jtrans;
+  //  int jtrans;
 
   int mtrans = CFG_2M_INITIAL - CFG_2M_FINAL;
   if (abs(mtrans) > jtrans_max)

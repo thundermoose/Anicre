@@ -67,7 +67,8 @@ void couple_accumulate()
       fprintf (stderr, "FIXME: abs(mtrans) > jtrans_max.\n");
       exit(1);
     }
-
+  FILE *fp=NULL;
+  fp=fopen(CFG_FILENAME_NLJ,"wb");
   for (jtrans = jtrans_min; jtrans <= jtrans_max; jtrans += 2)
     {
       printf ("Jtrans=%d\n", jtrans/2);
@@ -102,108 +103,108 @@ void couple_accumulate()
 #if CFG_ANICR_TWO
 
 #else
-  double final_1b[CFG_NUM_NLJ_STATES * CFG_NUM_NLJ_STATES];
-  int sp_anni;
-  int sp_crea;
+      double final_1b[CFG_NUM_NLJ_STATES * CFG_NUM_NLJ_STATES];
+      int sp_anni;
+      int sp_crea;
 
-  memset (final_1b, 0, sizeof (final_1b));
+      memset (final_1b, 0, sizeof (final_1b));
 
-  for (sp_anni = 0; sp_anni < CFG_NUM_SP_STATES; sp_anni++)
-    {
-      for (sp_crea = 0; sp_crea < CFG_NUM_SP_STATES; sp_crea++)
+      for (sp_anni = 0; sp_anni < CFG_NUM_SP_STATES; sp_anni++)
 	{
+	  for (sp_crea = 0; sp_crea < CFG_NUM_SP_STATES; sp_crea++)
+	    {
 	  //int acc_i = sp_anni * CFG_NUM_SP_STATES + sp_crea;
 
-	  if (one_coeff[sp_anni][sp_crea])
-	    {
-	      sp_state_info *sp_a = &_table_sp_states[sp_anni];
-	      sp_state_info *sp_c = &_table_sp_states[sp_crea];
+	      if (one_coeff[sp_anni][sp_crea])
+		{
+		  sp_state_info *sp_a = &_table_sp_states[sp_anni];
+		  sp_state_info *sp_c = &_table_sp_states[sp_crea];
 
-	      printf ("a: %3d  c %3d : %2d %2d - %2d %2d [%10.6f]",
-		      sp_anni+1, sp_crea+1,
-		      sp_a->_j, sp_a->_m, sp_c->_j, sp_c->_m,
-		      one_coeff[sp_anni][sp_crea]);
+		  printf ("a: %3d  c %3d : %2d %2d - %2d %2d [%10.6f]",
+			  sp_anni+1, sp_crea+1,
+			  sp_a->_j, sp_a->_m, sp_c->_j, sp_c->_m,
+			  one_coeff[sp_anni][sp_crea]);
 
 	      /* searching for jtrans */
+		  
+		  int diff_j = abs(sp_a->_j - sp_c->_j);
+		  int sum_j  = sp_a->_j + sp_c->_j;
+		  int sum_m  = sp_a->_m - sp_c->_m;
 
-	      int diff_j = abs(sp_a->_j - sp_c->_j);
-	      int sum_j  = sp_a->_j + sp_c->_j;
-	      int sum_m  = sp_a->_m - sp_c->_m;
-
-	      if (diff_j <= jtrans && sum_j >= jtrans &&
-		  abs(sum_m) <= jtrans)
-		{
-		  printf (" *");
-
-		  gsl_sf_result result;
-	  
-		  int ret =
-		    gsl_sf_coupling_3j_e(sp_a->_j, jtrans,  sp_c->_j,
-					 sp_a->_m, -sum_m, -sp_c->_m,
-					 &result);
-
-		  if (ret != GSL_SUCCESS)
+		  if (diff_j <= jtrans && sum_j >= jtrans &&
+		      abs(sum_m) <= jtrans)
 		    {
-		      fprintf (stderr,"ERR! %d\n", ret);
-		      exit(1);
+		      printf (" *");
+
+		      gsl_sf_result result;
+	  
+		      int ret =
+			gsl_sf_coupling_3j_e(sp_a->_j, jtrans,  sp_c->_j,
+					     sp_a->_m, -sum_m, -sp_c->_m,
+					     &result);
+
+		      if (ret != GSL_SUCCESS)
+			{
+			  fprintf (stderr,"ERR! %d\n", ret);
+			  exit(1);
+			}
+
+		      int sign = 1 - ((sp_c->_j/* - jtrans*/ + sp_a->_m) & 2);
+
+		      printf (" [%10.5f %2d]", result.val, sign);
+		      
+		      printf (" %2d %2d", sp_a->_nlj+1, sp_c->_nlj+1);
+
+		      int fin_i = sp_a->_nlj * CFG_NUM_NLJ_STATES + sp_c->_nlj;
+
+		      final_1b[fin_i] +=
+			result.val * one_coeff[sp_anni][sp_crea] * sign;   //one_coeff can be hash-table to save memory
+
 		    }
 
-		  int sign = 1 - ((sp_c->_j/* - jtrans*/ + sp_a->_m) & 2);
+		  printf ("\n");
+		}	  
+	    }
+	}
 
-		  printf (" [%10.5f %2d]", result.val, sign);
+      int nlj_a, nlj_c;
+      
+      size_t nz = 0;
 
-		  printf (" %2d %2d", sp_a->_nlj+1, sp_c->_nlj+1);
-
-		  int fin_i = sp_a->_nlj * CFG_NUM_NLJ_STATES + sp_c->_nlj;
-
-		  final_1b[fin_i] +=
-		    result.val * one_coeff[sp_anni][sp_crea] * sign;   //one_coeff can be hash-table to save memory
-
+      for (nlj_a = 0; nlj_a < CFG_NUM_NLJ_STATES; nlj_a++)
+	{
+	  for (nlj_c = 0; nlj_c < CFG_NUM_NLJ_STATES; nlj_c++)
+	    {
+	      int fin_i = nlj_a * CFG_NUM_NLJ_STATES + nlj_c;
+	      
+	      if (final_1b[fin_i])
+		{
+		  
+		  printf ("%3d %3d  %11.6f\n",
+			  nlj_a+1, nlj_c+1, mult * final_1b[fin_i]);
+		  
+		  nz++;
 		}
 
-	      printf ("\n");
-	    }	  
-	}
-    }
 
-  int nlj_a, nlj_c;
-
-  size_t nz = 0;
-
-  for (nlj_a = 0; nlj_a < CFG_NUM_NLJ_STATES; nlj_a++)
-    {
-      for (nlj_c = 0; nlj_c < CFG_NUM_NLJ_STATES; nlj_c++)
-	{
-	  int fin_i = nlj_a * CFG_NUM_NLJ_STATES + nlj_c;
-	  
-	  if (final_1b[fin_i])
-	    {
-	      
-	      printf ("%3d %3d  %11.6f\n",
-		      nlj_a+1, nlj_c+1, mult * final_1b[fin_i]);
-	      
-	      nz++;
 	    }
-
-
 	}
-    }
-  FILE *fp=NULL;
-  fp=fopen(CFG_FILENAME_NLJ,"wb");
-  if(fp!=NULL){
-    fwrite(final_1b, sizeof(double),CFG_NUM_NLJ_STATES*CFG_NUM_NLJ_STATES,fp);
-    }  
-  else{
-    printf("Couldn't write to file");
-    exit(0);
+      //     FILE *fp=NULL;
+      // fp=fopen(CFG_FILENAME_NLJ,"wb");
+      if(fp!=NULL){
+	fwrite(final_1b, sizeof(double),CFG_NUM_NLJ_STATES*CFG_NUM_NLJ_STATES,fp);
+      }  
+      else{
+	printf("Couldn't write to file");
+	exit(0);
 
-  }
-  fclose(fp);
-printf ("nz nlj items: %zd\n", nz);
+      }
+      //      fclose(fp);
+      printf ("nz nlj items: %zd\n", nz);
 
 #endif
     }
-
+  fclose(fp);
   //#endif
 }
 
