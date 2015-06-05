@@ -100,6 +100,8 @@ public:
 
   uint32_t                    _max_j;
 
+  uint32_t                    _nhomax;
+
   vect_sp_state               _sps;
   int                        *_sps_map;
 

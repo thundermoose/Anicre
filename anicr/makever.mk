@@ -35,6 +35,12 @@ CFLAGS += -DFILENAME_CONFIG_H=\"config_$(ANICR_PREFIX).h\"
 
 ####################################################################
 
+ifneq (,$(TABLE_PREFIX))
+CFLAGS += -DTABLE_PREFIX=\"$(TABLE_PREFIX)\"
+endif
+
+####################################################################
+
 ANICR_OBJS = $(addprefix build_$(ANICR_PREFIX)_anicr/,$(OBJS))
 
 ANICR_AUTO_DEPS = $(ANICR_OBJS:%.o=%.d)

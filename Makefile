@@ -9,6 +9,7 @@ OBJS = mfr_main.o mr_file_reader.o mr_base_reader.o \
 	file_output.o sp_states.o pack_mp_state.o sp_pair_use.o \
 	antoine_read.o missing_mpr.o repl_states.o \
 	prepare_anicr.o \
+	antoine_vector_read.o \
 	colourtext.o markconvbold.o error.o
 
 ####################################################################
@@ -88,6 +89,36 @@ pp-anicr-%: %/tables_rev.h
 
 np-anicr-%: %/tables_rev.h
 	make -C $* -f ../anicr/makever.mk ANICR_PREFIX=np
+
+####################################################################
+
+n-tables-anicr-%: %/tables_forw.h
+	make -C $* -f ../anicr/makever.mk ANICR_PREFIX=n_tables TABLE_PREFIX=n
+
+####################################################################
+
+nn-tables-anicr-%: %/tables_forw.h
+	make -C $* -f ../anicr/makever.mk ANICR_PREFIX=nn_tables TABLE_PREFIX=nn
+
+####################################################################
+
+nnn-tables-anicr-%: %/tables_forw.h
+	make -C $* -f ../anicr/makever.mk ANICR_PREFIX=nnn_tables TABLE_PREFIX=nnn
+
+####################################################################
+
+p-tables-anicr-%: %/tables_rev.h
+	make -C $* -f ../anicr/makever.mk ANICR_PREFIX=p_tables TABLE_PREFIX=p
+
+####################################################################
+
+pp-tables-anicr-%: %/tables_rev.h
+	make -C $* -f ../anicr/makever.mk ANICR_PREFIX=pp_tables TABLE_PREFIX=pp
+
+####################################################################
+
+ppp-tables-anicr-%: %/tables_rev.h
+	make -C $* -f ../anicr/makever.mk ANICR_PREFIX=ppp_tables TABLE_PREFIX=ppp
 
 ####################################################################
 

@@ -84,7 +84,7 @@ void pack_mp_state<pack_T>::insert_packed(pack_T *pack, int i, int value)
 template<typename pack_T>
 void pack_mp_state<pack_T>::generate_code(file_output &out)
 {
-  out.fprintf ("void packed_to_int_list(int *list, uint64_t *packed)\n");
+  out.fprintf ("void packed_to_int_list(int *list, const uint64_t *packed)\n");
   out.fprintf ("{\n");
   for (int i = 0; i < _len[0] + _len[1]; i++)
     {
@@ -99,7 +99,7 @@ void pack_mp_state<pack_T>::generate_code(file_output &out)
 
   out.fprintf ("\n");
 
-  out.fprintf ("void int_list_to_packed(uint64_t *packed, int *list)\n");
+  out.fprintf ("void int_list_to_packed(uint64_t *packed, const int *list)\n");
   out.fprintf ("{\n");
   for (int i = 0; i < _words; i++)
     out.fprintf ("  packed[%d] = 0;\n", i);
@@ -116,7 +116,7 @@ void pack_mp_state<pack_T>::generate_code(file_output &out)
   out.fprintf ("\n");
 
   out.fprintf ("void int_list2_to_packed(uint64_t *packed, "
-	       "int *list0, int *list1)\n");
+	       "const int *list0, const int *list1)\n");
   out.fprintf ("{\n");
   for (int i = 0; i < _words; i++)
     out.fprintf ("  packed[%d] = 0;\n", i);

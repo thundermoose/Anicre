@@ -81,4 +81,4 @@ union mr_antoine_fon_old_t
   } _;
 };
 
-#endif/*__MAGIC_ANTOINE_READ_HH__*/
+#endif/*__ANTOINE_STRUCT_HH__*/

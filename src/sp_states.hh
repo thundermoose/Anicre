@@ -53,4 +53,5 @@ typedef std::vector<sp_state> vect_sp_state;
 
 void sp_states_table(file_output &out, vect_sp_state &sps);
 
+void twob_states_table(file_output &out, vect_nlj_state &nljs);
 #endif/*__SP_STATES_HH__*/

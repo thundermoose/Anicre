@@ -1,6 +1,6 @@
 
 #include "sp_states.hh"
-
+#include <cmath>
 void nlj_states_table(file_output &out, vect_nlj_state &nljs)
 {
   out.fprintf("/********************************************/\n");
@@ -48,4 +48,3 @@ void sp_states_table(file_output &out, vect_sp_state &sps)
   out.fprintf("};\n");
   out.fprintf("\n");
 }
-
