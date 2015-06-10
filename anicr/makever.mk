@@ -13,7 +13,7 @@ NLJ_OBJS = anicr_tables_sp.o util.o dumpnlj.o
 
 ####################################################################
 
-CFLAGS =  -O3 -g -std=c99 # -pg
+CFLAGS = -lm -O3 -g -std=c99 # -pg
 
 LINKFLAGS += -g # -pg
 

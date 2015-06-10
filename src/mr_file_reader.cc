@@ -198,7 +198,7 @@ void *mr_file_reader::map_block_data(uint64_t offset_data,size_t size,
   size_t length = end - offset;
 
   void *addr = mmap(NULL, length,
-		    PROT_READ, MAP_SHARED,
+		    PROT_READ, MAP_SHARED | MAP_POPULATE,
 		    _fd, offset);
 
   if (addr == MAP_FAILED)

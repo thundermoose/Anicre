@@ -14,12 +14,14 @@ OBJS = mfr_main.o mr_file_reader.o mr_base_reader.o \
 
 ####################################################################
 
-CXXFLAGS =  -O3 -g
+CXXFLAGS = -lm -O3 -g
 
 LINKFLAGS += -g
 
 CXXFLAGS += -ansi -Wall -Wno-unused-function -Wno-unused-label \
-        -W -Wshadow -Wwrite-strings  
+        -W -Wshadow -Wwrite-strings -Wconversion \
+        -Wno-non-template-friend -Werror 
+
 SRC_DIRS = src lu_common util
 
 CXXFLAGS += $(addprefix -I ,$(SRC_DIRS))
