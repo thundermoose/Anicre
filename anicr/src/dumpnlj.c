@@ -267,10 +267,7 @@ int main()
   int n1max=0;
   int n12max=0;
   int nasps=0;
-  int nnlj=0;
-  int lnlj=1;
-  int j2nlj=1;
-  int num=1;
+
   printf(" A=%3d   Z=%3d   N=%3d\n",A,Z,N);
   printf(" 2*MJ=%3d   2*MT=%3d  parity= %c \n",CFG_2M_INITIAL,two_MT,parity);
   printf(" hbar Omega=%8.4f   Nhw=%3d   dimension=%8d   nhme=%10d\n",hw,Nhw,dim,nhme);
@@ -282,13 +279,16 @@ int main()
   printf(" wave functions of the states #  1 -  1 used \n \n");
   printf(" number of single-nucleon states=%4d\n",CFG_NUM_NLJ_STATES);
   
-  
 
-  printf(" #%4d  n=%3d  l=%3d  j=%2d/2\n",num,nnlj,lnlj,j2nlj);
+  for (int i=0;i<CFG_NUM_NLJ_STATES; i++)
+  {
+    printf("#%4d  n=%3d  l=%3d  j=%2d/2\n",i+1,_table_nlj_states[i]._n,_table_nlj_states[i]._l,_table_nlj_states[i]._j);
+  
+  }
   for(int sp_anni=0;sp_anni<CFG_NUM_NLJ_STATES;sp_anni++){
     for( int sp_crea=0;sp_crea<CFG_NUM_NLJ_STATES;sp_crea++){
-      if(final_p[0][sp_anni+sp_crea*CFG_NUM_NLJ_STATES]!=0.0||final_n[0][sp_anni+sp_crea*CFG_NUM_NLJ_STATES]){
-	printf(" %d   %d  p=%f  n=%f\n",sp_anni,sp_crea,final_p[0][sp_anni+sp_crea*CFG_NUM_NLJ_STATES],final_n[0][sp_anni+sp_crea*CFG_NUM_NLJ_STATES]);
+      if(fabs(final_p[0][sp_anni+sp_crea*CFG_NUM_NLJ_STATES])>=0.000001||fabs(final_n[1][sp_anni+sp_crea*CFG_NUM_NLJ_STATES])>0.000001){
+	printf(" %d   %d  p=%f  n=%f\n",sp_anni,sp_crea,final_p[0][sp_anni+sp_crea*CFG_NUM_NLJ_STATES],final_n[1][sp_anni+sp_crea*CFG_NUM_NLJ_STATES]);
       }
     }
   }
