@@ -22,7 +22,7 @@
 extern double *_accumulate;
 #endif
 
-extern double one_coeff[CFG_NUM_MP_STATES][CFG_NUM_MP_STATES];
+extern double one_coeff[CFG_NUM_SP_STATES][CFG_NUM_SP_STATES];
 #if !CFG_CONN_TABLES
 void couple_accumulate()
 {
