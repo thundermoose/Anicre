@@ -761,7 +761,6 @@ int main(int argc, char *argv[])
   double   *wf = _wf;
   for (i = 0; i < num_mp; i++)
     {
-      printf("i= %zd\n",i);
       _cur_val = wf[0];
 
       if (packed)

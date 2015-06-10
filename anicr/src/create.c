@@ -300,7 +300,7 @@ void annihilate_states(int *in_sp_other,
   /* Delete 1 state. */
 
   int out_sp[NSP];
-  printf("NSP= %d\n",NSP);
+ 
 #if CFG_CONN_TABLES
   for (i = 1; i < NSP; i++)
     {
@@ -1490,10 +1490,10 @@ void created_state(int *in_sp_other,
 #endif
 
   uint64_t acc_x;
-  printf("accumulate_pre \n");
+ 
   accumulate_pre(key, &acc_x);   //Key for transition state (e.g. a+a)
   accumulate_prefetch_rw(acc_x);
-  printf("accumulate_post: %zd \n", acc_x);
+  
 #endif
 
   /*
@@ -1520,7 +1520,6 @@ void created_state(int *in_sp_other,
   */
 
   uint64_t lookfor_x;
-  printf("find_state\n");
   find_mp_state_pre(lookfor_packed, &lookfor_x);   //Find possible initia and final states      
   find_mp_state_prefetch(lookfor_x);
 
@@ -1553,7 +1552,7 @@ void created_state(int *in_sp_other,
 #endif
 
 
-#if 1 //DEBUG_COUPLING
+#if DEBUG_COUPLING
   /*Print coefficients for all connections*/
 #if CFG_ANICR_TWO
   printf("Coefficients: a1=%4d a2=%4d c1=%4d c2=%4d : bmpi=  %11.8f bmpf=  %11.8f sign= %3d\n",sp_anni1,sp_anni2,sp_crea1,sp_crea2,val,_cur_val,sign);
@@ -1564,13 +1563,13 @@ void created_state(int *in_sp_other,
 #if CFG_ANICR_TWO
 #if !CFG_CONN_TABLES
   accumulate_advance_add(key, &acc_x);
-  printf("mellan\n");
+ 
   accumulate_post_add(acc_x, val * _cur_val * sign);
 #endif
 #else
   one_coeff[sp_anni][sp_crea]+=val*_cur_val*sign;
 #endif
-  printf("postaccumeulate\n");
+  
 #if DEBUG_ANICR
   /* printf ("%5d %15.10f\n", acc_i, val * _cur_val * sign); */
   printf ("%15.10f\n", val * _cur_val * sign);
