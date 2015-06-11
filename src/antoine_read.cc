@@ -17,6 +17,9 @@
 
 extern int _debug;
 
+extern int _t_2_initial;
+extern int _t_2_final;
+
 template<class header_version_t, class fon_version_t>
 mr_antoine_reader<header_version_t, fon_version_t>::
 mr_antoine_reader(mr_file_reader *file_reader)
@@ -1495,6 +1498,7 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
 
 	char filename[128];
 
+
 	sprintf (filename, FILENAME_CONFIG, cfg._ident);
 
 	file_output out_config(_config._td_dir, filename);
@@ -1556,7 +1560,16 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
 	    out_config.fprintf("#define CFG_2J_FINAL                   %d\n",
 			       _wavefcns[0]->_fon._.jt2);
 	  }
-
+	if(_t_2_initial==-1){
+	  _t_2_initial= _header.A[cfg._use_forw_states ? 0 : 1]+ _header.A[cfg._use_forw_states ? 1 : 0];
+	}
+	if(_t_2_final==-1){
+	  _t_2_final=_t_2_initial;
+	}
+	out_config.fprintf("#define CFG_2T_INITIAL                 %d\n",
+			   _t_2_initial);
+	out_config.fprintf("#define CFG_2T_FINAL                 %d\n",
+			   _t_2_final);
 	out_config.fprintf("#define CFG_2M_INITIAL                 %d\n",
 			   mp_info._sum_m);
 	out_config.fprintf("#define CFG_2M_FINAL                   %d\n",

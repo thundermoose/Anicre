@@ -18,7 +18,8 @@
 #include <sys/types.h>
 
 int _debug = 0;
-
+int _t_2_initial=-1;
+int _t_2_final=-1;
 void check_create_dir(const char *dir)
 {
   struct stat buf;
@@ -127,6 +128,8 @@ void usage(char *cmdname)
   printf ("  --colour=yes|no    Force colour and markup on or off.\n");
   printf ("  --dump=full        Level of text output.\n");
   printf ("  --td-dir=PATH      (Temporary) directory for generated tables and code.\n");
+  printf ("  --Ti=2*T            Set isospin for initial state\n");
+  printf ("  --Tf=2*T            Set isospin for final state, if not given Ti=Tf will be assumed.\n");
   printf ("  --help             Print this usage information and quit.\n");
   printf ("\n");
 }
@@ -141,6 +144,7 @@ int main(int argc,char *argv[])
 
   const char *_filename = NULL;
 
+ 
   for (int i = 1; i < argc; i++)
     {
       char *post;
@@ -171,6 +175,16 @@ int main(int argc,char *argv[])
 
         colourtext_setforce(force);
       }
+      else if (MATCH_PREFIX("-Ti=",post)){
+	_t_2_initial=atoi(post);
+	printf("2*T_initial=%d \n",_t_2_initial);
+      }
+      else if (MATCH_PREFIX("-Tf=",post)){
+	_t_2_final=atoi(post);
+	printf("2*T_initial=%d \n",_t_2_final);
+
+      }
+
       else if (MATCH_PREFIX("--dump=",post)) {
 	if (strcmp(post,"full") == 0)
 	  _config._dump = DUMP_FULL;
