@@ -192,48 +192,57 @@ int main()
   char filename_p[14]="nlj_out-p.bin";
   char filename_n[14]="nlj_out-n.bin";
  
-  FILE *fp=NULL;
   size_t num_nlj_2=CFG_NUM_NLJ_STATES*CFG_NUM_NLJ_STATES;
   int jtrans_min = abs(CFG_2J_INITIAL - CFG_2J_FINAL);
   int jtrans_max = CFG_2J_INITIAL + CFG_2J_FINAL;
   
-  int num_jtrans=(jtrans_max-jtrans_min)/2;
-  printf("Jtrans Max=%d Min=%d num=%d \n",jtrans_max,jtrans_min,num_jtrans);
+  int num_jtrans=(jtrans_max-jtrans_min)/2+1;
+  //  printf("Jtrans Max=%d Min=%d num=%d \n",jtrans_max,jtrans_min,num_jtrans);
   double final_p[num_jtrans][num_nlj_2];
   double final_n[num_jtrans][num_nlj_2];
-  fp=fopen(filename_p,"rb");
+ 
+  FILE *fp=NULL;
   FILE *fn=NULL;
+
+  fp=fopen(filename_p,"rb");
   fn=fopen(filename_n,"rb");
   int jtrans;
   int ii=0;
-  for(jtrans=jtrans_min;jtrans<jtrans_max;jtrans=jtrans+2){
+  printf("test\n");
+  for(ii=0;ii<num_jtrans;ii++){
     if(fp!=NULL){
       fread(final_p[ii],sizeof(double),num_nlj_2,fp);
-      printf("ii=%d\n",ii);
-      ii++;
+      //  printf("ii=%d\n",ii);
+      
     }
     else{
-      printf("ERROR reading file\n");
+      perror("open");
+      exit(1);
     }
     if(fn!=NULL){
-      fread(final_n[0],sizeof(double),num_nlj_2,fp);
+      fread(final_n[ii],sizeof(double),num_nlj_2,fn);
     }
     else{
-      printf("ERROR reading file\n");
+      perror("open");
+      exit(1);
     }
   }
+
   fclose(fp);
   fclose(fn);
-   for( size_t i=0;i<num_nlj_2;i++){
+  printf("read sp\n");
+  for( size_t i=0;i<num_nlj_2;i++){
      printf(" %f %f \n",final_p[0][i],final_n[0][i]);
     }
-  
+  printf("%s\n",filename_nn);
   _nlj_items_nn=readDumpfile(filename_nn,&_num_nlj_items_nn);
+  printf("test!\n");
   _nlj_items_pp=readDumpfile(filename_pp,&_num_nlj_items_pp);
-  _nlj_items_np=readDumpfile(filename_np,&_num_nlj_items_np);
+  printf("test2\n");
+ _nlj_items_np=readDumpfile(filename_np,&_num_nlj_items_np);
 
   printf("trdens.out:\n");
-  printf(" OBDME calulations\n");
+  printf(" OBDME calculation\n");
   printf(" T \n"); //if diagonal elements.
   printf(" Wave functions read from anto.egv file");
   printf("\n \n *** Nuclear states ***\n");
@@ -253,46 +262,55 @@ int main()
   }
   float hw=20.0;
   
-  int Nhw=10;
-  int dim=10;
-  int nhme=10;
-  int k1max=1;
+  int Nhw=2;
+  int dim=5;
+  int nhme=0;
+  int k1max=-1;
   int mxnwd=1;
-  int mxsps=1;
-  int major=2;
+  int mxsps=32;
+  int major=3;
   int iparity=0;
-  float T=0.0;
-  float energy=-25.0;
+  double T=(double)CFG_2T_INITIAL/2.0f;
+  double energy=-12.5466;
   float ex=0.0;
-  int n1max=0;
-  int n12max=0;
-  int nasps=0;
+  int n1max=1;
+  int n12max=2;
+  int nasps=8;
 
   printf(" A=%3d   Z=%3d   N=%3d\n",A,Z,N);
   printf(" 2*MJ=%3d   2*MT=%3d  parity= %c \n",CFG_2M_INITIAL,two_MT,parity);
   printf(" hbar Omega=%8.4f   Nhw=%3d   dimension=%8d   nhme=%10d\n",hw,Nhw,dim,nhme);
-  printf(" k1max=%3d   mxnwd=%3d   mxsps=%8d   major=%2d   iparity=%d\n \n",k1max,mxnwd,mxsps,major,iparity);
+  printf(" k1max=%3d   mxnwd=%3d   mxsps=%8d   major=%2d   iparity= %d\n \n",k1max,mxnwd,mxsps,major,iparity);
   
   printf(" J=%7.4f    T=%7.4f     Energy=%12.4f     Ex=%12.4f\n \n",CFG_2J_INITIAL/2.,T,energy,ex);
-  printf(" N1_max=%4d   N12_max=%4d    Nasps=%4d\n \n",n1max,n12max,nasps);
-  printf(" wave functions of the states #  1 -  1 used \n \n");   //Fixed for only gs.
-  printf(" wave functions of the states #  1 -  1 used \n \n");
-  printf(" number of single-nucleon states=%4d\n",CFG_NUM_NLJ_STATES);
+  printf(" N1_max=%4d   N12_max=%4d   Nasps=%4d\n \n",n1max,n12max,nasps);
+  printf(" wave functions of the states #%3d- #%3d used\n \n",1,1);   //Fixed for only gs.
+  printf(" wave functions of the states #%3d- #%3d used\n \n",1,1);   //Fixed for only gs.
+  printf(" number of single-nucleon states =%4d\n",CFG_NUM_NLJ_STATES);
   
 
   for (int i=0;i<CFG_NUM_NLJ_STATES; i++)
   {
-    printf("#%4d  n=%3d  l=%3d  j=%2d/2\n",i+1,_table_nlj_states[i]._n,_table_nlj_states[i]._l,_table_nlj_states[i]._j);
+    printf(" #%4d  n=%3d  l=%3d  j=%2d/2\n",i+1,_table_nlj_states[i]._n,_table_nlj_states[i]._l,_table_nlj_states[i]._j);
   
   }
-  for(int sp_anni=0;sp_anni<CFG_NUM_NLJ_STATES;sp_anni++){
-    for( int sp_crea=0;sp_crea<CFG_NUM_NLJ_STATES;sp_crea++){
-      if(fabs(final_p[0][sp_anni+sp_crea*CFG_NUM_NLJ_STATES])>=0.000001||fabs(final_n[1][sp_anni+sp_crea*CFG_NUM_NLJ_STATES])>0.000001){
-	printf(" %d   %d  p=%f  n=%f\n",sp_anni,sp_crea,final_p[0][sp_anni+sp_crea*CFG_NUM_NLJ_STATES],final_n[1][sp_anni+sp_crea*CFG_NUM_NLJ_STATES]);
-      }
-    }
-  }
+  ii=0;
 
+  printf("\n\n *** Transition matrix elements for states: ***\n");
+   printf(" #  1 [2*(J,T),Ex]_f= %2d%2d  0.0000   #  1 [2*(J,T),Ex]_i= %2d%2d  0.0000\n",CFG_2J_FINAL,CFG_2T_FINAL,CFG_2J_INITIAL,CFG_2T_INITIAL); //i, excitation energy
+  for (jtrans = jtrans_min; jtrans <= jtrans_max; jtrans += 2)
+   {
+     printf("\n Jtrans=%3d\n",jtrans);
+     for(int sp_anni=0;sp_anni<CFG_NUM_NLJ_STATES;sp_anni++){
+       for( int sp_crea=0;sp_crea<CFG_NUM_NLJ_STATES;sp_crea++){
+	 if(fabs(final_p[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES])>0.000001||fabs(final_n[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES])>0.000001){
+	   printf(" a+=%3d    a-=%3d     td(a+,a-): p=%10.6f     n=%10.6f\n",sp_anni+1,sp_crea+1,final_p[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES],final_n[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES]);
+	 }
+       }
+     }
+     ii++;
+   }
+  printf(" ***************************************************************\n\n");
 
   //  int jtrans_min = abs(CFG_2J_INITIAL - CFG_2J_FINAL);
   //  int jtrans_max = CFG_2J_INITIAL + CFG_2J_FINAL;
@@ -309,7 +327,42 @@ int main()
   int Jab;
   int pi1;
   int twob1=0;
-  printf("Two-nucleon states\n");
+  printf("  Two-body transition matrix elements\n");
+  printf("  ***********************************\n");
+
+#ifdef CFG_SP_PAIRS
+
+  printf(" number of two-nucleon states =%4d\n",CFG_SP_PAIRS); 
+#else
+   for(pi1=1;pi1>=-1;pi1=pi1-2){
+    for(Jab=0; Jab<=CFG_MAX_J;Jab++){
+      for (Tab=0;Tab<=1;Tab++){
+	for (int i1 = 0; i1<CFG_NUM_NLJ_STATES; i1++)
+	  {
+	    for(int i2 = i1; i2<CFG_NUM_NLJ_STATES; i2++)
+	      { 
+		int li1=_table_nlj_states[i1]._l;
+		int li2=_table_nlj_states[i2]._l;
+		int ni1=_table_nlj_states[i1]._n;
+		int ni2=_table_nlj_states[i2]._n;
+		int ji1=_table_nlj_states[i1]._j;
+		int ji2=_table_nlj_states[i2]._j;
+		if(ji1+ji2<2*Jab){continue;}
+		if(abs(ji1-ji2)>2*Jab){continue;}
+		if(pow(-1,(li1+li2))!=pi1){continue;}
+		if(i1==i2 && pow(-1,(Jab+Tab))!=-1){continue;}
+		if(2*ni1+li1+2*ni2+li2>CFG_MAX_SUM_E){continue;}
+		
+		twob1++;
+	      }
+	  }
+      }
+    }
+  }
+  printf(" number of two-nucleon states =%5d\n",twob1++);
+  twob1=0;
+#endif
+  printf(" number of two-body Hamiltonian matrix elements = %6d\n",32);  //compute!!
    
   for(pi1=1;pi1>=-1;pi1=pi1-2){
     for(Jab=0; Jab<=CFG_MAX_J;Jab++){
@@ -331,15 +384,21 @@ int main()
 		if(2*ni1+li1+2*ni2+li2>CFG_MAX_SUM_E){continue;}
 		
 		twob1++;
-		printf("#%5d  a b J T= %3d %3d %2d %2d \n",twob1,i1+1,i2+1,Jab,Tab);
+		printf(" #%5d  a b J T= %2d %2d  %1d %1d \n",twob1,i1+1,i2+1,Jab,Tab);
 	      }
 	  }
       }
     }
   }
+
+ printf("\n\n *** Transition matrix elements for states: ***\n");
+ //loop over all states. 
+
+   printf(" #  1 [2*(J,T),Ex]_f= %2d%2d  0.0000   #  1 [2*(J,T),Ex]_i= %2d%2d  0.0000\n",CFG_2J_FINAL,CFG_2T_FINAL,CFG_2J_INITIAL,CFG_2T_INITIAL); //i, excitation energy
+ 
  for (jtrans = jtrans_min; jtrans <= jtrans_max; jtrans += 2)
     {
-      printf ("Jtrans=%d\n", jtrans/2);
+      printf ("\n Jtrans= %2d\n", jtrans/2);
       double mult;
       {
 	gsl_sf_result result;
@@ -358,7 +417,6 @@ int main()
 	mult = 1.0 / (result.val) * sign; 
 	if(result.val==0.0){continue;}
       }
-     
       twob1=0;
       int twob2=0;
    
@@ -444,7 +502,8 @@ int main()
 			  value_np=(value_np+rev1_np+rev2_np+rev3_np)*mult*clebsch_np*Nab*Ncd;
 				  
 			  if ((fabs(value_np)>0.000001) ||( fabs(value_pp)>0.000001) ||( fabs(value_nn)>0.000001) ){
-			    printf(" (a+a+)J=%5d  (a-a-)J=%5d   td: pn=%10.6f   pp=%10.6f   nn=%10.6f - Jab=%d Tab=%d Jcd=%d Tcd=%d\n",twob1,twob2, value_np, value_pp,value_nn, Jab, Tab, Jcd,Tcd);
+			    //  printf(" (a+a+)J=%5d  (a-a-)J=%5d   td: pn=%10.6f   pp=%10.6f   nn=%10.6f - Jab=%d Tab=%d Jcd=%d Tcd=%d\n",twob1,twob2, value_np, value_pp,value_nn, Jab, Tab, Jcd,Tcd);
+			    printf(" (a+a+)J=%5d  (a-a-)J=%5d   td: pn=%10.6f   pp=%10.6f   nn=%10.6f\n",twob1,twob2, value_np, value_pp,value_nn);//, Jab, Tab, Jcd,Tcd);
 			  }
 			}
 		      }
