@@ -1386,7 +1386,9 @@ extern double *_accumulate;
 
 extern double _cur_val;
 
-double one_coeff[CFG_NUM_MP_STATES][CFG_NUM_MP_STATES];
+#if !CFG_ANICR_TWO
+double one_coeff[CFG_NUM_SP_STATES][CFG_NUM_SP_STATES];
+#endif
 
 void created_state(int *in_sp_other,
 		   int *in_sp,
