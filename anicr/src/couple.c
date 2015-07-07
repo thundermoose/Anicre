@@ -68,7 +68,13 @@ void couple_accumulate()
       exit(1);
     }
   FILE *fp=NULL;
-  fp=fopen(CFG_FILENAME_NLJ,"wb");
+  #define FILENAME_NLJ "nlj_out-%s.bin"
+
+  char filename[128];
+
+
+  sprintf (filename, FILENAME_NLJ, CFG_ANICR_IDENT);
+  fp=fopen(filename,"wb");
   for (jtrans = jtrans_min; jtrans <= jtrans_max; jtrans += 2)
     {
       printf ("Jtrans=%d\n", jtrans/2);

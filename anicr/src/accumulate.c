@@ -1173,7 +1173,11 @@ void write_nlj()
 
   printf ("%zd nlj pair comb, %zd non-zero.\n", num_nlj_comb, nz);
 
-  int fd = open (CFG_FILENAME_NLJ,
+#define FILENAME_NLJ "nlj_out-%s.bin"
+  char filename[128];
+  sprintf (filename, FILENAME_NLJ, CFG_ANICR_IDENT);
+
+  int fd = open (filename,
 		 O_WRONLY | O_CREAT | O_TRUNC
 #ifdef O_LARGEFILE
 		 | O_LARGEFILE
