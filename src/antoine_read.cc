@@ -1467,7 +1467,7 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
     np_config[1]._ident="p";
     np_config[2]._ident="nn";
     np_config[3]._ident= "pp";
-    np_config[4]._ident="np";
+    np_config[4]._ident="pn";
 
     np_config[5]._ident= "n_tables";
     np_config[6]._ident= "p_tables";
