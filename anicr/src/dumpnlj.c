@@ -26,6 +26,8 @@ nlj_hash_item *_nlj_items_pp = NULL;
 size_t     _num_nlj_items_pp = 0;
 nlj_hash_item *_nlj_items_np = NULL;
 size_t     _num_nlj_items_np = 0;
+nlj_hash_item *_nlj_items_pn = NULL;
+size_t     _num_nlj_items_pn = 0;
 
 
 double findState(nlj_hash_item *nlj_items, size_t num_nlj_items,int i1,int i2, int j1,int j2, int J1, int J2,int jtrans)
@@ -189,6 +191,8 @@ int main()
   char filename_nn[14]="nlj_out-nn.bin";
   char filename_pp[14]="nlj_out-pp.bin";
   char filename_np[14]="nlj_out-np.bin";
+  char filename_pn[14]="nlj_out-pn.bin";
+
   char filename_p[14]="nlj_out-p.bin";
   char filename_n[14]="nlj_out-n.bin";
  
@@ -239,8 +243,13 @@ int main()
   printf("test!\n");
   _nlj_items_pp=readDumpfile(filename_pp,&_num_nlj_items_pp);
   printf("test2\n");
+#if NP_ORDER
+  (void)filename_np;
  _nlj_items_np=readDumpfile(filename_np,&_num_nlj_items_np);
-
+#else
+ (void)filename_np;
+ _nlj_items_pn=readDumpfile(filename_pn,&_num_nlj_items_pn);
+#endif
   printf("trdens.out:\n");
   printf(" OBDME calculation\n");
   printf(" T \n"); //if diagonal elements.
@@ -503,7 +512,11 @@ int main()
 				  
 			  if ((fabs(value_np)>0.000001) ||( fabs(value_pp)>0.000001) ||( fabs(value_nn)>0.000001) ){
 			    //  printf(" (a+a+)J=%5d  (a-a-)J=%5d   td: pn=%10.6f   pp=%10.6f   nn=%10.6f - Jab=%d Tab=%d Jcd=%d Tcd=%d\n",twob1,twob2, value_np, value_pp,value_nn, Jab, Tab, Jcd,Tcd);
+#if NP_ORDER
+			    printf(" (a+a+)J=%5d  (a-a-)J=%5d   td: np=%10.6f   pp=%10.6f   nn=%10.6f\n",twob1,twob2, value_np, value_pp,value_nn);//, Jab, Tab, Jcd,Tcd);
+#else 
 			    printf(" (a+a+)J=%5d  (a-a-)J=%5d   td: pn=%10.6f   pp=%10.6f   nn=%10.6f\n",twob1,twob2, value_np, value_pp,value_nn);//, Jab, Tab, Jcd,Tcd);
+#endif
 			  }
 			}
 		      }
