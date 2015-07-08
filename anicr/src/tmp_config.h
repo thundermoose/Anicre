@@ -9,4 +9,6 @@
 #define ACC_TABLE         0
 #define NLJ_TABLE         0
 
-#define NP_ORDER          1      /* if 0, PN order!*/
+
+#define NP_ORDER          1   
+

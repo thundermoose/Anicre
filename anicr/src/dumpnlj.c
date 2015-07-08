@@ -4,6 +4,8 @@
 #include "anicr_tables.h"
 #include "anicr_config.h"
 
+#include "tmp_config.h"
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -240,16 +242,19 @@ int main()
     }
   printf("%s\n",filename_nn);
   _nlj_items_nn=readDumpfile(filename_nn,&_num_nlj_items_nn);
-  printf("test!\n");
+  printf("Read NN-file\n");
   _nlj_items_pp=readDumpfile(filename_pp,&_num_nlj_items_pp);
-  printf("test2\n");
+  printf("Read PP-file\n");
 #if NP_ORDER
-  (void)filename_np;
- _nlj_items_np=readDumpfile(filename_np,&_num_nlj_items_np);
+  printf("NP order\n");
+  (void)filename_pn;
+  _nlj_items_np=readDumpfile(filename_np,&_num_nlj_items_np);
 #else
- (void)filename_np;
- _nlj_items_pn=readDumpfile(filename_pn,&_num_nlj_items_pn);
+  printf("PN order\n");
+  (void)filename_np;
+  _nlj_items_np=readDumpfile(filename_pn,&_num_nlj_items_np);
 #endif
+  printf("Read NP-file\n");
   printf("trdens.out:\n");
   printf(" OBDME calculation\n");
   printf(" T \n"); //if diagonal elements.
@@ -511,7 +516,6 @@ int main()
 			  value_np=(value_np+rev1_np+rev2_np+rev3_np)*mult*clebsch_np*Nab*Ncd;
 				  
 			  if ((fabs(value_np)>0.000001) ||( fabs(value_pp)>0.000001) ||( fabs(value_nn)>0.000001) ){
-			    //  printf(" (a+a+)J=%5d  (a-a-)J=%5d   td: pn=%10.6f   pp=%10.6f   nn=%10.6f - Jab=%d Tab=%d Jcd=%d Tcd=%d\n",twob1,twob2, value_np, value_pp,value_nn, Jab, Tab, Jcd,Tcd);
 #if NP_ORDER
 			    printf(" (a+a+)J=%5d  (a-a-)J=%5d   td: np=%10.6f   pp=%10.6f   nn=%10.6f\n",twob1,twob2, value_np, value_pp,value_nn);//, Jab, Tab, Jcd,Tcd);
 #else 
