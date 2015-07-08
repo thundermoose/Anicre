@@ -1175,8 +1175,16 @@ void write_nlj()
 
 #define FILENAME_NLJ "nlj_out-%s.bin"
   char filename[128];
-  sprintf (filename, FILENAME_NLJ, CFG_ANICR_IDENT);
+#if CFG_ANICR_NP
+#if NP_ORDER
+  sprintf (filename, FILENAME_NLJ, "np");
+#else
+  sprintf (filename, FILENAME_NLJ, "pn");
+#endif
 
+#else
+  sprintf(filename,FILENAME_NLJ,CFG_ANICR_IDENT);
+#endif
   int fd = open (filename,
 		 O_WRONLY | O_CREAT | O_TRUNC
 #ifdef O_LARGEFILE
