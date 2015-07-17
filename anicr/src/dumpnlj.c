@@ -215,7 +215,6 @@ int main()
   fn=fopen(filename_n,"rb");
   int jtrans;
   int ii=0;
-  printf("test\n");
   for(ii=0;ii<num_jtrans;ii++){
     if(fp!=NULL){
       fread(final_p[ii],sizeof(double),num_nlj_2,fp);
@@ -313,12 +312,17 @@ int main()
 
   printf("\n\n *** Transition matrix elements for states: ***\n");
    printf(" #  1 [2*(J,T),Ex]_f= %2d%2d  0.0000   #  1 [2*(J,T),Ex]_i= %2d%2d  0.0000\n",CFG_2J_FINAL,CFG_2T_FINAL,CFG_2J_INITIAL,CFG_2T_INITIAL); //i, excitation energy
+   int showJtrans=0;
   for (jtrans = jtrans_min; jtrans <= jtrans_max; jtrans += 2)
    {
-     printf("\n Jtrans=%3d\n",jtrans);
+     showJtrans=1;
      for( int sp_crea=0;sp_crea<CFG_NUM_NLJ_STATES;sp_crea++){
        for(int sp_anni=0;sp_anni<CFG_NUM_NLJ_STATES;sp_anni++){
 	 if(fabs(final_p[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES])>0.000001||fabs(final_n[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES])>0.000001){
+	   if(showJtrans==1){
+	   printf("\n Jtrans=%3d\n",jtrans/2);
+	   showJtrans=0;
+	   }
 	   printf(" a+=%3d    a-=%3d     td(a+,a-): p=%10.6f     n=%10.6f\n",sp_crea+1,sp_anni+1,final_p[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES],final_n[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES]);
 	 }
        }
@@ -413,7 +417,8 @@ int main()
  
  for (jtrans = jtrans_min; jtrans <= jtrans_max; jtrans += 2)
     {
-      printf ("\n Jtrans= %2d\n", jtrans/2);
+      showJtrans=1;
+      
       double mult;
       {
 	gsl_sf_result result;
@@ -497,7 +502,7 @@ int main()
 			  double clebsch_nn=0.0;
 			  double clebsch_pp=0.0;
 			  double clebsch_np=0.0;
-					  
+			  
 			  if(Tab==1 && Tcd==1){
 			    clebsch_nn=1.0;
 			    clebsch_pp=1.0;
@@ -517,7 +522,12 @@ int main()
 			  value_np=(value_np+rev1_np+rev2_np+rev3_np)*mult*clebsch_np*Nab*Ncd;
 				  
 			  if ((fabs(value_np)>0.000001) ||( fabs(value_pp)>0.000001) ||( fabs(value_nn)>0.000001) ){
+			    if(showJtrans==1){
+			      printf ("\n Jtrans= %2d\n", jtrans/2);
+			      showJtrans=0;
+			    }
 #if NP_ORDER
+			    
 			    printf(" (a+a+)J=%5d  (a-a-)J=%5d   td: np=%10.6f   pp=%10.6f   nn=%10.6f\n",twob1,twob2, value_np, value_pp,value_nn);//, Jab, Tab, Jcd,Tcd);
 #else 
 			    printf(" (a+a+)J=%5d  (a-a-)J=%5d   td: pn=%10.6f   pp=%10.6f   nn=%10.6f\n",twob1,twob2, value_np, value_pp,value_nn);//, Jab, Tab, Jcd,Tcd);
