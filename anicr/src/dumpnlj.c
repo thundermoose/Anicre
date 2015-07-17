@@ -1,4 +1,5 @@
 
+
 #include "util.h"
 
 #include "anicr_tables.h"
@@ -315,10 +316,10 @@ int main()
   for (jtrans = jtrans_min; jtrans <= jtrans_max; jtrans += 2)
    {
      printf("\n Jtrans=%3d\n",jtrans);
-     for(int sp_anni=0;sp_anni<CFG_NUM_NLJ_STATES;sp_anni++){
-       for( int sp_crea=0;sp_crea<CFG_NUM_NLJ_STATES;sp_crea++){
+     for( int sp_crea=0;sp_crea<CFG_NUM_NLJ_STATES;sp_crea++){
+       for(int sp_anni=0;sp_anni<CFG_NUM_NLJ_STATES;sp_anni++){
 	 if(fabs(final_p[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES])>0.000001||fabs(final_n[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES])>0.000001){
-	   printf(" a+=%3d    a-=%3d     td(a+,a-): p=%10.6f     n=%10.6f\n",sp_anni+1,sp_crea+1,final_p[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES],final_n[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES]);
+	   printf(" a+=%3d    a-=%3d     td(a+,a-): p=%10.6f     n=%10.6f\n",sp_crea+1,sp_anni+1,final_p[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES],final_n[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES]);
 	 }
        }
      }

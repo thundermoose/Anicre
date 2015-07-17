@@ -86,7 +86,7 @@ void couple_accumulate()
 	
 	int ret =
 	  gsl_sf_coupling_3j_e(CFG_2J_INITIAL,  jtrans,  CFG_2J_FINAL,
-			       CFG_2M_INITIAL, -mtrans, -CFG_2M_FINAL,
+			       CFG_2M_INITIAL, mtrans, -CFG_2M_FINAL,
 			       &result);
 	
 	if (ret != GSL_SUCCESS)
@@ -95,13 +95,12 @@ void couple_accumulate()
 	    exit(1);
 	  }
 
-	int sign = 1 - ((CFG_2J_INITIAL/* - jtrans*/ + CFG_2M_FINAL) & 2);
+	int sign = 1 - ((-CFG_2J_INITIAL - CFG_2M_FINAL) & 2);
 
-	mult = 1 / (result.val) * sign;
+	mult = sign / (result.val);//*sqrt(CFG_2J_FINAL + 1.);
       }
 
-      (void) mult;
-
+      (void)mult;
 #define END_J (CFG_MAX_J+1)
 
 #define J_STRIDE (CFG_NUM_NLJ_STATES * CFG_NUM_NLJ_STATES * CFG_NUM_NLJ_STATES * CFG_NUM_NLJ_STATES)
@@ -147,7 +146,7 @@ void couple_accumulate()
 	  
 		      int ret =
 			gsl_sf_coupling_3j_e(sp_a->_j, jtrans,  sp_c->_j,
-					     sp_a->_m, -sum_m, -sp_c->_m,
+					     sp_a->_m, sum_m, -sp_c->_m,
 					     &result);
 
 		      if (ret != GSL_SUCCESS)
@@ -156,7 +155,7 @@ void couple_accumulate()
 			  exit(1);
 			}
 
-		      int sign = 1 - ((sp_c->_j/* - jtrans*/ + sp_a->_m) & 2);   //kontrollerA!
+		      int sign = 1 - ((sp_c->_j + sp_a->_m) & 2);   //kontrollerA!
 #if DEBUG_ANICR
 		      printf (" [%10.5f %2d]", result.val, sign);
 		      
@@ -165,7 +164,7 @@ void couple_accumulate()
 		      int fin_i = sp_a->_nlj * CFG_NUM_NLJ_STATES + sp_c->_nlj;
 
 		      final_1b[fin_i] +=
-			result.val * one_coeff[sp_anni][sp_crea] * sign;   //one_coeff can be hash-table to save memory
+			result.val * one_coeff[sp_anni][sp_crea] * sign*mult;   //one_coeff can be hash-table to save memory
 
 		    }
 #if DEBUG_ANICR
