@@ -7,6 +7,8 @@
 
 #include "tmp_config.h"
 
+#include "accumulate.h"
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -31,48 +33,6 @@ nlj_hash_item *_nlj_items_np = NULL;
 size_t     _num_nlj_items_np = 0;
 nlj_hash_item *_nlj_items_pn = NULL;
 size_t     _num_nlj_items_pn = 0;
-
-
-double findState(nlj_hash_item *nlj_items, size_t num_nlj_items,int i1,int i2, int j1,int j2, int J1, int J2,int jtrans)
-{
-  uint64_t savedkey=0;
-  int foundKey=0;
-  for (size_t i = 0; i < num_nlj_items; i++)
-    {
-   
-      uint64_t key = nlj_items[i]._key;
-      
-      int nlj_a1, nlj_a2, nlj_c1, nlj_c2;
-      int anni_j, crea_j;
-      int key_jtrans;
-      
-      nlj_a1 = (key >>  0) & 0x7ff;
-      nlj_a2 = (key >> 11) & 0x7ff;
-      nlj_c1 = (key >> 22) & 0x7ff;
-      nlj_c2 = (key >> 33) & 0x7ff;
-      anni_j = (key >> 44) &  0x7f;
-      crea_j = (key >> 51) &  0x7f;
-      key_jtrans = (int) (key >> 58);
-
-      if (key_jtrans == jtrans && nlj_c1==i1 && nlj_c2==i2 && nlj_a1==j1 && nlj_a2==j2 && anni_j==J2 && crea_j==J1)
-	{	
-	  if(foundKey){
-	    printf("ERROR: More then one key found!");
-	    return 0;
-	   }
-	  savedkey=i;
-	  foundKey=1;
-	}
-    }
-  if(!foundKey)
-    {
-      return 0;
-    }
-  else
-    {
-      return (double)nlj_items[savedkey]._value;
-    }
- }
 
 int compare_nlj_item(const void *p1, const void *p2)
 {
@@ -133,6 +93,93 @@ int compare_nlj_item(const void *p1, const void *p2)
 
   return 0;
 }
+double findState(nlj_hash_item *nlj_items, size_t num_nlj_items,int i1,int i2, int j1,int j2, int J1, int J2,int jtrans)
+{
+  uint64_t savedkey=0;
+  int foundKey=0;
+  
+  for (size_t i = 0; i < num_nlj_items; i++)
+    {
+   
+      uint64_t key = nlj_items[i]._key;
+      
+      int nlj_a1, nlj_a2, nlj_c1, nlj_c2;
+      int anni_j, crea_j;
+      int key_jtrans;
+      
+      nlj_a1 = (key >>  0) & 0x7ff;
+      nlj_a2 = (key >> 11) & 0x7ff;
+      nlj_c1 = (key >> 22) & 0x7ff;
+      nlj_c2 = (key >> 33) & 0x7ff;
+      anni_j = (key >> 44) &  0x7f;
+      crea_j = (key >> 51) &  0x7f;
+      key_jtrans = (int) (key >> 58);
+      
+      if (key_jtrans == jtrans && nlj_c1==i1 && nlj_c2==i2 && nlj_a1==j1 && nlj_a2==j2 && anni_j==J2 && crea_j==J1)
+	{	
+	  if(foundKey){
+	    printf("ERROR: More then one key found!");
+	    return 0;
+	   }
+	  savedkey=i;
+	  foundKey=1;
+	}
+    }
+  if(!foundKey)
+    {
+      return 0;
+    }
+  else
+    {
+      return (double)nlj_items[savedkey]._value;
+    }
+ }
+double findState2(nlj_hash_item *nlj_items, size_t num_nlj_items,int i1,int i2, int j1,int j2, int J1, int J2,int jtrans)
+{
+  // uint64_t savedkey;
+  //  int foundKey=0;
+  nlj_hash_item *found_item;
+  
+   
+  //    uint64_t key = nlj_items[i]._key;
+      
+  //      int nlj_a1, nlj_a2, nlj_c1, nlj_c2;
+  //  int anni_j, crea_j;
+  //   int key_jtrans;
+      uint64_t key =
+	(((uint64_t) i1) <<  0) |
+	(((uint64_t) i2) << 11) |
+	(((uint64_t) j1) << 22) |
+	(((uint64_t) j2) << 33) |
+	(((uint64_t) J1) << 44) |
+	(((uint64_t) J2) << 51) |
+	(((uint64_t) jtrans) << 58);
+
+      found_item=(nlj_hash_item *) bsearch (&key, nlj_items, num_nlj_items, sizeof (nlj_hash_item), compare_nlj_item); 
+      if(found_item!=NULL){
+
+	//	printf("found %f \n",(double)found_item->_value);
+	
+	//	printf("Not found\n");
+	return (double)found_item->_value;
+      }
+      //      else{
+      //	printf("found\n");
+
+      //}
+      
+      /*      nlj_a1 = (key >>  0) & 0x7ff;
+      nlj_a2 = (key >> 11) & 0x7ff;
+      nlj_c1 = (key >> 22) & 0x7ff;
+      nlj_c2 = (key >> 33) & 0x7ff;
+      anni_j = (key >> 44) &  0x7f;
+      crea_j = (key >> 51) &  0x7f;
+      key_jtrans = (int) (key >> 58);
+      printf("key: %d",nlj_hash_key(key)); */
+      //      return (double)nlj_items[savedkey]._value;
+    
+ }
+
 
 double norm(int na,int la,int ja,int nb,int lb,int jb,int J,int T) //T=0,1
 {
@@ -477,25 +524,25 @@ int main()
 			  if(2*nj1+lj1+2*nj2+lj2>CFG_MAX_SUM_E){continue;}
 			  
 			  twob2++;
-			  double value_nn=findState(_nlj_items_nn, _num_nlj_items_nn, i1, i2,  j1, j2, 2*Jab,2*Jcd,jtrans);
-			  double value_pp=findState(_nlj_items_pp, _num_nlj_items_pp, i1, i2,  j1, j2, 2*Jab,2*Jcd,jtrans);
-			  double value_np=findState(_nlj_items_np, _num_nlj_items_np, i1, i2,  j1, j2, 2*Jab,2*Jcd,jtrans);  
+			  double value_nn=findState2(_nlj_items_nn, _num_nlj_items_nn, i1, i2,  j1, j2, 2*Jab,2*Jcd,jtrans);
+			  double value_pp=findState2(_nlj_items_pp, _num_nlj_items_pp, i1, i2,  j1, j2, 2*Jab,2*Jcd,jtrans);
+			  double value_np=findState2(_nlj_items_np, _num_nlj_items_np, i1, i2,  j1, j2, 2*Jab,2*Jcd,jtrans);  
 			  double rev1_np=0.0;
 			  double rev2_np=0.0;
 			  double rev3_np=0.0;
 			  
 			  if(i1!=i2){
-			    rev1_np=findState(_nlj_items_np,_num_nlj_items_np,i2,i1,j1,j2,2*Jab,2*Jcd,jtrans);  
+			    rev1_np=findState2(_nlj_items_np,_num_nlj_items_np,i2,i1,j1,j2,2*Jab,2*Jcd,jtrans);  
 			    if(rev1_np){rev1_np=rev1_np*pow(-1.,-(ji1+ji2)/2+Jab+Tab-1);}
 			  }
 			  
 			  if(j2!=j1){  
-			    rev2_np=findState(_nlj_items_np,_num_nlj_items_np,i1,i2,j2,j1,2*Jab,2*Jcd,jtrans);
+			    rev2_np=findState2(_nlj_items_np,_num_nlj_items_np,i1,i2,j2,j1,2*Jab,2*Jcd,jtrans);
 			    if(rev2_np){rev2_np=rev2_np*pow(-1.,-(jj1+jj2)/2+Jcd+Tcd-1);}
 			  }
 					  
 			  if(i1!=i2&&j2!=j1){
-			    rev3_np=findState(_nlj_items_np,_num_nlj_items_np,i2,i1,j2,j1,2*Jab,2*Jcd,jtrans);
+			    rev3_np=findState2(_nlj_items_np,_num_nlj_items_np,i2,i1,j2,j1,2*Jab,2*Jcd,jtrans);
 			    if(rev3_np){rev3_np=rev3_np*pow(-1.,-(ji1+ji2+jj1+jj2)/2+Jab+Jcd+Tab+Tcd); }
 			  }
 		   

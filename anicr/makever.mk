@@ -9,17 +9,17 @@ OBJS = anicr_main.o anicr_tables.o anicr_tables_sp.o \
 	create.o couple.o packed_create.o \
 	accumulate.o util.o
 
-NLJ_OBJS = anicr_tables_sp.o util.o dumpnlj.o
+NLJ_OBJS = anicr_tables_sp.o util.o accumulate.o dumpnlj.o
 
 ####################################################################
 
-CFLAGS = -lm -O3 -g -std=c99 # -pg
+CFLAGS = -lm -O3 -g -std=c99  -pg
 
-LINKFLAGS += -g # -pg
+LINKFLAGS += -g  -pg
 
 CFLAGS += -Wall -Wno-unused-function -Wno-unused-label \
 	-W -Wshadow -Wwrite-strings -Wconversion \
-	-Werror 
+
 
 SRC_DIRS = ../anicr/src
 
