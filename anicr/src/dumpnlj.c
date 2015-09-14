@@ -147,10 +147,10 @@ double findState2(nlj_hash_item *nlj_items, size_t num_nlj_items,int i1,int i2, 
   //  int anni_j, crea_j;
   //   int key_jtrans;
       uint64_t key =
-	(((uint64_t) i1) <<  0) |
-	(((uint64_t) i2) << 11) |
-	(((uint64_t) j1) << 22) |
-	(((uint64_t) j2) << 33) |
+	(((uint64_t) j1) <<  0) |
+	(((uint64_t) j2) << 11) |
+	(((uint64_t) i1) << 22) |
+	(((uint64_t) i2) << 33) |
 	(((uint64_t) J1) << 44) |
 	(((uint64_t) J2) << 51) |
 	(((uint64_t) jtrans) << 58);
@@ -158,26 +158,11 @@ double findState2(nlj_hash_item *nlj_items, size_t num_nlj_items,int i1,int i2, 
       found_item=(nlj_hash_item *) bsearch (&key, nlj_items, num_nlj_items, sizeof (nlj_hash_item), compare_nlj_item); 
       if(found_item!=NULL){
 
-	//	printf("found %f \n",(double)found_item->_value);
-	
-	//	printf("Not found\n");
 	return (double)found_item->_value;
       }
-      //      else{
-      //	printf("found\n");
-
-      //}
-      
-      /*      nlj_a1 = (key >>  0) & 0x7ff;
-      nlj_a2 = (key >> 11) & 0x7ff;
-      nlj_c1 = (key >> 22) & 0x7ff;
-      nlj_c2 = (key >> 33) & 0x7ff;
-      anni_j = (key >> 44) &  0x7f;
-      crea_j = (key >> 51) &  0x7f;
-      key_jtrans = (int) (key >> 58);
-      printf("key: %d",nlj_hash_key(key)); */
-      //      return (double)nlj_items[savedkey]._value;
-    
+      else{
+	return 0.0;
+      }
  }
 
 
