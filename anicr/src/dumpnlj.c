@@ -136,49 +136,31 @@ double findState(nlj_hash_item *nlj_items, size_t num_nlj_items,int i1,int i2, i
  }
 double findState2(nlj_hash_item *nlj_items, size_t num_nlj_items,int i1,int i2, int j1,int j2, int J1, int J2,int jtrans)
 {
-  // uint64_t savedkey;
-  //  int foundKey=0;
+
   nlj_hash_item *found_item;
   
-   
-  //    uint64_t key = nlj_items[i]._key;
-      
-  //      int nlj_a1, nlj_a2, nlj_c1, nlj_c2;
-  //  int anni_j, crea_j;
-  //   int key_jtrans;
+
       uint64_t key =
-	(((uint64_t) i1) <<  0) |
-	(((uint64_t) i2) << 11) |
-	(((uint64_t) j1) << 22) |
-	(((uint64_t) j2) << 33) |
-	(((uint64_t) J1) << 44) |
-	(((uint64_t) J2) << 51) |
+	(((uint64_t) j1) <<  0) |   //a1
+	(((uint64_t) j2) << 11) |   //a2
+	(((uint64_t) i1) << 22) |   //c1
+	(((uint64_t) i2) << 33) |  //c2
+	(((uint64_t) J2) << 44) | //anni_j
+	(((uint64_t) J1) << 51) | //crea_j
 	(((uint64_t) jtrans) << 58);
 
       found_item=(nlj_hash_item *) bsearch (&key, nlj_items, num_nlj_items, sizeof (nlj_hash_item), compare_nlj_item); 
       if(found_item!=NULL){
 
-	//	printf("found %f \n",(double)found_item->_value);
-	
-	//	printf("Not found\n");
 	return (double)found_item->_value;
       }
-      //      else{
-      //	printf("found\n");
+      else{
 
-      //}
-      
-      /*      nlj_a1 = (key >>  0) & 0x7ff;
-      nlj_a2 = (key >> 11) & 0x7ff;
-      nlj_c1 = (key >> 22) & 0x7ff;
-      nlj_c2 = (key >> 33) & 0x7ff;
-      anni_j = (key >> 44) &  0x7f;
-      crea_j = (key >> 51) &  0x7f;
-      key_jtrans = (int) (key >> 58);
-      printf("key: %d",nlj_hash_key(key)); */
-      //      return (double)nlj_items[savedkey]._value;
-    
- }
+	return 0.0;
+
+      }
+}
+
 
 
 double norm(int na,int la,int ja,int nb,int lb,int jb,int J,int T) //T=0,1
@@ -365,7 +347,7 @@ int main()
      showJtrans=1;
      for( int sp_crea=0;sp_crea<CFG_NUM_NLJ_STATES;sp_crea++){
        for(int sp_anni=0;sp_anni<CFG_NUM_NLJ_STATES;sp_anni++){
-	 if(fabs(final_p[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES])>0.000001||fabs(final_n[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES])>0.000001){
+       	 if(fabs(final_p[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES])>0.000001||fabs(final_n[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES])>0.000001)
 	   if(showJtrans==1){
 	   printf("\n Jtrans=%3d\n",jtrans/2);
 	   showJtrans=0;
