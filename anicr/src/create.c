@@ -187,8 +187,8 @@ void annihilate_packed_states(uint64_t *packed
 {
   int list[CFG_NUM_SP_STATES0 + CFG_NUM_SP_STATES1];
 
-  packed_to_int_list(list,packed);
-
+  packed_to_int_list(list,packed);   //Verkar skapa en lista med alla tillstånd.
+   
   annihilate_states(list + CFG_NUM_SP_STATES0, list
 #if CFG_CONN_TABLES
 		    ,
@@ -300,7 +300,7 @@ void annihilate_states(int *in_sp_other,
   /* Delete 1 state. */
 
   int out_sp[NSP];
-
+ 
 #if CFG_CONN_TABLES
   for (i = 1; i < NSP; i++)
     {
@@ -316,7 +316,7 @@ void annihilate_states(int *in_sp_other,
       /* M += sp_info[in_sp_other[i]]._m; */
       E += SP_STATE_E(sp_info[in_sp_other[i]]);
 #if DEBUG_ANICR
-      printf ("%3d  %3d %3d\n",
+      printf ("1:%3d  %3d %3d\n",
 	      E,
 	      sp_info[in_sp_other[i]]._m, SP_STATE_E(sp_info[in_sp_other[i]]));
 #endif
@@ -1386,6 +1386,10 @@ extern double *_accumulate;
 
 extern double _cur_val;
 
+#if !CFG_ANICR_TWO
+double one_coeff[CFG_NUM_SP_STATES][CFG_NUM_SP_STATES];
+#endif
+
 void created_state(int *in_sp_other,
 		   int *in_sp,
 #if CFG_ANICR_THREE
@@ -1401,7 +1405,7 @@ void created_state(int *in_sp_other,
 		   )
 {
   int i;
-
+  // double one_coeff[CFG_NUM_MP_STATES][CFG_NUM_MP_STATES];
   /* We need to find the created state in the destination hash table.
    * To get its coefficient.
    */
@@ -1469,7 +1473,7 @@ void created_state(int *in_sp_other,
   (void) acc_i;
 #endif
 #else
-#if 0
+#if 0 //DS
   int acc_i = sp_anni * CFG_NUM_SP_STATES + sp_crea;
 #endif
 #endif
@@ -1488,9 +1492,10 @@ void created_state(int *in_sp_other,
 #endif
 
   uint64_t acc_x;
-
-  accumulate_pre(key, &acc_x);
+ 
+  accumulate_pre(key, &acc_x);   //Key for transition state (e.g. a+a)
   accumulate_prefetch_rw(acc_x);
+  
 #endif
 
   /*
@@ -1506,7 +1511,7 @@ void created_state(int *in_sp_other,
 
   uint64_t lookfor_packed[CFG_PACK_WORDS];
 
-  int_list2_to_packed(lookfor_packed, in_sp, in_sp_other);
+  int_list2_to_packed(lookfor_packed, in_sp, in_sp_other);  //Created many-body state
 
   /*
 #if DEBUG_ANICR
@@ -1517,8 +1522,7 @@ void created_state(int *in_sp_other,
   */
 
   uint64_t lookfor_x;
-
-  find_mp_state_pre(lookfor_packed, &lookfor_x);
+  find_mp_state_pre(lookfor_packed, &lookfor_x);   //Find possible initia and final states      
   find_mp_state_prefetch(lookfor_x);
 
 #if CFG_CONN_TABLES
@@ -1552,14 +1556,22 @@ void created_state(int *in_sp_other,
 
 #if DEBUG_COUPLING
   /*Print coefficients for all connections*/
+#if CFG_ANICR_TWO
   printf("Coefficients: a1=%4d a2=%4d c1=%4d c2=%4d : bmpi=  %11.8f bmpf=  %11.8f sign= %3d\n",sp_anni1,sp_anni2,sp_crea1,sp_crea2,val,_cur_val,sign);
+#else
+  printf("Coefficients: a=%4d c=%4d : bmpi=  %11.8f bmpf=  %11.8f sign= %3d\n",sp_anni,sp_crea,val,_cur_val,sign);
 #endif
-
+#endif
+#if CFG_ANICR_TWO
 #if !CFG_CONN_TABLES
   accumulate_advance_add(key, &acc_x);
+ 
   accumulate_post_add(acc_x, val * _cur_val * sign);
 #endif
-
+#else
+  one_coeff[sp_anni][sp_crea]+=val*_cur_val*sign;
+#endif
+  
 #if DEBUG_ANICR
   /* printf ("%5d %15.10f\n", acc_i, val * _cur_val * sign); */
   printf ("%15.10f\n", val * _cur_val * sign);

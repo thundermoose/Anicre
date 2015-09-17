@@ -17,6 +17,9 @@
 
 extern int _debug;
 
+extern int _t_2_initial;
+extern int _t_2_final;
+
 template<class header_version_t, class fon_version_t>
 mr_antoine_reader<header_version_t, fon_version_t>::
 mr_antoine_reader(mr_file_reader *file_reader)
@@ -1439,23 +1442,46 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
     int         _num_change;
     int         _change_pn_at;
     int         _sp_pairs_table;
-  } np_config[] = {
-    { "n",  false, true,  1, 0, -1 },
-    { "p",  false, false, 1, 0, -1 },
-    { "nn", false, true,  2, 0, 0 },
-    { "pp", false, false, 2, 0, 1 },
-    { "np", false, true,  2, 1, 2 },
+  }np_config[]= {
+       { "p",  false, true,  1, 0, -1 },
+       { "n",  false, false, 1, 0, -1 },
+       { "pp", false, true,  2, 0, 0 },
+       { "nn", false, false, 2, 0, 1 },
+       { "np", false, true,  2, 1, 2 },
+       
+       { "p_tables",   true,  true,  1, 0, -1 },
+       { "n_tables",   true,  false, 1, 0, -1 },
+       { "pp_tables",  true,  true,  2, 0, 0 },
+       { "nn_tables",  true,  false, 2, 0, 1 },
+       { "nnn_tables", true,  true,  3, 0, 0 },
+       { "ppp_tables", true,  false, 3, 0, 1 },
+    }; 
 
-    { "n_tables",   true,  true,  1, 0, -1 },
-    { "p_tables",   true,  false, 1, 0, -1 },
-    { "nn_tables",  true,  true,  2, 0, 0 },
-    { "pp_tables",  true,  false, 2, 0, 1 },
-    { "nnn_tables", true,  true,  3, 0, 0 },
-    { "ppp_tables", true,  false, 3, 0, 1 },
-  };
+ 
+ 
+  printf("Coul: %d \n", _wavefcns[0]->_fon._.coul);
+ 
+  if(_wavefcns[0]->_fon._.coul==2){
+      
+    np_config[0]._ident="n";
+    np_config[1]._ident="p";
+    np_config[2]._ident="nn";
+    np_config[3]._ident= "pp";
+    np_config[4]._ident="pn";
 
-  
+    np_config[5]._ident= "n_tables";
+    np_config[6]._ident= "p_tables";
+    np_config[7]._ident="nn_tables";
+    np_config[8]._ident= "pp_tables";
+    np_config[9]._ident= "nnn_tables";
+    np_config[10]._ident="ppp_tables";
+     
+   }
+  /* 
+  for(int i=0; i<=10;i++){
+    printf("titta! %s %d %d %d %d %d \n",np_config[i]._ident,np_config[i]._conn_tables_output,np_config[i]._use_forw_states,np_config[i]._num_change,np_config[i]._change_pn_at,np_config[i]._sp_pairs_table);
 
+    }*/
   for (size_t icfg = 0; icfg < countof(np_config); icfg++)
     {
       np_config_t &cfg = np_config[icfg];
@@ -1494,6 +1520,7 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
 #define FILENAME_CONFIG "config_%s.h"
 
 	char filename[128];
+
 
 	sprintf (filename, FILENAME_CONFIG, cfg._ident);
 
@@ -1556,7 +1583,16 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
 	    out_config.fprintf("#define CFG_2J_FINAL                   %d\n",
 			       _wavefcns[0]->_fon._.jt2);
 	  }
-
+	if(_t_2_initial==-1){
+	  _t_2_initial= _header.A[cfg._use_forw_states ? 0 : 1]+ _header.A[cfg._use_forw_states ? 1 : 0];
+	}
+	if(_t_2_final==-1){
+	  _t_2_final=_t_2_initial;
+	}
+	out_config.fprintf("#define CFG_2T_INITIAL                 %d\n",
+			   _t_2_initial);
+	out_config.fprintf("#define CFG_2T_FINAL                 %d\n",
+			   _t_2_final);
 	out_config.fprintf("#define CFG_2M_INITIAL                 %d\n",
 			   mp_info._sum_m);
 	out_config.fprintf("#define CFG_2M_FINAL                   %d\n",
@@ -1583,11 +1619,9 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
 			   (cfg._num_change == 3 ? 1 : 0));
 	out_config.fprintf("#define CFG_ANICR_NP                   %d\n",
 			   (cfg._change_pn_at ? 1 : 0));
-	
-#define FILENAME_NLJ "nlj_out-%s.bin"
 
-	out_config.fprintf("#define CFG_FILENAME_NLJ     "
-                           "\"" FILENAME_NLJ "\"\n", cfg._ident); 
+	out_config.fprintf("#define CFG_ANICR_IDENT               \"%s\"\n",
+			   cfg._ident); 
       }
     }
 

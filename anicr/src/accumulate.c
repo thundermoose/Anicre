@@ -20,6 +20,7 @@
 
 uint32_t *_sp_pairs = NULL;
 
+#if CFG_ANICR_TWO   //DS
 void prepare_accumulate()
 {
 #if CFG_ANICR_TWO
@@ -58,6 +59,8 @@ void prepare_accumulate()
   printf ("Read %zd sp pairs.\n", (size_t) CFG_SP_PAIRS);
 #endif
 }
+
+#endif //DS
 
 #if ACC_TABLE
 double *_accumulate;
@@ -188,10 +191,12 @@ void alloc_accumulate()
   memset (_accumulate, 0, accum_sz); 
 #endif
 
+
+#if CFG_ANICR_TWO
   /* The reduced version. */
 
   /* List of the pairs sorted by j,m for the contained states. */
-
+ 
   size_t sz_jmpis = sizeof (jm_pair_info_sort) * CFG_SP_PAIRS;
 
   jm_pair_info_sort *jmpis = (jm_pair_info_sort *) malloc (sz_jmpis);
@@ -714,7 +719,9 @@ void alloc_accumulate()
           _acc_hash_mask + 1,
           (double) num_accum_comb / ((double) (_acc_hash_mask + 1)),
           (double) sum_coll / (double) num_accum_comb, max_coll);
+#endif //DS
 }
+
 #endif
 
 
@@ -770,7 +777,7 @@ uint64_t nlj_hash_key(uint64_t key)
 nlj_hash_item *_nlj_hash;
 uint64_t       _nlj_hash_mask = 0;
 
-
+#if CFG_ANICR_TWO
 #if !CFG_CONN_TABLES
 void prepare_nlj()
 {
@@ -1070,7 +1077,7 @@ void prepare_nlj()
 
 }
 #endif
-
+#endif
 
 void nlj_add(uint64_t key, double value)
 {
@@ -1166,7 +1173,19 @@ void write_nlj()
 
   printf ("%zd nlj pair comb, %zd non-zero.\n", num_nlj_comb, nz);
 
-  int fd = open (CFG_FILENAME_NLJ,
+#define FILENAME_NLJ "nlj_out-%s.bin"
+  char filename[128];
+#if CFG_ANICR_NP
+#if NP_ORDER
+  sprintf (filename, FILENAME_NLJ, "np");
+#else
+  sprintf (filename, FILENAME_NLJ, "pn");
+#endif
+
+#else
+  sprintf(filename,FILENAME_NLJ,CFG_ANICR_IDENT);
+#endif
+  int fd = open (filename,
 		 O_WRONLY | O_CREAT | O_TRUNC
 #ifdef O_LARGEFILE
 		 | O_LARGEFILE

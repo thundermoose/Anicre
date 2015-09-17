@@ -226,7 +226,6 @@ size_t sort_mp_by_E_M(size_t num_mp)
       {
 	size_t i1;
 
-	printf ("%5zd:", i);
 	for (i1 = 0; i1 < CFG_NUM_SP_STATES0; i1++)
 	  {
 	    printf (" %3d", list[i1]);
@@ -632,6 +631,7 @@ hash_mp_wf *setup_hash_table(uint64_t *mp,
   return hashed_mp;
 }
 
+extern double one_coeff[CFG_NUM_SP_STATES][CFG_NUM_SP_STATES];
 
 
 int main(int argc, char *argv[])
@@ -711,6 +711,13 @@ int main(int argc, char *argv[])
   find_sp_comb(num_mp);
 #endif
 
+#if !CFG_ANICR_TWO  //DS - unused variables
+  (void)argv;
+  (void)argc;
+#endif
+
+  //#if CFG_ANICR_TWO   //DS - No hashtable
+
 #if !CFG_CONN_TABLES /* lets not even set it up... */
   _hashed_mp = setup_hash_table(_mp,
 #if !CFG_CONN_TABLES
@@ -730,7 +737,7 @@ int main(int argc, char *argv[])
   
   printf ("Sorted %zd mp states.\n", num_mp);
 #endif
-
+  //#endif  //DS
   ammend_tables();
 
   int packed = 0;
@@ -739,19 +746,19 @@ int main(int argc, char *argv[])
     packed = 1;
 
   (void) packed;
-
 #if !CFG_CONN_TABLES
+  
+#if CFG_ANICR_TWO  //DS
   prepare_accumulate();
 
   prepare_nlj();
 
   alloc_accumulate();
-
+#endif
   size_t i;
 
   uint64_t *mp = _mp;
   double   *wf = _wf;
-
   for (i = 0; i < num_mp; i++)
     {
       _cur_val = wf[0];
@@ -762,7 +769,7 @@ int main(int argc, char *argv[])
 	}
       else
 	{
-	  /* annihilate_states(mp + CFG_NUM_SP_STATES0, mp); */
+	  //annihilate_states(mp + CFG_NUM_SP_STATES0, mp); //DS
 	  annihilate_packed_states(mp);
 	}
 
@@ -779,12 +786,13 @@ int main(int argc, char *argv[])
   printf ("Annihilated-created for %zd mp states.\n", num_mp);
 
   printf ("Found %"PRIu64"/%"PRIu64".\n", _found, _lookups);
-  
-  /* couple_accumulate(); */
 
-  couple_accumulate_2();
-
+#if !CFG_ANICR_TWO
+   couple_accumulate(); 
+#else
+   couple_accumulate_2();
   write_nlj();
+#endif
 #endif
 
 #if CFG_CONN_TABLES
