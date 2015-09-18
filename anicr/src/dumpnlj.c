@@ -316,7 +316,7 @@ int main()
   int mxnwd=1;
   int mxsps=32;
   int major=3;
-  int iparity=0;
+  int iparity=0; 
   double T=(double)CFG_2T_INITIAL/2.0f;
   double energy=-12.5466;
   float ex=0.0;
@@ -351,10 +351,19 @@ int main()
      showJtrans=1;
      for( int sp_crea=0;sp_crea<CFG_NUM_NLJ_STATES;sp_crea++){
        for(int sp_anni=0;sp_anni<CFG_NUM_NLJ_STATES;sp_anni++){
-       	 if(fabs(final_p[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES])>0.000001||fabs(final_n[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES])>0.000001)
+	 //       	 if(fabs(final_p[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES])>0.000001||fabs(final_n[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES])>0.000001)
+	 int jc=_table_nlj_states[sp_crea]._j;
+	 int ja=_table_nlj_states[sp_anni]._j;
+	 int lc=_table_nlj_states[sp_crea]._l;
+	 int la=_table_nlj_states[sp_anni]._l;
+
+	 if((jc+ja)<jtrans){continue;}
+	 if(abs(jc-ja)>jtrans){continue;}
+	 if(pow(-1,lc)==pow(-1,la)){   //This needs to be fixed if used for two different states. 
+	   
 	   if(showJtrans==1){
-	   printf("\n Jtrans=%3d\n",jtrans/2);
-	   showJtrans=0;
+	     printf("\n Jtrans=%3d\n",jtrans/2);
+	     showJtrans=0;
 	   }
 	   printf(" a+=%3d    a-=%3d     td(a+,a-): p=%10.6f     n=%10.6f\n",sp_crea+1,sp_anni+1,final_p[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES],final_n[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES]);
 	 }
