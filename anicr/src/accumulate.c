@@ -14,6 +14,8 @@
 #include <assert.h>
 #include <limits.h>
 
+#include "couple.h"
+
 #include "tmp_config.h"
 
 #define DUMP_JM_PAIRS 0

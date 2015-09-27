@@ -13,10 +13,14 @@
 #include "create.h"
 #include "accumulate.h"
 
+#include "couple.h"
+
 #include "tmp_config.h"
 
 #include <gsl/gsl_errno.h>
 #include "gsl/gsl_sf_coupling.h"
+
+
 
 #if ACC_TABLE
 extern double *_accumulate;
@@ -216,13 +220,6 @@ void couple_accumulate()
 
 
 
-typedef struct couple_item_t
-{
-  uint64_t _nlj_key;
-  int      _fact_anni_crea; /* x1: anni_nlj_same, x2: crea_nlj_same */
-  double   _value;
-
-} couple_item;
 
 couple_item *_couple_items = NULL;
 
@@ -238,12 +235,6 @@ void alloc_couple_items(size_t max_anni, size_t max_crea)
       exit(1);
     }
 }
-
-typedef struct couple_j_item_t
-{
-  int _j;
-  double _val;
-} couple_j_item;
 
 #if CFG_ANICR_TWO
 void couple_accumulate_2()
