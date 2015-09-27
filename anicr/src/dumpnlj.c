@@ -93,47 +93,7 @@ int compare_nlj_item(const void *p1, const void *p2)
 
   return 0;
 }
-double findState(nlj_hash_item *nlj_items, size_t num_nlj_items,int i1,int i2, int j1,int j2, int J1, int J2,int jtrans)
-{
-  uint64_t savedkey=0;
-  int foundKey=0;
-  
-  for (size_t i = 0; i < num_nlj_items; i++)
-    {
-   
-      uint64_t key = nlj_items[i]._key;
-      
-      int nlj_a1, nlj_a2, nlj_c1, nlj_c2;
-      int anni_j, crea_j;
-      int key_jtrans;
-      
-      nlj_a1 = (key >>  0) & 0x7ff;
-      nlj_a2 = (key >> 11) & 0x7ff;
-      nlj_c1 = (key >> 22) & 0x7ff;
-      nlj_c2 = (key >> 33) & 0x7ff;
-      anni_j = (key >> 44) &  0x7f;
-      crea_j = (key >> 51) &  0x7f;
-      key_jtrans = (int) (key >> 58);
-      
-      if (key_jtrans == jtrans && nlj_c1==i1 && nlj_c2==i2 && nlj_a1==j1 && nlj_a2==j2 && anni_j==J2 && crea_j==J1)
-	{	
-	  if(foundKey){
-	    printf("ERROR: More then one key found!");
-	    return 0;
-	   }
-	  savedkey=i;
-	  foundKey=1;
-	}
-    }
-  if(!foundKey)
-    {
-      return 0;
-    }
-  else
-    {
-      return (double)nlj_items[savedkey]._value;
-    }
- }
+
 double findState2(nlj_hash_item *nlj_items, size_t num_nlj_items,int i1,int i2, int j1,int j2, int J1, int J2,int jtrans)
 {
 
