@@ -3,13 +3,15 @@ ifndef QUIET
 QUIET=@
 endif
 
-all: $(ANICR_PREFIX)_anicr dumpnlj
+all: $(ANICR_PREFIX)_anicr dumpnlj obs 
 
 OBJS = anicr_main.o anicr_tables.o anicr_tables_sp.o \
 	create.o couple.o packed_create.o \
-	accumulate.o util.o
+	accumulate.o util.o 
 
 NLJ_OBJS = anicr_tables_sp.o util.o dumpnlj.o
+
+OBS_OBJS = util.o calobop.o
 
 ####################################################################
 
@@ -49,6 +51,10 @@ DUMPNLJ_OBJS = $(addprefix build_dumpnlj/,$(NLJ_OBJS))
 
 DUMPNLJ_AUTO_DEPS = $(DUMPNLJ_OBJS:%.o=%.d)
 
+COMPOBS_OBJS = $(addprefix build_obs/,$(OBS_OBJS))
+
+COMPOBS_AUTO_DEPS = $(OBSNLJ_OBJS:%.o=%.d)
+
 ####################################################################
 
 -include $(ANICR_AUTO_DEPS)
@@ -60,12 +66,12 @@ DUMPNLJ_AUTO_DEPS = $(DUMPNLJ_OBJS:%.o=%.d)
 # In such templates, all $ must be replaced by $$, to avoid evaluation
 # at instantiation
 define COMPILE_FROM_DIR_template
-build_$(ANICR_PREFIX)_anicr/%.o: $(1)/%.c build_$(ANICR_PREFIX)_anicr/%.d
+build_$(ANICR_PREFIX)_anicr/%.o: $(1)/%.c $(1)/%.h build_$(ANICR_PREFIX)_anicr/%.d
 	@echo "   CC    $$@"
 	@mkdir -p $$(dir $$@)
 	$$(QUIET)$$(CC) $$(CFLAGS) $$< -c -o $$@
 
-build_$(ANICR_PREFIX)_anicr/%.d: $(1)/%.c
+build_$(ANICR_PREFIX)_anicr/%.d: $(1)/%.c $(1)/%.h
 	@echo "  DEPS   $$@"
 	@mkdir -p $$(dir $$@)
 	$$(QUIET)$$(CC) $$(CFLAGS) -MM -MG $$< | \
@@ -78,12 +84,12 @@ $(foreach dir,$(SRC_DIRS),$(eval $(call COMPILE_FROM_DIR_template,$(dir),)))
 # In such templates, all $ must be replaced by $$, to avoid evaluation
 # at instantiation
 define COMPILE_FROM_DIR_template_nlj
-build_dumpnlj/%.o: $(1)/%.c build_dumpnlj/%.d
+build_dumpnlj/%.o: $(1)/%.c $(1)/%.h  build_dumpnlj/%.d
 	@echo "   CC    $$@"
 	@mkdir -p $$(dir $$@)
 	$$(QUIET)$$(CC) $$(CFLAGS) $$< -c -o $$@
 
-build_dumpnlj/%.d: $(1)/%.c
+build_dumpnlj/%.d: $(1)/%.c $(1)/%.h
 	@echo "  DEPS   $$@"
 	@mkdir -p $$(dir $$@)
 	$$(QUIET)$$(CC) $$(CFLAGS) -MM -MG $$< | \
@@ -92,8 +98,26 @@ build_dumpnlj/%.d: $(1)/%.c
 endef
 
 $(foreach dir,$(SRC_DIRS),$(eval $(call COMPILE_FROM_DIR_template_nlj,$(dir),)))
+###################################################################
+define COMPILE_FROM_DIR_template_obs
+build_obs/%.o: $(1)/%.c $(1)/%.h  build_obs/%.d
+	@echo "   CC    $$@"
+	@mkdir -p $$(dir $$@)
+	$$(QUIET)$$(CC) $$(CFLAGS) $$< -c -o $$@
+
+build_obs/%.d: $(1)/%.c $(1)/%.h
+	@echo "  DEPS   $$@"
+	@mkdir -p $$(dir $$@)
+	$$(QUIET)$$(CC) $$(CFLAGS) -MM -MG $$< | \
+	 sed -e 's,\($$(*F)\)\.o[ :]*,$$(dir $$@)$$*.o $$@ : ,g' \
+	> $$@
+endef
+
+$(foreach dir,$(SRC_DIRS),$(eval $(call COMPILE_FROM_DIR_template_obs,$(dir),)))
+
 
 ####################################################################
+
 
 $(ANICR_PREFIX)_anicr: $(ANICR_OBJS)
 	@echo "   LD    $@"
@@ -103,6 +127,9 @@ dumpnlj: $(DUMPNLJ_OBJS)
 	@echo "   LD    $@"
 	$(QUIET)$(CC) -o $@ $(DUMPNLJ_OBJS) $(LINKFLAGS) $(LIBS)
 
+obs: $(OBS_OBJS)
+	@echo "   LD    $@"
+	$(QUIET)$(CC) -o $@ $(COMPOBS_OBJS) $(LINKFLAGS) $(LIBS)
 ####################################################################
 
 clean:
