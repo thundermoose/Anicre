@@ -5,8 +5,11 @@
 #include <math.h>
 #include <gsl/gsl_errno.h>
 #include "gsl/gsl_sf_coupling.h"
-
+#include "gsl/gsl_sf_laguerre.h"
+#include "gsl/gsl_integration.h"
 #include "nlj.h"
+
+//#define M_PI 3.14159265358979323846
 
 /*nlj_hash_item *_nlj_items_nn = NULL;
 size_t     _num_nlj_items_nn = 0;
@@ -17,10 +20,13 @@ size_t     _num_nlj_items_np = 0;
 nlj_hash_item *_nlj_items_pn = NULL;
 size_t     _num_nlj_items_pn = 0;
 */
+double radialHO(double r,double b,int n,int l);
+double obmeSH(int l1,int jj1,int l2,int jj2,int lambda);
+double obmeQ(int na, int la, int jja,int nb, int lb,int jb,int lambda,double b);
 int main()
 {
 
-  _nlj_items_nn = NULL;
+  /*  _nlj_items_nn = NULL;
   _num_nlj_items_nn = 0;
   _nlj_items_pp = NULL;
   _num_nlj_items_pp = 0;
@@ -34,7 +40,7 @@ int main()
   char filename_pp[14]="nlj_out-pp.bin";
   char filename_np[14]="nlj_out-np.bin";
   char filename_pn[14]="nlj_out-pn.bin";
-
+  */
   char filename_p[14]="nlj_out-p.bin";
   char filename_n[14]="nlj_out-n.bin";
  
@@ -163,6 +169,9 @@ int main()
      for( int sp_crea=0;sp_crea<CFG_NUM_NLJ_STATES;sp_crea++){
        for(int sp_anni=0;sp_anni<CFG_NUM_NLJ_STATES;sp_anni++){
 	 //       	 if(fabs(final_p[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES])>0.000001||fabs(final_n[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES])>0.000001)
+	 int na=_table_nlj_states[sp_anni]._n;
+	 int nc=_table_nlj_states[sp_crea]._n;
+
 	 int jc=_table_nlj_states[sp_crea]._j;
 	 int ja=_table_nlj_states[sp_anni]._j;
 	 int lc=_table_nlj_states[sp_crea]._l;
@@ -177,6 +186,7 @@ int main()
 	     showJtrans=0;
 	   }
 	   fprintf(fp," a+=%3d    a-=%3d     td(a+,a-): p=%10.6f     n=%10.6f\n",sp_crea+1,sp_anni+1,final_p[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES],final_n[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES]);
+	   printf("Q= %f \n",obmeQ(na,la,ja,nc,lc,jc,2,1.0));
 	 }
        }
      }
@@ -185,5 +195,69 @@ int main()
   fprintf(fp," ***************************************************************\n\n");
 
   fclose(fp);
+
+
+  for(double r=0.0;r<10;r+=0.1){
+    printf(" %f  %f \n",r,radialHO(r,1,2,1));
+  }
+
+  printf(" %f \n",obmeSH(1,1,1,1,0));
   return 0;
+}
+double radialHO(double r, double b,int n,int l){
+  double L;
+  double temp;
+  L=gsl_sf_laguerre_n(n,l+0.5,pow(r/b,2));
+  temp=sqrt(2*tgamma(n+1)/(pow(b,3)*tgamma(n+l+3./2)))*pow(r/b,l);
+  temp*=exp(-0.5*pow(r/b,2));
+  temp*=L;
+  
+  return temp ;
+};
+
+
+double obmeSH(int l1,int jj1,int l2,int jj2,int lambda){
+  //Computes the matrix element (l1,1/2,j2||Y_lambda||l2,1/2,j2) according to Suhonen eq. 2.57
+  double temp;
+  temp=1./sqrt(4.*M_PI)*pow(-1,jj2/2.0-0.5+lambda)*(1+pow(-1.,l1+l2+lambda))/2.0;
+  temp*=sqrt(jj1+1.)*sqrt(jj2+1.)*sqrt(2*lambda+1.);
+  temp*=gsl_sf_coupling_3j(jj1,jj2,lambda*2,1,-1,0);
+  return temp;
+}
+
+struct RR_params{int na; int la;int nb;int lb;double b; int lambda;};
+  
+double radialQ(double x,void *p){//int na, int la, int nb, int lb,int lambda,double b){
+  struct RR_params * params = (struct RR_params *)p;
+  int na=(params->na);
+  int la=(params->la);
+  int nb=(params->nb);
+  int lb=(params->lb);
+  double b=(params->b);
+  int lambda=(params->lambda);
+  return radialHO(x,b,na,la)*pow(x,lambda)*radialHO(x,b,nb,lb)*pow(x,2);
+}
+double obmeQ(int na, int la, int jja,int nb, int lb,int jjb,int lambda,double b){
+  //computes the reduced electric transition for single-particles.
+  //Doesn't include the charge factor
+  double Q;
+
+  Q=obmeSH(la,jja,lb,jjb,lambda);
+
+  
+  //Integrate r-dependence
+  struct RR_params alpha={na,la,nb,lb,b,lambda};
+  gsl_integration_workspace * w = gsl_integration_workspace_alloc(1000);
+  double result,error;
+  gsl_function F;
+  F.function = &radialQ;
+  F.params=&alpha;
+  gsl_integration_qags( &F,0,10,0,1e-7,1000,w,&result,&error);
+  printf ("result          = % .18f\n", result);
+  //  printf ("exact result    = % .18f\n", expected);
+  printf ("estimated error = % .18f\n", error);
+  //  printf ("actual error    = % .18f\n", result - expected);
+  printf ("intervals =  %d\n",(int) w->size);
+  
+  return Q*result;
 }
