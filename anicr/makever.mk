@@ -5,9 +5,9 @@ endif
 
 all: $(ANICR_PREFIX)_anicr dumpnlj obs 
 
-OBJS = anicr_main.o anicr_tables.o anicr_tables_sp.o \
-	create.o couple.o packed_create.o \
-	accumulate.o util.o 
+OBJS = anicr_main.o anicr_tables.o anicr_tables_sp.o accumulate.o\
+	create.o packed_create.o\
+	util.o couple.o
 
 NLJ_OBJS = anicr_tables_sp.o util.o nlj.o dumpnlj.o
 
@@ -15,7 +15,7 @@ OBS_OBJS = anicr_tables_sp.o util.o nlj.o calobop.o
 
 ####################################################################
 
-CFLAGS = -lm -O3 -g -std=c99  -pg
+CFLAGS = -O3 -g -std=c99  -pg
 
 LINKFLAGS += -g  -pg
 
@@ -81,7 +81,7 @@ build_$(ANICR_PREFIX)_anicr/%.d: $(1)/%.c
 endef
 
 $(foreach dir,$(SRC_DIRS),$(eval $(call COMPILE_FROM_DIR_template,$(dir),)))
-
+	
 # In such templates, all $ must be replaced by $$, to avoid evaluation
 # at instantiation
 define COMPILE_FROM_DIR_template_nlj
