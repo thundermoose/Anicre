@@ -13,14 +13,26 @@ OBJS = mfr_main.o mr_file_reader.o mr_base_reader.o \
 	colourtext.o markconvbold.o error.o
 
 ####################################################################
-
-CXXFLAGS = -lm -O3 -g
+ UNAME_S := $(shell uname -s)
+    ifeq ($(UNAME_S),Darwin)
+        CXXFLAGS = -lm -O3 -g
 
 LINKFLAGS += -g
 
 CXXFLAGS += -ansi -Wall -Wno-unused-function -Wno-unused-label \
         -W -Wshadow -Wwrite-strings -Wconversion \
-        -Wno-non-template-friend -Werror 
+        -Wno-non-template-friend 
+
+    endif
+    ifeq ($(UNAME_S),Darwin1)
+    CXXFLAGS = -O3 -g
+
+LINKFLAGS += -g
+
+CXXFLAGS += -ansi -Wall -Wno-unused-function -Wno-unused-label \
+        -W -Wshadow -Wwrite-strings -Wconversion 
+
+    endif
 
 SRC_DIRS = src lu_common util
 

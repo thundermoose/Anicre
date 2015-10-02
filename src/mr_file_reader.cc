@@ -196,10 +196,15 @@ void *mr_file_reader::map_block_data(uint64_t offset_data,size_t size,
   end = (end + (_pagesize - 1)) & ~(_pagesize - 1);
 
   size_t length = end - offset;
-
+#ifdef __APPLE__
   void *addr = mmap(NULL, length,
-		    PROT_READ, MAP_SHARED | MAP_POPULATE,
+		    PROT_READ, MAP_SHARED ,
 		    _fd, offset);
+#else 
+void *addr = mmap(NULL, length,
+        PROT_READ, MAP_SHARED | MAP_POPULATE,
+        _fd, offset);
+#endif
 
   if (addr == MAP_FAILED)
     {
