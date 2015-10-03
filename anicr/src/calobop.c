@@ -162,48 +162,63 @@ int main()
   
   fprintf(fp,"\n\n *** Transition matrix elements for states: ***\n");
   fprintf(fp," #  1 [2*(J,T),Ex]_f= %2d%2d  0.0000   #  1 [2*(J,T),Ex]_i= %2d%2d  0.0000\n",CFG_2J_FINAL,CFG_2T_FINAL,CFG_2J_INITIAL,CFG_2T_INITIAL); //i, excitation energy
+
    int showJtrans=0;
+  double Qp=0.0,Qn=0.0;
+
   for (jtrans = jtrans_min; jtrans <= jtrans_max; jtrans += 2)
    {
+
      showJtrans=1;
      for( int sp_crea=0;sp_crea<CFG_NUM_NLJ_STATES;sp_crea++){
        for(int sp_anni=0;sp_anni<CFG_NUM_NLJ_STATES;sp_anni++){
 	 //       	 if(fabs(final_p[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES])>0.000001||fabs(final_n[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES])>0.000001)
-	 int na=_table_nlj_states[sp_anni]._n;
-	 int nc=_table_nlj_states[sp_crea]._n;
+	       int na=_table_nlj_states[sp_anni]._n;
+	       int nc=_table_nlj_states[sp_crea]._n;
 
-	 int jc=_table_nlj_states[sp_crea]._j;
-	 int ja=_table_nlj_states[sp_anni]._j;
-	 int lc=_table_nlj_states[sp_crea]._l;
-	 int la=_table_nlj_states[sp_anni]._l;
-
-	 if((jc+ja)<jtrans){continue;}
-	 if(abs(jc-ja)>jtrans){continue;}
-	 if(pow(-1,lc)==pow(-1,la)){   //This needs to be fixed if used for two different states. 
+	       int jc=_table_nlj_states[sp_crea]._j;
+	       int ja=_table_nlj_states[sp_anni]._j;
+	       int lc=_table_nlj_states[sp_crea]._l;
+	       int la=_table_nlj_states[sp_anni]._l;
+	       if((jc+ja)<jtrans){continue;}
+	       if(abs(jc-ja)>jtrans){continue;}
+	       if(pow(-1,lc)==pow(-1,la)){   //This needs to be fixed if used for two different states. 
 	   
-	   if(showJtrans==1){
-	     fprintf(fp,"\n Jtrans=%3d\n",jtrans/2);
-	     showJtrans=0;
-	   }
-	   fprintf(fp," a+=%3d    a-=%3d     td(a+,a-): p=%10.6f     n=%10.6f\n",sp_crea+1,sp_anni+1,final_p[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES],final_n[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES]);
-	   printf("Q= %f \n",obmeQ(na,la,ja,nc,lc,jc,2,1.0));
-	 }
-       }
+	         if(showJtrans==1){
+	           fprintf(fp,"\n Jtrans=%3d\n",jtrans/2);
+	           showJtrans=0;
+	         }
+	         fprintf(fp," a+=%3d    a-=%3d     td(a+,a-): p=%10.6f     n=%10.6f\n",sp_crea+1,sp_anni+1,final_p[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES],final_n[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES]);
+	         printf("Q= %f \n",obmeQ(na,la,ja,nc,lc,jc,jtrans,1.0));
+	         Qp+=obmeQ(na,la,ja,nc,lc,jc,jtrans,1.0)*final_p[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES];
+           Qn+=obmeQ(na,la,ja,nc,lc,jc,jtrans,1.0)*final_n[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES];
+
+          }
+
+       }  
      }
      ii++;
+     printf(" p: %f n: %f \n", Qp,Qn);
+     Qp=0.0;
+     Qn=0.0;
    }
   fprintf(fp," ***************************************************************\n\n");
 
   fclose(fp);
 
-
+/*
   for(double r=0.0;r<10;r+=0.1){
     printf(" %f  %f \n",r,radialHO(r,1,2,1));
   }
 
   printf(" %f \n",obmeSH(1,1,1,1,0));
   return 0;
+  */
 }
+
+
+
+
 double radialHO(double r, double b,int n,int l){
   double L;
   double temp;
