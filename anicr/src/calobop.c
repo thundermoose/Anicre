@@ -8,7 +8,9 @@
 #include "gsl/gsl_sf_laguerre.h"
 #include "gsl/gsl_integration.h"
 #include "nlj.h"
-
+#include <stdio.h>
+#include <stdlib.h>
+  
 //#define M_PI 3.14159265358979323846
 
 /*nlj_hash_item *_nlj_items_nn = NULL;
@@ -236,7 +238,18 @@ double obmeSH(int l1,int jj1,int l2,int jj2,int lambda){
   double temp;
   temp=1./sqrt(4.*M_PI)*pow(-1,jj2/2.0-0.5+lambda)*(1+pow(-1.,l1+l2+lambda))/2.0;
   temp*=sqrt(jj1+1.)*sqrt(jj2+1.)*sqrt(2*lambda+1.);
-  temp*=gsl_sf_coupling_3j(jj1,jj2,lambda*2,1,-1,0);
+  gsl_sf_result result;
+  int ret =
+    gsl_sf_coupling_3j_e(jj1,jj2,lambda*2,1,-1,0,
+             &result);
+    
+        if (ret != GSL_SUCCESS)
+    {
+      fprintf (stderr,"ERR! %d\n", ret);
+      exit(1);
+    }
+
+  temp*=result.val;
   return temp;
 }
 
@@ -267,12 +280,16 @@ double obmeQ(int na, int la, int jja,int nb, int lb,int jjb,int lambda,double b)
   gsl_function F;
   F.function = &radialQ;
   F.params=&alpha;
-  gsl_integration_qags( &F,0,10,0,1e-7,1000,w,&result,&error);
-  printf ("result          = % .18f\n", result);
+  int ret =gsl_integration_qags( &F,0,10,0,1e-7,1000,w,&result,&error);
+  if( error>=0.000001){
+        printf (stderr,"ERR! %d\n", ret);
+      exit(1);
+  }
+  //printf ("result          = % .18f\n", result);
   //  printf ("exact result    = % .18f\n", expected);
-  printf ("estimated error = % .18f\n", error);
+  //printf ("estimated error = % .18f\n", error);
   //  printf ("actual error    = % .18f\n", result - expected);
-  printf ("intervals =  %d\n",(int) w->size);
-  
+  //printf ("intervals =  %d\n",(int) w->size);
+  gsl_integration_workspace_free (w);
   return Q*result;
 }
