@@ -282,7 +282,7 @@ double obmeQ(int na, int la, int jja,int nb, int lb,int jjb,int lambda,double b)
   F.params=&alpha;
   int ret =gsl_integration_qags( &F,0,10,0,1e-7,1000,w,&result,&error);
   if( error>=0.000001){
-        printf (stderr,"ERR! %d\n", ret);
+        printf ("ERR! %d\n", ret);
       exit(1);
   }
   //printf ("result          = % .18f\n", result);
