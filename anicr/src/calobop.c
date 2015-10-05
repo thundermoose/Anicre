@@ -22,9 +22,13 @@ size_t     _num_nlj_items_np = 0;
 nlj_hash_item *_nlj_items_pn = NULL;
 size_t     _num_nlj_items_pn = 0;
 */
+
+#define MASSN 938.9187
+#define HBARC 197.326963
 double radialHO(double r,double b,int n,int l);
 double obmeSH(int l1,int jj1,int l2,int jj2,int lambda);
 double obmeQ(int na, int la, int jja,int nb, int lb,int jb,int lambda,double b);
+double computeB(double hw);
 int main()
 {
 
@@ -167,7 +171,7 @@ int main()
 
    int showJtrans=0;
   double Qp=0.0,Qn=0.0;
-
+  double b=1.0;//computeB(20.0);
   for (jtrans = jtrans_min; jtrans <= jtrans_max; jtrans += 2)
    {
 
@@ -188,12 +192,14 @@ int main()
 	   
 	         if(showJtrans==1){
 	           fprintf(fp,"\n Jtrans=%3d\n",jtrans/2);
+		   printf("\n Jtrans=%3d\n",jtrans/2);
+
 	           showJtrans=0;
 	         }
-	         fprintf(fp," a+=%3d    a-=%3d     td(a+,a-): p=%10.6f     n=%10.6f\n",sp_crea+1,sp_anni+1,final_p[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES],final_n[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES]);
-	         printf("Q= %f \n",obmeQ(na,la,ja,nc,lc,jc,jtrans,1.0));
-	         Qp+=obmeQ(na,la,ja,nc,lc,jc,jtrans,1.0)*final_p[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES];
-           Qn+=obmeQ(na,la,ja,nc,lc,jc,jtrans,1.0)*final_n[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES];
+	         printf(" a+=%3d    a-=%3d     td(a+,a-): p=%10.6f     n=%10.6f\n",sp_crea+1,sp_anni+1,final_p[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES],final_n[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES]);
+	         printf("Q= %f \n",obmeQ(na,la,ja,nc,lc,jc,jtrans/2,b));
+	         Qp+=obmeQ(na,la,ja,nc,lc,jc,jtrans/2,b)*final_p[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES];
+           Qn+=obmeQ(na,la,ja,nc,lc,jc,jtrans/2,b)*final_n[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES];
 
           }
 
@@ -280,8 +286,8 @@ double obmeQ(int na, int la, int jja,int nb, int lb,int jjb,int lambda,double b)
   gsl_function F;
   F.function = &radialQ;
   F.params=&alpha;
-  int ret =gsl_integration_qags( &F,0,10,0,1e-7,1000,w,&result,&error);
-  if( error>=0.000001){
+  int ret =gsl_integration_qag( &F,0,10,1e-5,1e-5,1000,6,w,&result,&error);
+  if( error>=0.01){
         printf ("ERR! %d\n", ret);
       exit(1);
   }
@@ -292,4 +298,10 @@ double obmeQ(int na, int la, int jja,int nb, int lb,int jjb,int lambda,double b)
   //printf ("intervals =  %d\n",(int) w->size);
   gsl_integration_workspace_free (w);
   return Q*result;
+}
+
+double computeB(double hw){
+  double B;
+  
+  return B=sqrt(pow(HBARC,2)/(MASSN*hw));
 }
