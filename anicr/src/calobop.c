@@ -179,16 +179,16 @@ int main()
      for( int sp_crea=0;sp_crea<CFG_NUM_NLJ_STATES;sp_crea++){
        for(int sp_anni=0;sp_anni<CFG_NUM_NLJ_STATES;sp_anni++){
 	 //       	 if(fabs(final_p[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES])>0.000001||fabs(final_n[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES])>0.000001)
-	       int na=_table_nlj_states[sp_anni]._n;
-	       int nc=_table_nlj_states[sp_crea]._n;
+	       int nb=_table_nlj_states[sp_anni]._n;
+	       int na=_table_nlj_states[sp_crea]._n;
 
-	       int jc=_table_nlj_states[sp_crea]._j;
-	       int ja=_table_nlj_states[sp_anni]._j;
-	       int lc=_table_nlj_states[sp_crea]._l;
-	       int la=_table_nlj_states[sp_anni]._l;
-	       if((jc+ja)<jtrans){continue;}
-	       if(abs(jc-ja)>jtrans){continue;}
-	       if(pow(-1,lc)==pow(-1,la)){   //This needs to be fixed if used for two different states. 
+	       int ja=_table_nlj_states[sp_crea]._j;
+	       int jb=_table_nlj_states[sp_anni]._j;
+	       int la=_table_nlj_states[sp_crea]._l;
+	       int lb=_table_nlj_states[sp_anni]._l;
+	       if((ja+jb)<jtrans){continue;}
+	       if(abs(ja-jb)>jtrans){continue;}
+	       if(pow(-1,lb)==pow(-1,la)){   //This needs to be fixed if used for two different states. 
 	   
 	         if(showJtrans==1){
 	           fprintf(fp,"\n Jtrans=%3d\n",jtrans/2);
@@ -197,9 +197,9 @@ int main()
 	           showJtrans=0;
 	         }
 	         printf(" a+=%3d    a-=%3d     td(a+,a-): p=%10.6f     n=%10.6f\n",sp_crea+1,sp_anni+1,final_p[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES],final_n[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES]);
-	         printf("Q= %f \n",obmeQ(na,la,ja,nc,lc,jc,jtrans/2,b));
-	         Qp+=obmeQ(na,la,ja,nc,lc,jc,jtrans/2,b)*final_p[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES];
-           Qn+=obmeQ(na,la,ja,nc,lc,jc,jtrans/2,b)*final_n[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES];
+	         printf("Q= %f \n",obmeQ(na,la,ja,nb,lb,jb,jtrans/2,b));
+	         Qp+=obmeQ(na,la,ja,nb,lb,jb,jtrans/2,b)*final_p[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES];
+		 Qn+=obmeQ(na,la,ja,nb,lb,jb,jtrans/2,b)*final_n[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES];
 
           }
 
