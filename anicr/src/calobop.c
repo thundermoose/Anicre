@@ -174,7 +174,7 @@ int main()
   double b=1.0;//computeB(20.0);
   for (jtrans = jtrans_min; jtrans <= jtrans_max; jtrans += 2)
    {
-
+     if (jtrans/2%2!=0){continue;}  //Only for Iparityi==IparityF
      showJtrans=1;
      for( int sp_crea=0;sp_crea<CFG_NUM_NLJ_STATES;sp_crea++){
        for(int sp_anni=0;sp_anni<CFG_NUM_NLJ_STATES;sp_anni++){
