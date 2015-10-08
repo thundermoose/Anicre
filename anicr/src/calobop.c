@@ -172,62 +172,72 @@ int main()
    int showJtrans=0;
   double Qp=0.0,Qn=0.0;
   double b=computeB(hw);
-   gsl_sf_result result;
+  int numberStep=100;
+  double rmin=3.0;
+  double rmax=10.0;
+  double r[numberStep];
+  double fr[numberStep];
+  for(int i=0; i<numberStep;i++){
+    r[i]=(rmax-rmin)/(numberStep-1)*i+rmin;
+    printf("r %d %f \n",i,r[i]);
+  }
+
+  gsl_sf_result result;
 
   
   printf(" b= %f hw= %f\n",b,hw);
   for (jtrans = jtrans_min; jtrans <= jtrans_max; jtrans += 2)
    {
-     
-     if (jtrans/2%2!=0){continue;}  //Only for Iparityi==IparityF
-     showJtrans=1;
-     for( int sp_crea=0;sp_crea<CFG_NUM_NLJ_STATES;sp_crea++){
-       for(int sp_anni=0;sp_anni<CFG_NUM_NLJ_STATES;sp_anni++){
+    for(int i=0; i<numberStep;i++){
+      fr[i]=0.0;
+  
+    }
+    Qp=0.0;
+    Qn=0.0;
+    if (jtrans/2%2!=0){continue;}  //Only for Iparityi==IparityF
+    showJtrans=1;
+    for( int sp_crea=0;sp_crea<CFG_NUM_NLJ_STATES;sp_crea++){
+      for(int sp_anni=0;sp_anni<CFG_NUM_NLJ_STATES;sp_anni++){
 	 //       	 if(fabs(final_p[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES])>0.000001||fabs(final_n[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES])>0.000001)
 	       int nb=_table_nlj_states[sp_anni]._n;
 	       int na=_table_nlj_states[sp_crea]._n;
-
 	       int ja=_table_nlj_states[sp_crea]._j;
 	       int jb=_table_nlj_states[sp_anni]._j;
 	       int la=_table_nlj_states[sp_crea]._l;
 	       int lb=_table_nlj_states[sp_anni]._l;
+
 	       if((ja+jb)<jtrans){continue;}
 	       if(abs(ja-jb)>jtrans){continue;}
 	       if(pow(-1,lb)==pow(-1,la)){   //This needs to be fixed if used for two different states. 
 	   
 	         if(showJtrans==1){
 	           fprintf(fp,"\n Jtrans=%3d\n",jtrans/2);
-		   printf("\n Jtrans=%3d\n",jtrans/2);
-
+		         printf("\n Jtrans=%3d\n",jtrans/2);
 	           showJtrans=0;
 	         }
+
 	         printf(" a+=%3d    a-=%3d     td(a+,a-): p=%10.6f     n=%10.6f\n",sp_crea+1,sp_anni+1,final_p[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES],final_n[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES]);
 	         printf("Q= %f \n",obmeQ(na,la,ja,nb,lb,jb,jtrans/2,b));
-
-		 
-		 int ret =
+		
+	      	 int ret =
 		   		   gsl_sf_coupling_3j_e(CFG_2J_INITIAL,jtrans,CFG_2J_FINAL,CFG_2J_INITIAL,0,-CFG_2J_INITIAL,
-					&result);
+	    				&result);
     
-        if (ret != GSL_SUCCESS)
-    {
-      fprintf (stderr,"ERR! %d\n", ret);
-      exit(1);
-      }
-	Qp+=obmeQ(na,la,ja,nb,lb,jb,jtrans/2,b)*final_p[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES]*result.val/sqrt(jtrans+1.);
-	Qn+=obmeQ(na,la,ja,nb,lb,jb,jtrans/2,b)*final_n[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES]*result.val/ sqrt(jtrans+1.);
-
-		 
-
+          if (ret != GSL_SUCCESS)
+          {
+            fprintf (stderr,"ERR! %d\n", ret);
+            exit(1);
           }
+	        Qp+=obmeQ(na,la,ja,nb,lb,jb,jtrans/2,b)*final_p[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES]*result.val/sqrt(jtrans+1.);
+          Qn+=obmeQ(na,la,ja,nb,lb,jb,jtrans/2,b)*final_n[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES]*result.val/ sqrt(jtrans+1.);
+
+        }
 
        }  
      }
      ii++;
   
      printf("B(E) %f p: %f n: %f \n", pow(Qp,2),Qp,Qn);
-     Qp=0.0;
-     Qn=0.0;
    }
   fprintf(fp," ***************************************************************\n\n");
 
