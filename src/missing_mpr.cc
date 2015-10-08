@@ -24,7 +24,8 @@ missing_mpr_table(const vect_sp_state &sps,
 		  int32_t max_sp_mpr,
 		  int32_t max_sp_N,
 		  int32_t oddeven,
-		  int miss1, int miss2)
+		  int miss1, int miss2,
+		  bool change_pn)
 {
   int32_t miss_m_min = M - max_sp_mpr;
   int32_t miss_m_max = M - min_sp_mpr;
@@ -57,14 +58,15 @@ missing_mpr_table(const vect_sp_state &sps,
 
 	  int next_miss_m = miss_m - sp._m;
 
-	  int next_N_min;
-
 	  for (int parity = 0; parity < (prev_repl_st ? 2 : 1); parity++)
 	    {
+	      int next_N_min;
+
 	      if (prev_repl_st)
 		{
 		  next_N_min = prev_repl_st->min_N(parity,
-						   next_miss_m, (int) i);
+						   next_miss_m,
+						   change_pn ? -1 : (int) i);
 
 		  if (next_N_min == INT_MAX)
 		    continue;
@@ -101,7 +103,8 @@ missing_mpr_table(const vect_sp_state &sps,
  */
 
 void missing_mpr_tables(file_output &out,
-			int M, int parity, const vect_sp_state &sps)
+			int M, int parity, const vect_sp_state &sps,
+			int n_create, int change_pn_at)
 {
   (void) parity;
 
@@ -152,36 +155,47 @@ void missing_mpr_tables(file_output &out,
   // missing a certain m to reach the total sum_m.  Also keep track
   // of how much energy is needed at each location
 
-  repl_states_by_m_N *repl_st1;
+  repl_states_by_m_N *repl_st1 = NULL;
+  repl_states_by_m_N *repl_st2 = NULL;
+  repl_states_by_m_N *repl_st3 = NULL;
 
-  repl_st1 = missing_mpr_table(sps, NULL,
-                               M, 1 * min_sp_mpr, 1 * max_sp_mpr,
-                               max_sp_N * 1, 1, 1, 0); // odd
+  if (n_create >= 1)
+    {
+      repl_st1 = missing_mpr_table(sps, NULL,
+				   M, 1 * min_sp_mpr, 1 * max_sp_mpr,
+				   max_sp_N * 1, 1, 1, 0,
+				   0); // odd
 
-  // When calculating what particle can go in as the second last, we
-  // must also take into consideration in what state we might leave
-  // the system.  We know that the next particle to be added will have
-  // a higher index, i.e. add at least as much energy.
-  //
-  // I.e. if we add a certain amount of energy, we might already
-  // know that further additions are futile.  So, we should consult
-  // the previous tables to see if there is any possible future.
+      // When calculating what particle can go in as the second last, we
+      // must also take into consideration in what state we might leave
+      // the system.  We know that the next particle to be added will have
+      // a higher index, i.e. add at least as much energy.
+      //
+      // I.e. if we add a certain amount of energy, we might already
+      // know that further additions are futile.  So, we should consult
+      // the previous tables to see if there is any possible future.
 
-  repl_states_by_m_N *repl_st2;
+      if (n_create >= 2)
+	{
+	  repl_st2 = missing_mpr_table(sps, repl_st1,
+				       M, 2 * min_sp_mpr, 2 * max_sp_mpr,
+				       max_sp_N * 2, 0, 2, 0, // even
+				       change_pn_at == 1);
 
-  repl_st2 = missing_mpr_table(sps, repl_st1,
-                               M, 2 * min_sp_mpr, 2 * max_sp_mpr,
-                               max_sp_N * 2, 0, 2, 0); // even
+	  if (n_create >= 3)
+	    {
+	      repl_st3 = missing_mpr_table(sps, repl_st2,
+					   M, 3 * min_sp_mpr, 3 * max_sp_mpr, 
+					   max_sp_N * 3, 1, 3, 0, // odd
+					   change_pn_at == 2);
+	    }
+	}
+    }
 
-  repl_states_by_m_N *repl_st3;
-
-  repl_st3 = missing_mpr_table(sps, repl_st2,
-			       M, 3 * min_sp_mpr, 3 * max_sp_mpr, 
-			       max_sp_N * 3, 1, 3, 0); // odd
-
-  (void) repl_st3;
-
-  repl_st1->write_table(out, false);
-  repl_st2->write_table(out, true);
-  repl_st3->write_table(out, true);
+  if (repl_st1)
+    repl_st1->write_table(out, false);
+  if (repl_st2)
+    repl_st2->write_table(out, true);
+  if (repl_st3)
+    repl_st3->write_table(out, true);
 }

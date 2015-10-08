@@ -8,6 +8,7 @@
 #include <stdio.h>
 
 void missing_mpr_tables(file_output &out,
-			int M, int parity, const vect_sp_state &sps);
+			int M, int parity, const vect_sp_state &sps,
+			int n_create, int change_pn_at);
 
 #endif/*__MISSING_MPR_HH__*/

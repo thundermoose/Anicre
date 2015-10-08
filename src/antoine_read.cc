@@ -6,10 +6,7 @@
 
 #include "mr_file_chunk.hh"
 
-#include "sp_states.hh"
 #include "missing_mpr.hh"
-
-#include "pack_mp_state.hh"
 
 #include "file_output.hh"
 
@@ -19,9 +16,6 @@
 #include <algorithm>
 
 extern int _debug;
-
-#define __STDC_FORMAT_MACROS
-#include <inttypes.h>
 
 template<class header_version_t, class fon_version_t>
 mr_antoine_reader<header_version_t, fon_version_t>::
@@ -33,6 +27,9 @@ mr_antoine_reader(mr_file_reader *file_reader)
   for (int i = 0; i < 2; i++)
     _occ_used[i] = NULL;
   _jm_used = NULL;
+  _nlj_used = NULL;
+  _nljs_map = NULL;
+  _sps_map = NULL;
 }
 
 template<class header_version_t, class fon_version_t>
@@ -622,13 +619,9 @@ dump_istate_chunk(mr_file_chunk<mr_antoine_istate_item_t> &chunk)
 
 
 template<class header_version_t, class fon_version_t>
-void mr_antoine_reader<header_version_t, fon_version_t>::find_used_states()
+void mr_antoine_reader<header_version_t, fon_version_t>::find_occ_used()
 {
-  /* First find out which occ states are used by the istates. */
-  /*
-  BITSONE_CONTAINER_TYPE      _occ_used[2];
-#define BITSONE_CONTAINER_BITS    (sizeof(BITSONE_CONTAINER_TYPE)*8)
-  */
+  /* Find out which occ states are used by the istates. */
 
   for (int i = 0; i < 2; i++)
     {
@@ -688,10 +681,12 @@ void mr_antoine_reader<header_version_t, fon_version_t>::find_used_states()
 
       printf ("OCC %d used: %ld (%zd)\n", i, occ_used, _occ_used_items[i]);
     }
+}
 
-  /* And then find out which single-particle states are used
-   * by the occs.
-   */
+template<class header_version_t, class fon_version_t>
+void mr_antoine_reader<header_version_t, fon_version_t>::find_jm_used()
+{
+  /* Find out which single-particle states are used by the occs. */
 
   _jm_used_slots = _header.A[0] + _header.A[1] + 1;
   _jm_used_items_per_slot =
@@ -713,13 +708,12 @@ void mr_antoine_reader<header_version_t, fon_version_t>::find_used_states()
 
   size_t max_jm_for_jm_sz = 2 * sizeof (uint32_t) * _header.num_of_jm;
 
-  uint32_t *_max_jm_for_jm = (uint32_t *) malloc (max_jm_for_jm_sz);
+  _max_jm_for_jm = (uint32_t *) malloc (max_jm_for_jm_sz);
+
+  if (!_max_jm_for_jm)
+    FATAL("Memory allocation failure (_max_jm_for_jm).");
 
   memset(_max_jm_for_jm, 0, max_jm_for_jm_sz);
-
-  char *jm_jm_used = (char *) malloc (_header.num_of_jm * _header.num_of_jm);
-
-  memset (jm_jm_used, 0, _header.num_of_jm * _header.num_of_jm);
 
   for (int i = 0; i < 2; i++)
     {
@@ -737,13 +731,9 @@ void mr_antoine_reader<header_version_t, fon_version_t>::find_used_states()
 
 	      mr_antoine_occ_item_t *pocc1 = pocc;
 
-	      uint32_t jm_array[32];
-
 	      for (unsigned int j = 0; j < _header.A[i]; j++)
 		{
 		  uint32_t jm = (pocc++)->sp - 1;
-
-		  jm_array[j] = jm;
 
 		  BITSONE_CONTAINER_TYPE mask =
 		    ((BITSONE_CONTAINER_TYPE) 1) <<
@@ -773,14 +763,6 @@ void mr_antoine_reader<header_version_t, fon_version_t>::find_used_states()
 		    max_jm_for_jm[jm] = jm_max_plus1;
 		}
 
-	      for (unsigned int j1 = 0; j1 < _header.A[i] - 1; j1++)
-		{
-		  for (unsigned int j2 = j1 + 1; j2 < _header.A[i]; j2++)
-		    {
-		      jm_jm_used[jm_array[j1] +
-				 jm_array[j2] * _header.num_of_jm] = 1;
-		    }
-		}
 	      /*
 	      (void) pocc1;
 	      (void) max_jm_for_jm;
@@ -800,21 +782,12 @@ void mr_antoine_reader<header_version_t, fon_version_t>::find_used_states()
 	      _max_jm_for_jm[i + _header.num_of_jm]);
       */
     }
+}
 
-  uint64_t combs = 0;
-
-  for (unsigned int j1 = 0; j1 < _header.num_of_jm; j1++)
-    {
-      for (unsigned int j2 = 0; j2 < _header.num_of_jm; j2++)
-	{
-	  combs += jm_jm_used[j1 + j2 * _header.num_of_jm];
-	}
-    }
-
-  printf ("jm x jm used: %"PRIu64" /  %"PRIu64"\n",
-	  combs, (uint64_t) _header.num_of_jm * (uint64_t) _header.num_of_jm);
-
-  jm_u = _jm_used;
+template<class header_version_t, class fon_version_t>
+void mr_antoine_reader<header_version_t, fon_version_t>::info_jm_used()
+{
+  BITSONE_CONTAINER_TYPE *jm_u = _jm_used;
 
   int sp_used = -1;
 
@@ -836,22 +809,28 @@ void mr_antoine_reader<header_version_t, fon_version_t>::find_used_states()
     }
 
   (void) sp_used;
+}
 
-  /* Fetch all the sp states that actually are in use.
-   * No need to included unused ones in tables.
-   */
+template<class header_version_t, class fon_version_t>
+void mr_antoine_reader<header_version_t, fon_version_t>::find_nlj_used()
+{
+  /* Find out which nlj indices are in use. */
 
-  vect_sp_state sps;
+  _nlj_used_items_per_slot =
+    (_header.num_of_shell + BITSONE_CONTAINER_BITS-1) / BITSONE_CONTAINER_BITS;
+  
+  _nlj_used = (BITSONE_CONTAINER_TYPE *)
+    malloc (_nlj_used_items_per_slot *
+	    sizeof (BITSONE_CONTAINER_TYPE));
 
-  /* Mapping. */
+  if (!_nlj_used)
+    FATAL("Memory allocation failure (_nlj_used).");
 
-  int *sps_map = (int *) malloc (sizeof (int) * _header.num_of_jm);
+  memset(_nlj_used, 0,
+	 _nlj_used_items_per_slot *
+	    sizeof (BITSONE_CONTAINER_TYPE));
 
-  if (!sps_map)
-    FATAL("Memory allocation failure (sps_map).");
-
-  for (uint32_t i = 0; i < _header.num_of_jm; i++)
-    sps_map[i] = -1;
+  BITSONE_CONTAINER_TYPE *jm_u = _jm_used;
 
   for (size_t j = 0; j < _jm_used_items_per_slot; j++)
     {
@@ -866,33 +845,142 @@ void mr_antoine_reader<header_version_t, fon_version_t>::find_used_states()
 	      size_t i = j * sizeof (used) * 8 + off;
 
 	      mr_antoine_num_mpr_item_t &mpr = _num_mpr[i];
-	      uint32_t sh = mpr.num;
-	      mr_antoine_nr_ll_jj_item_t &shell = _nr_ll_jj[sh-1];
+	      uint32_t sh = mpr.num - 1;
 
-	      sps_map[i] = (int) sps.size();
+	      BITSONE_CONTAINER_TYPE mask =
+		((BITSONE_CONTAINER_TYPE) 1) <<
+		((sh) % (BITSONE_CONTAINER_BITS));
+	      size_t offset = sh / (BITSONE_CONTAINER_BITS);
 
-	      sps.push_back(sp_state(shell.nr, shell.ll, shell.jj, mpr.mpr));
+	      _nlj_used[offset] |= mask;
 	    }
 
 	  used >>= 1;
 	  off++;
 	}
     }
+}
 
-  unsigned int max_jm_first = -1;
+template<class header_version_t, class fon_version_t>
+void mr_antoine_reader<header_version_t, fon_version_t>::make_nlj_map()
+{
+  /* */
 
-  for (unsigned int i = 0; i < _header.num_of_jm; i++)
+  int nlj_used = 0;
+  
+  /* Mapping. */
+
+  _nljs_map = (int *) malloc (sizeof (int) * _header.num_of_shell);
+
+  if (!_nljs_map)
+    FATAL("Memory allocation failure (nljs_map).");
+
+  for (uint32_t i = 0; i < _header.num_of_shell; i++)
+    _nljs_map[i] = -1;
+
+  _max_j = 0;
+
+  for (size_t j = 0; j < _nlj_used_items_per_slot; j++)
     {
-      if (_max_jm_for_jm[i] || _max_jm_for_jm[i + _header.num_of_jm])
-	max_jm_first = sps_map[i];
+      nlj_used += __builtin_popcountl(_nlj_used[j]);
+
+      BITSONE_CONTAINER_TYPE used = _nlj_used[j];
+
+      int off = 0;
+
+      for ( ; used; )
+	{
+	  if (used & 1)
+	    {
+	      size_t i = j * sizeof (used) * 8 + off;
+
+	      mr_antoine_nr_ll_jj_item_t &shell = _nr_ll_jj[i];
+
+	      _nljs_map[i] = (int) _nljs.size();
+
+	      _nljs.push_back(nlj_state(shell.nr, shell.ll, shell.jj));
+
+	      if (shell.jj > _max_j)
+		_max_j = shell.jj;
+	    }
+	  used >>= 1;
+	  off++;
+	}
     }
 
+  printf ("NLJ used: %4d\n", nlj_used);
+  printf ("max j used: %4d\n", _max_j);
+}
+
+template<class header_version_t, class fon_version_t>
+void mr_antoine_reader<header_version_t, fon_version_t>::make_sps_map()
+{
+  /* Fetch all the sp states that actually are in use.
+   * No need to included unused ones in tables.
+   */
+
+  /* Mapping. */
+
+  _sps_map = (int *) malloc (sizeof (int) * _header.num_of_jm);
+
+  if (!_sps_map)
+    FATAL("Memory allocation failure (sps_map).");
+
+  for (uint32_t i = 0; i < _header.num_of_jm; i++)
+    _sps_map[i] = -1;
+
+  BITSONE_CONTAINER_TYPE *jm_u = _jm_used;
+
+  for (size_t j = 0; j < _jm_used_items_per_slot; j++)
+    {
+      BITSONE_CONTAINER_TYPE used = jm_u[j];
+
+      int off = 0;
+
+      for ( ; used; )
+	{
+	  if (used & 1)
+	    {
+	      size_t i = j * sizeof (used) * 8 + off;
+
+	      mr_antoine_num_mpr_item_t &mpr = _num_mpr[i];
+	      uint32_t sh = mpr.num - 1;
+	      mr_antoine_nr_ll_jj_item_t &shell = _nr_ll_jj[sh];
+
+	      _sps_map[i] = (int) _sps.size();
+
+	      _sps.push_back(sp_state(shell.nr, shell.ll, shell.jj, mpr.mpr,
+				      _nljs_map[sh]));
+	    }
+
+	  used >>= 1;
+	  off++;
+	}
+    }
+}
+
+template<class header_version_t, class fon_version_t>
+void mr_antoine_reader<header_version_t, fon_version_t>::find_used_states()
+{
+  find_occ_used();
+  find_jm_used();
+  info_jm_used();
+  find_nlj_used();
+  make_nlj_map();
+  make_sps_map();
+}
+
+template<class header_version_t, class fon_version_t>
+void mr_antoine_reader<header_version_t, fon_version_t>::find_mp_bit_packing()
+{
   /* Now that we know who are used, we can for each sp location in the
    * mp state find which is the maximum index used.
    */
 
   int *_jm_max_spi =
     (int *) malloc (sizeof (int) * _jm_used_slots);
+
+  BITSONE_CONTAINER_TYPE *jm_u = _jm_used;
 
   for (size_t i = 0; i < _jm_used_slots; i++)
     {
@@ -910,7 +998,7 @@ void mr_antoine_reader<header_version_t, fon_version_t>::find_used_states()
 	      if (used & 1)
 		{
 		  int orig_sp = (int) (j * sizeof (used) * 8 + off);
-		  int map_sp = sps_map[orig_sp];
+		  int map_sp = _sps_map[orig_sp];
 
 		  if (map_sp > _jm_max_spi[i])
 		    _jm_max_spi[i] = map_sp;
@@ -921,22 +1009,29 @@ void mr_antoine_reader<header_version_t, fon_version_t>::find_used_states()
 	}
     }
 
-#define BIT_PACK_T uint64_t
-
-  pack_mp_state<BIT_PACK_T> bit_packing;
-
-  bit_packing.setup_pack(_header.A[0], _header.A[1],
-			 &_jm_max_spi[1], &_jm_max_spi[1 + _header.A[0]]);
+  _bit_packing[0].setup_pack(_header.A[0], _header.A[1],
+			     &_jm_max_spi[1], &_jm_max_spi[1 + _header.A[0]]);
+  _bit_packing[1].setup_pack(_header.A[1], _header.A[0],
+			     &_jm_max_spi[1 + _header.A[0]], &_jm_max_spi[1]);
 
   for (size_t i = 1; i < _jm_used_slots; i++)
     {
-      printf ("JM %2zd max sp %4d, %2d bits @ %2d in word %d\n",
+      printf ("JM %2zd max sp %4d, "
+	      "%2d bits @ %2d in word %d | %2d bits @ %2d in word %d\n",
 	      i, _jm_max_spi[i],
-	      bit_packing._items[i-1]._bits,
-	      bit_packing._items[i-1]._shift,
-	      bit_packing._items[i-1]._word);
+	      _bit_packing[0]._items[i-1]._bits,
+	      _bit_packing[0]._items[i-1]._shift,
+	      _bit_packing[0]._items[i-1]._word,
+	      _bit_packing[1]._items[i-1]._bits,
+	      _bit_packing[1]._items[i-1]._shift,
+	      _bit_packing[1]._items[i-1]._word);
     }
+}
 
+template<class header_version_t, class fon_version_t>
+void mr_antoine_reader<header_version_t, fon_version_t>::
+  find_energy_dump_states(mp_state_info &mp_info)
+{
   /* To calculate the maximum energy, we must map the istate in chunks,
    * and for each chunk, we must map the occ states for both particle
    * kinds in chunks too...
@@ -947,7 +1042,7 @@ void mr_antoine_reader<header_version_t, fon_version_t>::find_used_states()
   int min_pos_m = INT_MAX, max_pos_m = INT_MIN;
   int min_neg_m = INT_MAX, max_neg_m = INT_MIN; // redundant
   int has_parity[2] = { 0, 0 };
-
+  
   /* Also dump all the states.  We need each multi-particle state
    * explicitly.
    */
@@ -966,28 +1061,45 @@ void mr_antoine_reader<header_version_t, fon_version_t>::find_used_states()
 	    sizeof (BIT_PACK_T), sizeof (double));
     }
 
-  int n_wavefcns = _wavefcns.size() > 0 ? 1 : 0;
+  size_t mp_states_stride[2] = { (size_t) _bit_packing[0]._words,
+				 (size_t) _bit_packing[1]._words };
 
-  size_t mp_states_stride = bit_packing._words + n_wavefcns;
+  size_t mp_states_sz[2] = {
+    sizeof (BIT_PACK_T) * istate_chunk_sz * mp_states_stride[0],
+    sizeof (BIT_PACK_T) * istate_chunk_sz * mp_states_stride[1],
+  };
 
-  size_t mp_states_sz =
-    sizeof (BIT_PACK_T) * istate_chunk_sz * mp_states_stride;
+  BIT_PACK_T *mp_states[2] = { NULL, NULL };
 
-  BIT_PACK_T *mp_states = (BIT_PACK_T *) malloc (mp_states_sz);
+  mp_states[0] = (BIT_PACK_T *) malloc (mp_states_sz[0]);
+  mp_states[1] = (BIT_PACK_T *) malloc (mp_states_sz[1]);
 
-  if (!mp_states)
-    FATAL("Memory allocation error (mp_states, %zd bytes).", mp_states_sz);
+  if (!mp_states[0] || !mp_states[1])
+    FATAL("Memory allocation error (mp_states, %zd + %zd bytes).",
+	  mp_states_sz[0], mp_states_sz[1]);
 
-  printf ("%zd %zd\n", mp_states_sz, mp_states_stride);
+  printf ("%zd %zd\n", mp_states_sz[0], mp_states_stride[0]);
+  printf ("%zd %zd\n", mp_states_sz[1], mp_states_stride[1]);
 
-#define FILENAME_STATES "/states_all_orig.bin"
+#define FILENAME_STATES     "states_all_forw_orig.bin"
+#define FILENAME_STATES_REV "states_all_rev_orig.bin"
 
-  file_output *out_states = NULL;
+  file_output *out_states[2] = { NULL, NULL };
 
   if (_config._td_dir)
     {
-      out_states = new file_output(_config._td_dir, FILENAME_STATES);
+      out_states[0] = new file_output(_config._td_dir, FILENAME_STATES);
+      out_states[1] = new file_output(_config._td_dir, FILENAME_STATES_REV);
     }
+
+  int *mapped_sp_array =
+    (int *) malloc (sizeof (int) * (_header.A[0] + _header.A[1]));
+
+  if (!mapped_sp_array)
+    FATAL("Memory allocation error (mapped_sp_array).");
+
+  for (int i = 0; i < 3; i++)
+    _mapped_sp_pair_use[i].alloc (_sps.size(), _sps.size());
 
   for (mr_file_chunk<mr_antoine_istate_item_t>
 	 cm_istate(_header.nsd, CHUNK_SZ);
@@ -995,7 +1107,8 @@ void mr_antoine_reader<header_version_t, fon_version_t>::find_used_states()
     {
       /* For debugging, fill with ones (= -1). */
 
-      memset (mp_states, -1, mp_states_sz);
+      memset (mp_states[0], -1, mp_states_sz[0]);
+      memset (mp_states[1], -1, mp_states_sz[1]);
 
       for (mr_file_chunk<mr_antoine_occ_item_t>
 	     cm_occ0(_header.nslt[0], CHUNK_SZ, _header.A[0]);
@@ -1011,7 +1124,7 @@ void mr_antoine_reader<header_version_t, fon_version_t>::find_used_states()
 
 	      mr_antoine_istate_item_t *pistate = cm_istate.ptr();
 
-	      BIT_PACK_T *mp_ptr = mp_states;
+	      BIT_PACK_T *mp_ptr[2] = { mp_states[0], mp_states[1] };
 
 	      for (unsigned int j = 0; j < cm_istate.num(); j++)
 		{
@@ -1036,15 +1149,21 @@ void mr_antoine_reader<header_version_t, fon_version_t>::find_used_states()
 				   _header.A[1]),
 			};
 
-		      BIT_PACK_T *mp_ptr_this = mp_ptr;
+		      BIT_PACK_T *mp_ptr_this[2] = { mp_ptr[0], mp_ptr[1] };
 
-		      bit_packing.clear_packed(mp_ptr_this);
-
-		      int kk = 0;
+		      _bit_packing[0].clear_packed(mp_ptr_this[0]);
+		      _bit_packing[1].clear_packed(mp_ptr_this[1]);
 
 		      for (unsigned int i = 0; i < 2; i++)
 			{
 			  // uint32_t occ = pistate->istate[i];
+
+			  int kk_off[2] = {
+			    (int) ((i == 0) ? 0 : _header.A[0]),
+			    (int) ((i == 0) ? _header.A[1] : 0),
+			  };
+
+			  int kk = 0;
 
 			  mr_antoine_occ_item_t *pocc = poccs[i];
 
@@ -1075,8 +1194,18 @@ void mr_antoine_reader<header_version_t, fon_version_t>::find_used_states()
 			      else
 				sum_neg_m += mpr;
 
-			      bit_packing.insert_packed(mp_ptr_this, kk++,
-							sps_map[jm]);
+			      int mapped_sp = _sps_map[jm];
+
+			      mapped_sp_array[kk + kk_off[0]] = mapped_sp;
+
+			      _bit_packing[0].insert_packed(mp_ptr_this[0],
+							    kk + kk_off[0],
+							    mapped_sp);
+			      _bit_packing[1].insert_packed(mp_ptr_this[1],
+							    kk + kk_off[1],
+							    mapped_sp);
+
+			      kk++;
 			    }
 			}
 		      /*
@@ -1105,38 +1234,54 @@ void mr_antoine_reader<header_version_t, fon_version_t>::find_used_states()
 			min_neg_m = sum_neg_m;
 
 		      has_parity[sum_l & 1] = 1;
+
+		      /* Find jm combinations in use. */
+
+		      for (unsigned int i = 0; i < _header.A[0] - 1; i++)
+			for (unsigned int k = i + 1; k < _header.A[0]; k++)
+			  _mapped_sp_pair_use[0].add(mapped_sp_array[i],
+						     mapped_sp_array[k]);
+
+		      int off = _header.A[0];
+
+		      for (unsigned int i = 0; i < _header.A[1] - 1; i++)
+			for (unsigned int k = i + 1; k < _header.A[1]; k++)
+			  _mapped_sp_pair_use[1].add(mapped_sp_array[off+i],
+						     mapped_sp_array[off+k]);
+
+		      for (unsigned int i = 0; i < _header.A[0]; i++)
+			for (unsigned int k = 0; k < _header.A[1]; k++)
+			  _mapped_sp_pair_use[2].add(mapped_sp_array[i],
+						     mapped_sp_array[off+k]);
+
 		    }
 
 		  pistate++;
-		  mp_ptr += mp_states_stride;
+		  mp_ptr[0] += mp_states_stride[0];
+		  mp_ptr[1] += mp_states_stride[1];
 		}
 	    }
 	}
 
-      if (out_states)
+      if (out_states[0])
 	{
-	  /* Fill in the wavefunctions. */
+	  size_t mp_used_sz[2] = {
+	    sizeof (BIT_PACK_T) * cm_istate.num() * mp_states_stride[0],
+	    sizeof (BIT_PACK_T) * cm_istate.num() * mp_states_stride[1]
+	  };
 
-	  for (int i = 0; i < n_wavefcns; i++)
-	    {
-	      _wavefcns[i]->fill_coeff((double *) mp_states,
-				       _file_reader,
-				       cm_istate.start(), cm_istate.num(),
-				       mp_states_stride,
-				       bit_packing._words + i);
-	    }
-
-	  size_t mp_used_sz =
-	    sizeof (BIT_PACK_T) * cm_istate.num() * mp_states_stride;
-
-	  out_states->fwrite (mp_states, mp_used_sz, 1);
+	  out_states[0]->fwrite (mp_states[0], mp_used_sz[0], 1);
+	  out_states[1]->fwrite (mp_states[1], mp_used_sz[1], 1);
 	}
     }
 
-  if (out_states)
-    delete out_states;
+  if (out_states[0])
+    delete out_states[0];
+  if (out_states[1])
+    delete out_states[1];
 
-  free(mp_states);
+  free(mp_states[0]);
+  free(mp_states[1]);
 
   printf ("N_min:     %2d  N_max:     %2d\n", min_N, max_N);
   printf ("m_min:     %2d  m_max:     %2d\n", min_m, max_m);
@@ -1151,92 +1296,302 @@ void mr_antoine_reader<header_version_t, fon_version_t>::find_used_states()
   if (has_parity[0] && has_parity[1])
     FATAL("parity is not the same for all states (both even and odd).");
 
-  int M = min_m;
-  int parity = has_parity[1];
+  mp_info._max_N = max_N;
 
+  mp_info._sum_m = min_m;
+  mp_info._parity = has_parity[1];
+  _nhomax=max_N;
+}
+
+template<class header_version_t, class fon_version_t>
+void mr_antoine_reader<header_version_t, fon_version_t>::dump_wavefcn()
+{
+  size_t iwavefcns_chunk_sz = _header.nsd;
+  if (iwavefcns_chunk_sz > CHUNK_SZ)
+    iwavefcns_chunk_sz = CHUNK_SZ;
+
+  _n_wavefcns = _wavefcns.size() > 0 ? 1 : 0;
+
+  size_t mp_wavefcns_stride = _n_wavefcns;
+
+  size_t mp_wavefcns_sz =
+    sizeof (double) * iwavefcns_chunk_sz * mp_wavefcns_stride;
+
+  double *mp_wavefcns = (double *) malloc (mp_wavefcns_sz);
+
+  if (!mp_wavefcns)
+    FATAL("Memory allocation error (mp_wavefcns, %zd bytes).", mp_wavefcns_sz);
+
+#define FILENAME_WAVEFCN "wavefcn_all_orig.bin"
+
+  file_output *out_wavefcn = NULL;
+
+  assert (_config._td_dir);
+
+  out_wavefcn = new file_output(_config._td_dir, FILENAME_WAVEFCN);
+
+  for (uint64_t start = 0; start < _header.nsd; )
+    {
+      uint64_t num = iwavefcns_chunk_sz;
+      if (start + num > _header.nsd)
+	num = _header.nsd - start;
+
+      /* For debugging, fill with ones (= -1). */
+
+      memset (mp_wavefcns, -1, mp_wavefcns_sz);
+
+      /* Fill in the wavefunctions. */
+
+      for (int i = 0; i < _n_wavefcns; i++)
+	{
+	  _wavefcns[i]->fill_coeff((double *) mp_wavefcns,
+				   _file_reader,
+				   start, num,
+				   mp_wavefcns_stride,
+				   i);
+	}
+
+      size_t mp_used_sz =
+	sizeof (double) * num * mp_wavefcns_stride;
+
+      out_wavefcn->fwrite (mp_wavefcns, mp_used_sz, 1);
+
+      start += num;
+    }
+
+}
+
+template<class header_version_t, class fon_version_t>
+void mr_antoine_reader<header_version_t, fon_version_t>::
+  find_inifin_states(mp_state_info &mp_info)
+{
+  find_mp_bit_packing();
+  find_energy_dump_states(mp_info);
+  if (_config._td_dir)
+    dump_wavefcn();  
+}
+
+template<class header_version_t, class fon_version_t>
+void mr_antoine_reader<header_version_t, fon_version_t>::
+  create_code_tables(mp_state_info &mp_info)
+{
   ///////////////////////////////////////////////////////////////////////
   //
   // TODO: move following into some other function (logically separate)
   //
   ///////////////////////////////////////////////////////////////////////
 
-  if (_config._td_dir)
+  {
+#define FILENAME_TABLE_SP "tables_sp.h"
+
+    file_output out_table_sp(_config._td_dir, FILENAME_TABLE_SP);
+
+    out_table_sp.fprintf("/* This file is automatically generated. */\n");
+    out_table_sp.fprintf("/* Editing is useless.                   */\n");
+    out_table_sp.fprintf("\n");
+
+    nlj_states_table(out_table_sp, _nljs);
+
+    sp_states_table(out_table_sp, _sps);
+}
+
+  for (int fr = 0; fr < 2; fr++)
     {
-#define FILENAME_TABLE "/tables.h"
+      const char *postfix[2] = { "forw", "rev" };
+      {
+#define FILENAME_TABLE_FR "tables_%s.h"
 
-      file_output out_table(_config._td_dir, FILENAME_TABLE);
+	char filename[128];
+	    
+	sprintf (filename, FILENAME_TABLE_FR, postfix[fr]);
+	    
+	file_output out_table(_config._td_dir, filename);
+	
+	out_table.fprintf("/* This file is automatically generated. */\n");
+	out_table.fprintf("/* Editing is useless.                   */\n");
+	out_table.fprintf("\n");
+	
+	_bit_packing[fr].generate_tables(out_table);
+      }
 
-      out_table.fprintf("/* This file is automatically generated. */\n");
-      out_table.fprintf("/* Editing is useless.                   */\n");
-      out_table.fprintf("\n");
+      {
+#define FILENAME_CODE "code_%s.h"
 
-      bit_packing.generate_tables(out_table);
+	char filename[128];
+	    
+	sprintf (filename, FILENAME_CODE, postfix[fr]);
+	    
+	file_output out_code(_config._td_dir, filename);
 
-      sp_states_table(out_table, sps);
+	out_code.fprintf("/* This file is automatically generated. */\n");
+	out_code.fprintf("/* Editing is useless.                   */\n");
+	out_code.fprintf("\n");
 
-      missing_mpr_tables(out_table, M, parity, sps);
+	_bit_packing[fr].generate_code(out_code);
+      }
     }
 
-  if (_config._td_dir)
+  struct np_config_t
+  {
+    const char *_ident;
+    bool        _conn_tables_output;
+    bool        _use_forw_states;
+    int         _num_change;
+    int         _change_pn_at;
+    int         _sp_pairs_table;
+  } np_config[] = {
+    { "n",  false, true,  1, 0, -1 },
+    { "p",  false, false, 1, 0, -1 },
+    { "nn", false, true,  2, 0, 0 },
+    { "pp", false, false, 2, 0, 1 },
+    { "np", false, true,  2, 1, 2 },
+
+    { "n_tables",   true,  true,  1, 0, -1 },
+    { "p_tables",   true,  false, 1, 0, -1 },
+    { "nn_tables",  true,  true,  2, 0, 0 },
+    { "pp_tables",  true,  false, 2, 0, 1 },
+    { "nnn_tables", true,  true,  3, 0, 0 },
+    { "ppp_tables", true,  false, 3, 0, 1 },
+  };
+
+  
+
+  for (size_t icfg = 0; icfg < countof(np_config); icfg++)
     {
-#define FILENAME_CONFIG "/config.h"
+      np_config_t &cfg = np_config[icfg];
 
-      file_output out_config(_config._td_dir, FILENAME_CONFIG);
+      {
+#define FILENAME_TABLE_MISS "tables_miss_%s.h"
 
-      out_config.fprintf("/* This file is automatically generated. */\n");
-      out_config.fprintf("/* Editing is useless.                   */\n");
-      out_config.fprintf("\n");
+	char filename[128];
+	    
+	sprintf (filename, FILENAME_TABLE_MISS, cfg._ident);
+	    
+	file_output out_table(_config._td_dir, filename);
+	
+	out_table.fprintf("/* This file is automatically generated. */\n");
+	out_table.fprintf("/* Editing is useless.                   */\n");
+	out_table.fprintf("\n");
+	
+	missing_mpr_tables(out_table, mp_info._sum_m, mp_info._parity, _sps,
+			   cfg._num_change, cfg._change_pn_at);
+      }
 
-      out_config.fprintf("#define CFG_NUM_MP_STATES   %d\n",
-			 _header.nsd);
-      out_config.fprintf("#define CFG_NUM_SP_STATES   %zd\n",
-			 sps.size());
-      out_config.fprintf("#define CFG_NUM_SP_STATES0  %d\n",
-			 _header.A[0]);
-      out_config.fprintf("#define CFG_NUM_SP_STATES1  %d\n",
-			 _header.A[1]);
-      out_config.fprintf("#define CFG_MAX_SUM_E       %d\n",
-			 max_N);
-      out_config.fprintf("#define CFG_SUM_M           %d\n",
-			 max_m); /* = min_m */
-      out_config.fprintf("#define CFG_PACK_WORDS      %d\n",
-			 bit_packing._words);
-      out_config.fprintf("#define CFG_WAVEFCNS        %d\n",
-			 n_wavefcns);
-      out_config.fprintf("#define CFG_END_JM_FIRST    %d\n",
-			 max_jm_first + 1);
+      if (cfg._sp_pairs_table != -1)
+      {
+#define FILENAME_SP_PAIRS "sp_pairs_%s.bin"
 
-      /* sum_i=0^(CFG_END_JM_FIRST-1) CFG_NUM_SP_STATES-i */
-      /*
-      index = first * CFG_NUM_SP_STATES - first * (first - 1)/2 +
-        (second - first);
-      index = first * (2 * CFG_NUM_SP_STATES - (first - 1))/2 +
-        (second - first);
-      index = first * (2 * CFG_NUM_SP_STATES - first - 1)/2 + second;
-      total = first * (2 * CFG_NUM_SP_STATES - first + 1)/2;
-      */
+	char filename[128];
+	    
+	sprintf (filename, FILENAME_SP_PAIRS, cfg._ident);
+	    
+	file_output out_sp_pairs(_config._td_dir, filename);
+	    
+	_mapped_sp_pair_use[cfg._sp_pairs_table].dump_pairs_used(out_sp_pairs);
+      }
 
-      uint64_t end_first = max_jm_first + 1;
-      uint64_t total2 = end_first * (2 * sps.size() - end_first + 1)/2;
+      {
+#define FILENAME_CONFIG "config_%s.h"
 
-      out_config.fprintf("#define CFG_TOT_FIRST_SCND    %"PRIu64"\n",
-                         total2);
+	char filename[128];
 
+	sprintf (filename, FILENAME_CONFIG, cfg._ident);
+
+	file_output out_config(_config._td_dir, filename);
+
+	out_config.fprintf("/* This file is automatically generated. */\n");
+	out_config.fprintf("/* Editing is useless.                   */\n");
+	out_config.fprintf("\n");
+	out_config.fprintf("#define CFG_CONN_TABLES                %d\n",
+			   cfg._conn_tables_output ? 1 : 0);
+
+	out_config.fprintf("#define CFG_MP_STATES_FR               \"%s\"\n",
+			   cfg._use_forw_states ? "forw" : "rev");
+	out_config.fprintf("#define CFG_FILENAME_TABLES_FR_H       \"tables_%s.h\"\n",
+			   cfg._use_forw_states ? "forw" : "rev");
+	out_config.fprintf("#define CFG_FILENAME_TABLES_MISS_H     "
+			   "\"" FILENAME_TABLE_MISS "\"\n", cfg._ident);
+	out_config.fprintf("#define CFG_FILENAME_CODE_FR_H         \"code_%s.h\"\n",
+			   cfg._use_forw_states ? "forw" : "rev");
+
+	out_config.fprintf("\n");
+	out_config.fprintf("#define CFG_NUM_MP_STATES              %d\n",
+			   _header.nsd);
+	out_config.fprintf("#define CFG_NUM_NLJ_STATES             %zd\n",
+			   _nljs.size());
+	out_config.fprintf("#define CFG_NUM_SP_STATES              %zd\n",
+			   _sps.size());
+	out_config.fprintf("#define CFG_NUM_SP_STATES0             %d\n",
+			   _header.A[cfg._use_forw_states ? 0 : 1]);
+	out_config.fprintf("#define CFG_NUM_SP_STATES1             %d\n",
+			   _header.A[cfg._use_forw_states ? 1 : 0]);
+	out_config.fprintf("#define CFG_MAX_SUM_E                  %d\n",
+			   mp_info._max_N);
+	out_config.fprintf("#define CFG_MAX_J                      %d\n",
+			   _max_j);
+	out_config.fprintf("#define CFG_SUM_M                      %d\n",
+			   mp_info._sum_m);
+
+	if (!cfg._conn_tables_output)
+	  out_config.fprintf("#define CFG_WAVEFCNS                   %d\n",
+			     _n_wavefcns);
+
+	int n_pack_words = _bit_packing[cfg._use_forw_states ? 0 : 1]._words;
+	out_config.fprintf("#define CFG_PACK_WORDS                 %d\n",
+			   n_pack_words);
+	/* Calculate padding required to get hash items 2^n */
+	int n_data = n_pack_words + 
+	  (cfg._conn_tables_output ? 1 : _n_wavefcns);
+	int n_full;
+	for (n_full = 1; n_full < n_data; n_full *= 2)
+	  ;
+	int n_pad = n_full - n_data;
+	out_config.fprintf("#define CFG_HASH_MP_PAD64              %d\n",
+			   n_pad);
+
+	if (_n_wavefcns)
+	  {
+	    out_config.fprintf("#define CFG_2J_INITIAL                 %d\n",
+			       _wavefcns[0]->_fon._.jt2);
+	    out_config.fprintf("#define CFG_2J_FINAL                   %d\n",
+			       _wavefcns[0]->_fon._.jt2);
+	  }
+
+	out_config.fprintf("#define CFG_2M_INITIAL                 %d\n",
+			   mp_info._sum_m);
+	out_config.fprintf("#define CFG_2M_FINAL                   %d\n",
+			   mp_info._sum_m);
+	out_config.fprintf("#define CFG_PARITY_INITIAL             %d\n",
+			   mp_info._parity);
+	out_config.fprintf("#define CFG_PARITY_FINAL               %d\n",
+			   mp_info._parity);
+
+	if (cfg._sp_pairs_table != -1)
+	  {
+	    out_config.fprintf("#define CFG_FILENAME_SP_PAIRS          "
+			       "\"" FILENAME_SP_PAIRS "\"\n", cfg._ident);
+      
+	    out_config.fprintf("#define CFG_SP_PAIRS                   %"PRIu64"\n",
+			       _mapped_sp_pair_use[cfg._sp_pairs_table].num_pairs());
+	  }
+
+	out_config.fprintf("#define CFG_NUM_SP_ANICR               %d\n",
+			   cfg._num_change);
+	out_config.fprintf("#define CFG_ANICR_TWO                  %d\n",
+			   (cfg._num_change == 2 ? 1 : 0));
+	out_config.fprintf("#define CFG_ANICR_THREE                %d\n",
+			   (cfg._num_change == 3 ? 1 : 0));
+	out_config.fprintf("#define CFG_ANICR_NP                   %d\n",
+			   (cfg._change_pn_at ? 1 : 0));
+	
+#define FILENAME_NLJ "nlj_out-%s.bin"
+
+	out_config.fprintf("#define CFG_FILENAME_NLJ     "
+                           "\"" FILENAME_NLJ "\"\n", cfg._ident); 
+      }
     }
 
-  if (_config._td_dir)
-    {
-      #define FILENAME_CODE "/code.h"
 
-      file_output out_code(_config._td_dir, FILENAME_CODE);
-
-      out_code.fprintf("/* This file is automatically generated. */\n");
-      out_code.fprintf("/* Editing is useless.                   */\n");
-      out_code.fprintf("\n");
-
-      bit_packing.generate_code(out_code);
-
-    }
 }
 
 #define INSTANTIATE_ANTOINE(header_t,fon_t)				\
@@ -1254,7 +1609,10 @@ void mr_antoine_reader<header_version_t, fon_version_t>::find_used_states()
   dump_istate_chunk(mr_file_chunk<mr_antoine_istate_item_t> &chunk);	\
   template void mr_antoine_reader<header_t,fon_t>::			\
   find_used_states();							\
+  template void mr_antoine_reader<header_t,fon_t>::			\
+  find_inifin_states(mp_state_info &mp_info)				\
   ;
+
 
 INSTANTIATE_ANTOINE(mr_antoine_header_old_t,mr_antoine_fon_old_t);
 INSTANTIATE_ANTOINE(mr_antoine_header_new_t,mr_antoine_fon_new_t);

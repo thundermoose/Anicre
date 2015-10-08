@@ -7,6 +7,8 @@
 #include "mr_file_reader.hh"
 #include "mr_base_reader.hh"
 #include "antoine_read.hh"
+#include "antoine_vector_read.hh"
+#include "prepare_anicr.hh"
 
 #include "mr_config.hh"
 
@@ -14,8 +16,6 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-
-#define countof(x) (sizeof(x)/sizeof(x[0]))
 
 int _debug = 0;
 
@@ -72,6 +72,7 @@ mr_base_reader *identify_file(mr_file_reader *file_reader)
 			  mr_antoine_fon_old_t>(file_reader),
     new mr_antoine_reader<mr_antoine_header_new_t,
 			  mr_antoine_fon_new_t>(file_reader),
+    new mr_antoine_vector_reader<1>(file_reader),
   };
 
   mr_base_reader *matching = NULL;
@@ -227,7 +228,11 @@ int main(int argc,char *argv[])
 
   reader->dump_info();
 
-  reader->find_used_states();
+  prepare_anicr prep_anicr;
+
+  prep_anicr.set(reader);
+
+  prep_anicr.create();
 
   // antoine.
 

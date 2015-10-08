@@ -6,12 +6,21 @@
 
 /**********************************************************************/
 
+typedef struct nlj_state_info_t
+{
+  int _n;
+  int _l;
+  int _j;
+} nlj_state_info;
+
 typedef struct sp_state_info_t
 {
   int _n;
   int _l;
   int _j;
   int _m;
+
+  int _nlj;
 } sp_state_info;
 
 typedef uint32_t state_for_miss_m_N;
@@ -39,12 +48,14 @@ typedef struct mp_pack_info_t
 
 /**********************************************************************/
 
-extern sp_state_info _table_sp_states[];
+extern nlj_state_info _table_nlj_states[];
+extern sp_state_info  _table_sp_states[];
 
 extern info_state_for_miss _table_1_0_info;
 extern info_state_for_miss _table_2_0_info;
 extern info_state_for_miss _table_3_0_info;
 
+extern mp_pack_info _mp_pack_info[];
 extern mp_pack_info _mp_pack_info[];
 
 /**********************************************************************/

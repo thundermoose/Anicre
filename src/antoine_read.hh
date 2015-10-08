@@ -6,11 +6,15 @@
 #include "mr_file_chunk.hh"
 #include "antoine_struct.hh"
 
+#include "sp_states.hh"
+#include "pack_mp_state.hh"
+
+#include "mp_state_info.hh"
+
+#include "sp_pair_use.hh"
+
 #include <set>
 #include <vector>
-
-#define BITSONE_CONTAINER_TYPE    unsigned long
-#define BITSONE_CONTAINER_BITS    (sizeof(BITSONE_CONTAINER_TYPE)*8)
 
 struct coeff_info
 {
@@ -86,6 +90,29 @@ public:
   size_t                      _jm_used_items_per_slot;
   size_t                      _jm_used_slots;
 
+  uint32_t *_max_jm_for_jm;  // TO BE REMOVED
+
+  BITSONE_CONTAINER_TYPE     *_nlj_used;
+  size_t                      _nlj_used_items_per_slot;
+
+  vect_nlj_state              _nljs;
+  int                        *_nljs_map;
+
+  uint32_t                    _max_j;
+
+  uint32_t                    _nhomax;
+
+  vect_sp_state               _sps;
+  int                        *_sps_map;
+
+#define BIT_PACK_T uint64_t
+
+  pack_mp_state<BIT_PACK_T>   _bit_packing[2];
+
+  int                         _n_wavefcns;
+
+  sp_pair_use                 _mapped_sp_pair_use[3]; // 00, 11, 01
+
 public:
   bool level1_read_wavefcn(wavefcn_t *wavefcn,
 			   uint64_t &cur_offset, uint32_t nsd);
@@ -102,6 +129,22 @@ public:
 
 public:
   virtual void find_used_states();
+
+  virtual void find_inifin_states(mp_state_info &mp_info);
+
+  virtual void create_code_tables(mp_state_info &mp_info);
+
+protected:
+  void find_occ_used();
+  void find_jm_used();
+  void info_jm_used();
+  void find_nlj_used();
+  void make_nlj_map();
+  void make_sps_map();
+  void find_sp_pairs();
+  void find_mp_bit_packing();
+  void find_energy_dump_states(mp_state_info &mp_info);
+  void dump_wavefcn();
 
 protected:
   void dump_occ_chunk(int k,uint32_t start,uint32_t num);
