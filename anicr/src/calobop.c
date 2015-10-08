@@ -171,9 +171,14 @@ int main()
 
    int showJtrans=0;
   double Qp=0.0,Qn=0.0;
-  double b=1.0;//computeB(20.0);
+  double b=computeB(hw);
+   gsl_sf_result result;
+
+  
+  printf(" b= %f hw= %f\n",b,hw);
   for (jtrans = jtrans_min; jtrans <= jtrans_max; jtrans += 2)
    {
+     
      if (jtrans/2%2!=0){continue;}  //Only for Iparityi==IparityF
      showJtrans=1;
      for( int sp_crea=0;sp_crea<CFG_NUM_NLJ_STATES;sp_crea++){
@@ -198,15 +203,29 @@ int main()
 	         }
 	         printf(" a+=%3d    a-=%3d     td(a+,a-): p=%10.6f     n=%10.6f\n",sp_crea+1,sp_anni+1,final_p[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES],final_n[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES]);
 	         printf("Q= %f \n",obmeQ(na,la,ja,nb,lb,jb,jtrans/2,b));
-	         Qp+=obmeQ(na,la,ja,nb,lb,jb,jtrans/2,b)*final_p[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES];
-		 Qn+=obmeQ(na,la,ja,nb,lb,jb,jtrans/2,b)*final_n[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES];
+
+		 
+		 int ret =
+		   		   gsl_sf_coupling_3j_e(CFG_2J_INITIAL,jtrans,CFG_2J_FINAL,CFG_2J_INITIAL,0,-CFG_2J_INITIAL,
+					&result);
+    
+        if (ret != GSL_SUCCESS)
+    {
+      fprintf (stderr,"ERR! %d\n", ret);
+      exit(1);
+      }
+	Qp+=obmeQ(na,la,ja,nb,lb,jb,jtrans/2,b)*final_p[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES]*result.val/sqrt(jtrans+1.);
+	Qn+=obmeQ(na,la,ja,nb,lb,jb,jtrans/2,b)*final_n[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES]*result.val/ sqrt(jtrans+1.);
+
+		 
 
           }
 
        }  
      }
      ii++;
-     printf(" p: %f n: %f \n", Qp,Qn);
+  
+     printf("B(E) %f p: %f n: %f \n", pow(Qp,2),Qp,Qn);
      Qp=0.0;
      Qn=0.0;
    }
@@ -242,7 +261,7 @@ double radialHO(double r, double b,int n,int l){
 double obmeSH(int l1,int jj1,int l2,int jj2,int lambda){
   //Computes the matrix element (l1,1/2,j2||Y_lambda||l2,1/2,j2) according to Suhonen eq. 2.57
   double temp;
-  temp=1./sqrt(4.*M_PI)*pow(-1,jj2/2.0-0.5+lambda)*(1+pow(-1.,l1+l2+lambda))/2.0;
+  temp=1./sqrt(4.*M_PI)*(1+pow(-1.,l1+l2+lambda))/2.0*pow(-1,jj2/2.0-0.5+lambda);
   temp*=sqrt(jj1+1.)*sqrt(jj2+1.)*sqrt(2*lambda+1.);
   gsl_sf_result result;
   int ret =
@@ -276,7 +295,7 @@ double obmeQ(int na, int la, int jja,int nb, int lb,int jjb,int lambda,double b)
   //Doesn't include the charge factor
   double Q;
 
-  Q=obmeSH(la,jja,lb,jjb,lambda);
+  Q=obmeSH(la,jja,lb,jjb,lambda);// Biedenhar-Rose: *pow(-1,0.5*(la+lb+lambda));
 
   
   //Integrate r-dependence
