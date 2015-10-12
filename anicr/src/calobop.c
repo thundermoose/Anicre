@@ -29,6 +29,7 @@ double radialHO(double r,double b,int n,int l);
 double obmeSH(int l1,int jj1,int l2,int jj2,int lambda);
 double obmeQ(int na, int la, int jja,int nb, int lb,int jb,int lambda,double b);
 double computeB(double hw);
+double obmeSH(int l1,int jj1,int l2,int jj2,int lambda);
 int main()
 {
 
@@ -173,10 +174,12 @@ int main()
   double Qp=0.0,Qn=0.0;
   double b=computeB(hw);
   int numberStep=100;
-  double rmin=3.0;
-  double rmax=10.0;
+  double rmin=0.0;
+  double rmax=6.0;
   double r[numberStep];
-  double fr[numberStep];
+  double Nr[numberStep];
+  double Pr[numberStep];
+
   for(int i=0; i<numberStep;i++){
     r[i]=(rmax-rmin)/(numberStep-1)*i+rmin;
     printf("r %d %f \n",i,r[i]);
@@ -189,8 +192,8 @@ int main()
   for (jtrans = jtrans_min; jtrans <= jtrans_max; jtrans += 2)
    {
     for(int i=0; i<numberStep;i++){
-      fr[i]=0.0;
-  
+      Pr[i]=0.0;
+      Nr[i]=0.0;
     }
     Qp=0.0;
     Qn=0.0;
@@ -230,14 +233,34 @@ int main()
           }
 	        Qp+=obmeQ(na,la,ja,nb,lb,jb,jtrans/2,b)*final_p[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES]*result.val/sqrt(jtrans+1.);
           Qn+=obmeQ(na,la,ja,nb,lb,jb,jtrans/2,b)*final_n[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES]*result.val/ sqrt(jtrans+1.);
-
+          double Rp=obmeSH(la,ja,lb,jb,jtrans/2)*final_p[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES]*result.val/sqrt(jtrans+1.);
+          double Rn=obmeSH(la,ja,lb,jb,jtrans/2)*final_n[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES]*result.val/ sqrt(jtrans+1.);
+        
+          printf("Rfactor: %f %f \n",Rp,Rn);
+          if(jtrans==0){   
+            
+            for(int i=0; i<numberStep;i++){
+              Pr[i]+=Rp*radialHO(r[i],b,na,la)*radialHO(r[i],b,nb,lb)*3.54491;
+              Nr[i]+=Rn*radialHO(r[i],b,na,la)*radialHO(r[i],b,nb,lb)*3.54491;
+            }
+          }
         }
 
        }  
      }
      ii++;
-  
      printf("B(E) %f p: %f n: %f \n", pow(Qp,2),Qp,Qn);
+
+     char filename[15];
+     sprintf(filename,"output_r_%d.txt",jtrans/2);
+
+     FILE *routput;
+     
+     routput = fopen(filename, "w");
+     for(int i=0; i< numberStep; i++){
+       fprintf(routput, "%4.2f  %8.5f %8.5f\n", r[i],Pr[i],Nr[i]);
+     }
+     fclose(routput);
    }
   fprintf(fp," ***************************************************************\n\n");
 
@@ -290,7 +313,8 @@ double obmeSH(int l1,int jj1,int l2,int jj2,int lambda){
 
 struct RR_params{int na; int la;int nb;int lb;double b; int lambda;};
   
-double radialQ(double x,void *p){//int na, int la, int nb, int lb,int lambda,double b){
+double radialQ(double x,void *p){
+  //Parameters to integration of R_aR_b
   struct RR_params * params = (struct RR_params *)p;
   int na=(params->na);
   int la=(params->la);
@@ -307,7 +331,7 @@ double obmeQ(int na, int la, int jja,int nb, int lb,int jjb,int lambda,double b)
 
   Q=obmeSH(la,jja,lb,jjb,lambda);// Biedenhar-Rose: *pow(-1,0.5*(la+lb+lambda));
 
-  
+
   //Integrate r-dependence
   struct RR_params alpha={na,la,nb,lb,b,lambda};
   gsl_integration_workspace * w = gsl_integration_workspace_alloc(1000);
@@ -329,6 +353,16 @@ double obmeQ(int na, int la, int jja,int nb, int lb,int jjb,int lambda,double b)
   return Q*result;
 }
 
+
+
+
+double rangularint(int K,int mk){
+  //Compute \int Y_KK(theta,rho) sin(theta) dtheta drho
+  
+  double integral=0.0;
+
+  return integral;
+}
 double computeB(double hw){
   double B;
   
