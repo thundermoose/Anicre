@@ -10,3 +10,6 @@ plt.plot(A[:,0],A[:,2],label='Neutron')
 
 plt.legend()
 plt.savefig("radius.pdf")
+
+print 'Integral P',np.trapz(A[:,1],x=A[:,0])
+print 'Integral N',np.trapz(A[:,2],x=A[:,0])
