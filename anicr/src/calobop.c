@@ -209,8 +209,8 @@ int main()
 	           showJtrans=0;
 	         }
 
-	         printf(" a+=%3d    a-=%3d     td(a+,a-): p=%10.6f     n=%10.6f\n",sp_crea+1,sp_anni+1,final_p[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES],final_n[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES]);
-	         printf("Q= %f Q*td= %f \n",obmeQ(na,la,ja,nb,lb,jb,jtrans/2,b),obmeQ(na,la,ja,nb,lb,jb,jtrans/2,b)*final_p[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES]);
+//	         printf(" a+=%3d    a-=%3d     td(a+,a-): p=%10.6f     n=%10.6f\n",sp_crea+1,sp_anni+1,final_p[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES],final_n[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES]);
+//	         printf("Q= %f Q*td= %f \n",obmeQ(na,la,ja,nb,lb,jb,jtrans/2,b),obmeQ(na,la,ja,nb,lb,jb,jtrans/2,b)*final_p[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES]);
 		
 	      	 int ret =
 		   		   gsl_sf_coupling_3j_e(CFG_2J_INITIAL,jtrans,CFG_2J_FINAL,CFG_2J_INITIAL,0,-CFG_2J_INITIAL,
@@ -222,11 +222,11 @@ int main()
             exit(1);
           }
 	        Qp+=obmeQ(na,la,ja,nb,lb,jb,jtrans/2,b)*final_p[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES];
-          Qn+=obmeQ(na,la,ja,nb,lb,jb,jtrans/2,b)*final_n[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES];//*result.val/ sqrt(jtrans+1.);
+          Qn+=obmeQ(na,la,ja,nb,lb,jb,jtrans/2,b)*final_n[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES];
           double Rp=obmeSH(la,ja,lb,jb,jtrans/2)*final_p[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES];
           double Rn=obmeSH(la,ja,lb,jb,jtrans/2)*final_n[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES];
         
-          printf("Rfactor: %f %f \n",Rp,Rn);
+  //        printf("Rfactor: %f %f \n",Rp,Rn);
           if(jtrans==0){   
             
             for(int i=0; i<numberStep;i++){
