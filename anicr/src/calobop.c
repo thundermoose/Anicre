@@ -164,24 +164,30 @@ int main()
   double Nr[numberStep];
   double Pr[numberStep];
 
+  double sumPr=0.0;
+  double sumNr=0.0;
   for(int i=0; i<numberStep;i++){
     r[i]=(rmax-rmin)/(numberStep-1)*i+rmin;
-    printf("r %d %f \n",i,r[i]);
   }
 
   gsl_sf_result result;
 
-  
+  ii=0;
   printf(" b= %f hw= %f\n",b,hw);
   for (jtrans = jtrans_min; jtrans <= jtrans_max; jtrans += 2)
    {
+
     for(int i=0; i<numberStep;i++){
       Pr[i]=0.0;
       Nr[i]=0.0;
     }
     Qp=0.0;
     Qn=0.0;
-    if (jtrans/2%2!=0){continue;}  //Only for Iparityi==IparityF
+    
+    if (jtrans/2%2!=0){
+    	ii++;
+	    continue;
+	    }  //Only for Iparityi==IparityF
     showJtrans=1;
     for( int sp_crea=0;sp_crea<CFG_NUM_NLJ_STATES;sp_crea++){
       for(int sp_anni=0;sp_anni<CFG_NUM_NLJ_STATES;sp_anni++){
@@ -215,7 +221,7 @@ int main()
             fprintf (stderr,"ERR! %d\n", ret);
             exit(1);
           }
-	        Qp+=obmeQ(na,la,ja,nb,lb,jb,jtrans/2,b)*final_p[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES]*result.val/ sqrt(jtrans+1.);
+	        Qp+=obmeQ(na,la,ja,nb,lb,jb,jtrans/2,b)*final_p[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES];
           Qn+=obmeQ(na,la,ja,nb,lb,jb,jtrans/2,b)*final_n[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES];//*result.val/ sqrt(jtrans+1.);
           double Rp=obmeSH(la,ja,lb,jb,jtrans/2)*final_p[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES];
           double Rn=obmeSH(la,ja,lb,jb,jtrans/2)*final_n[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES];
@@ -226,6 +232,8 @@ int main()
             for(int i=0; i<numberStep;i++){
               Pr[i]+=Rp*radialHO(r[i],b,na,la)*radialHO(r[i],b,nb,lb)*3.54491;
               Nr[i]+=Rn*radialHO(r[i],b,na,la)*radialHO(r[i],b,nb,lb)*3.54491;
+              sumPr+=Pr[i];
+              sumNr+=Nr[i];
             }
           }
         }
@@ -233,7 +241,7 @@ int main()
        }  
      }
      ii++;
-     printf("B(E) %f p: %f n: %f \n", pow(Qp,2),Qp,Qn);
+     printf("B(E) %f p: %f n: %f \n", pow(Qp,2)/(CFG_2J_INITIAL+1),Qp,Qn);
 
      char filename[15];
      sprintf(filename,"output_r_%d.txt",jtrans/2);
@@ -245,11 +253,12 @@ int main()
        fprintf(routput, "%4.2f  %8.5f %8.5f\n", r[i],Pr[i],Nr[i]);
      }
      fclose(routput);
+
    }
+
   fprintf(fp," ***************************************************************\n\n");
 
   fclose(fp);
-
 /*
   for(double r=0.0;r<10;r+=0.1){
     printf(" %f  %f \n",r,radialHO(r,1,2,1));
