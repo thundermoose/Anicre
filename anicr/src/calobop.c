@@ -88,23 +88,7 @@ int main()
 
   fclose(fpr);
   fclose(fn);
-  /*  
-  _nlj_items_nn=readDumpfile(filename_nn,&_num_nlj_items_nn);
-  printf("Read NN-file\n");
-  _nlj_items_pp=readDumpfile(filename_pp,&_num_nlj_items_pp);
-  printf("Read PP-file\n");
-#if NP_ORDER
-  printf("NP order\n");
-  (void)filename_pn;
-  _nlj_items_np=readDumpfile(filename_np,&_num_nlj_items_np);
-
-#else
-  printf("PN order\n");
-  (void)filename_np;
-  _nlj_items_np=readDumpfile(filename_pn,&_num_nlj_items_np);
-#endif
-  printf("Read NP-file\n");
-  */
+ 
   FILE *fp;
   fp=fopen("obs.txt","w");
   if (fp == NULL) {
@@ -220,7 +204,7 @@ int main()
 	         }
 
 	         printf(" a+=%3d    a-=%3d     td(a+,a-): p=%10.6f     n=%10.6f\n",sp_crea+1,sp_anni+1,final_p[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES],final_n[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES]);
-	         printf("Q= %f \n",obmeQ(na,la,ja,nb,lb,jb,jtrans/2,b));
+	         printf("Q= %f Q*td= %f \n",obmeQ(na,la,ja,nb,lb,jb,jtrans/2,b),final_p[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES]);
 		
 	      	 int ret =
 		   		   gsl_sf_coupling_3j_e(CFG_2J_INITIAL,jtrans,CFG_2J_FINAL,CFG_2J_INITIAL,0,-CFG_2J_INITIAL,
@@ -231,8 +215,8 @@ int main()
             fprintf (stderr,"ERR! %d\n", ret);
             exit(1);
           }
-	        Qp+=obmeQ(na,la,ja,nb,lb,jb,jtrans/2,b)*final_p[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES]*result.val/sqrt(jtrans+1.);
-          Qn+=obmeQ(na,la,ja,nb,lb,jb,jtrans/2,b)*final_n[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES]*result.val/ sqrt(jtrans+1.);
+	        Qp+=obmeQ(na,la,ja,nb,lb,jb,jtrans/2,b)*final_p[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES];//result.val/sqrt(jtrans+1.);
+          Qn+=obmeQ(na,la,ja,nb,lb,jb,jtrans/2,b)*final_n[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES];//*result.val/ sqrt(jtrans+1.);
           double Rp=obmeSH(la,ja,lb,jb,jtrans/2)*final_p[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES]*result.val/sqrt(jtrans+1.);
           double Rn=obmeSH(la,ja,lb,jb,jtrans/2)*final_n[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES]*result.val/ sqrt(jtrans+1.);
         
@@ -356,13 +340,13 @@ double obmeQ(int na, int la, int jja,int nb, int lb,int jjb,int lambda,double b)
 
 
 
-double rangularint(int K,int mk){
+/*double rangularint(int K,int mk){
   //Compute \int Y_KK(theta,rho) sin(theta) dtheta drho
   
   double integral=0.0;
 
   return integral;
-}
+}*/
 double computeB(double hw){
   double B;
   
