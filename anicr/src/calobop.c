@@ -10,7 +10,9 @@
 #include "nlj.h"
 #include <stdio.h>
 #include <stdlib.h>
-  
+
+#include "calobop.h"
+#include "caltbop.h"
 //#define M_PI 3.14159265358979323846
 
 /*nlj_hash_item *_nlj_items_nn = NULL;
@@ -25,12 +27,12 @@ size_t     _num_nlj_items_pn = 0;
 
 #define MASSN 938.9187
 #define HBARC 197.326963
-double radialHO(double r,double b,int n,int l);
+/*double radialHO(double r,double b,int n,int l);
 double obmeSH(int l1,int jj1,int l2,int jj2,int lambda);
 double obmeQ(int na, int la, int jja,int nb, int lb,int jb,int lambda,double b);
 double computeB(double hw);
-double obmeSH(int l1,int jj1,int l2,int jj2,int lambda);
-int main()
+double obmeSH(int l1,int jj1,int l2,int jj2,int lambda);*/
+int oneb()
 {
 
   /*  _nlj_items_nn = NULL;
@@ -267,6 +269,7 @@ int main()
   printf(" %f \n",obmeSH(1,1,1,1,0));
   return 0;
   */
+  return 0;
 }
 
 

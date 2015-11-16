@@ -11,7 +11,7 @@ OBJS = anicr_main.o anicr_tables.o anicr_tables_sp.o accumulate.o\
 
 NLJ_OBJS = anicr_tables_sp.o util.o nlj.o dumpnlj.o
 
-OBS_OBJS = anicr_tables_sp.o util.o nlj.o calobop.o
+OBS_OBJS = anicr_tables_sp.o util.o nlj.o calobop.o caltbop.o obs.o 
 
 ####################################################################
 
