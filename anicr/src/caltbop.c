@@ -276,6 +276,20 @@ int twob()
 int readTBME(){
 
   printf("Read TBME.int\n");
-
+  FILE *fp;
+  int numTBME;
+  int qn[6];
+  float f[6];
+  fp=fopen("TBME.int","r");
+  fscanf(fp,"%d",&numTBME);
+  
+  for(int i=0;i<numTBME; i++){
+    fscanf(fp,"%d %d %d %d %d %d %f %f %f %f %f %f",&qn[0],&qn[1],&qn[2],&qn[3],&qn[4],&qn[5],&f[0],&f[1],&f[2],&f[3],&f[4],&f[5]);
+    printf("%d %d \n",qn[0],qn[1]);
+    //Identify two-body states
+    //Save matrix elements in 6 arrays (Global)
+    
+  }
+  printf("%d\n",numTBME);
   return 0;
 }
