@@ -79,7 +79,9 @@ int main()
     twob_file_exist=0;
   }
   if(twob_file_exist){
-
+    if(access("TBME.int",F_OK)!=-1){
+      readTBME();
+    }
     twob();
   }
   return 0;

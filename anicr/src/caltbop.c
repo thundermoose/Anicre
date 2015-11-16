@@ -22,3 +22,9 @@ int twob()
   return 0;
 }
 
+int readTBME(){
+
+  printf("Read TBME.int\n");
+
+  return 0;
+}
