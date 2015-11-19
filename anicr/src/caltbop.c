@@ -276,6 +276,18 @@ int compare_tbme_item(const void *p1, const void *p2)
 
   return 0;
 }
+int printKey(twob_state p1 ){
+	uint64_t key=p1._key;
+	int a1,a2,c1,c2,j23,t23;
+	a1 = (key >>  0) & 0x7ff;
+  	a2 = (key >> 11) & 0x7ff;
+  	c1 = (key >> 22) & 0x7ff;
+  	c2 = (key >> 33) & 0x7ff;
+  	j23 = (key >> 44) &  0x7f;
+  	t23 = (key >> 51) &  0x7f;
+  	printf("a1: %d, a2: %d, c1: %d, c2: %d 2*J23: %d 2*T23: %d ",a1,a2,c1,c2,j23,t23);
+	return 0;
+}
 
 int readTBME(){
 
@@ -311,12 +323,16 @@ int readTBME(){
   printf("%zu\n",numTBME);
 
   for (int i=0;i<(int)numTBME;i++){
+  	printKey(twob_array[i]);
+
     printf("%016llX %f %f %f %f \n",twob_array[i]._key,twob_array[i]._hrel,twob_array[i]._trel,twob_array[i]._coul,twob_array[i]._vpn);
   }
     qsort (twob_array, numTBME, sizeof (twob_state), compare_tbme_item); 
-  printf("After sorting \n");
+  printf("\n After sorting: \n");
   for (int i=0;i<(int)numTBME;i++){
+  	printKey(twob_array[i]);
     printf(" %016llX %f %f %f %f \n",twob_array[i]._key,twob_array[i]._hrel,twob_array[i]._trel,twob_array[i]._coul,twob_array[i]._vpn);
   }
   return 0;
 }
+
