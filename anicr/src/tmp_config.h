@@ -9,5 +9,5 @@
 #define ACC_TABLE         0
 #define NLJ_TABLE         0
 
-#define NP_ORDER          1   
+#define NP_ORDER          0   
 
