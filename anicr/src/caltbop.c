@@ -10,6 +10,7 @@
 #include "nlj.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 
 #include "caltbop.h"
 
@@ -156,22 +157,8 @@ for (jtrans = jtrans_min; jtrans <= 0; jtrans += 2)
 			  if(pow(-1,(lj1+lj2))!=pi2){continue;}
 			  if(j1==j2 && pow(-1,(Jcd+Tcd))!=-1){continue;}
 			  if(2*nj1+lj1+2*nj2+lj2>CFG_MAX_SUM_E){continue;}
-			  if(Jcd==Jab && Tcd==Tab ){
-				  //  printf("key: %d %d %d \n", Jcd,(int)getKey(i1,i2,j1,j2,Jcd,0), (int)getKey(i1,i2,j1,j2,Jcd,1));
-
-			      twob_state *p=NULL;
-			      uint64_t key=getKey(i1,i2,j1,j2,Jcd,1);
-			      p=bsearch (&key,twob_array, numTBME, sizeof (twob_state), compare_tbme_item); 
-			       if(p!=NULL){
-			  	    printf("Hit T34=1 %f %d %d %d %d \n",p->_hrel,i1,i2,j1,j2);
-			       }
-			      key=getKey(i1,i2,j1,j2,Jcd,0);
-			      p=bsearch (&key,twob_array, numTBME, sizeof (twob_state), compare_tbme_item); 
-			      if(p!=NULL){
-			  	    printf("Hit T23=0 %f %d %d %d %d \n",p->_hrel,i1,i2,j1,j2);
-			      }
-          }
 			  twob2++;
+
 			  double value_nn=findState2(_nlj_items_nn, _num_nlj_items_nn, i1, i2,  j1, j2, 2*Jab,2*Jcd,jtrans);
 			  double value_pp=findState2(_nlj_items_pp, _num_nlj_items_pp, i1, i2,  j1, j2, 2*Jab,2*Jcd,jtrans);
 			  double value_np=findState2(_nlj_items_np, _num_nlj_items_np, i1, i2,  j1, j2, 2*Jab,2*Jcd,jtrans);  
@@ -228,8 +215,37 @@ for (jtrans = jtrans_min; jtrans <= 0; jtrans += 2)
 #else 
           printf(" (a+a+)J=%5d  (a-a-)J=%5d   td: pn=%10.6f   pp=%10.6f   nn=%10.6f\n",twob1,twob2, value_np, value_pp,value_nn);//, Jab, Tab, Jcd,Tcd);
 #endif
-        }
-			 
+        
+	  if(Jcd==Jab && Tcd==Tab ){
+				  //  printf("key: %d %d %d \n", Jcd,(int)getKey(i1,i2,j1,j2,Jcd,0), (int)getKey(i1,i2,j1,j2,Jcd,1));
+
+	    twob_state *p1=NULL;
+	    twob_state *p2=NULL;
+	    uint64_t key1=getKey(i1,i2,j1,j2,Jcd,1);
+	    uint64_t key2=getKey(j1,j2,i1,i2,Jcd,1);
+	    
+	    p1=bsearch (&key1,twob_array, numTBME, sizeof (twob_state), compare_tbme_item); 
+	    p2=bsearch (&key2,twob_array, numTBME, sizeof (twob_state), compare_tbme_item);
+	    
+	    if(p1!=NULL){// p2!=NULL){
+	      printf("%d %d Hit T34=1 P1:%f %d %d %d %d \n",twob1,twob2,p1->_trel,i1,i2,j1,j2);
+	    }
+	    if(p2!=NULL){				 printf("%d %d Hit T34=1 P2: %f %d %d %d %d \n",twob1,twob2,p2->_trel,i1,i2,j1,j2);}
+			      
+	    p1=NULL;
+	    p2=NULL;
+	    key1=getKey(i1,i2,j1,j2,Jcd,0);
+	    key2=getKey(j1,j2,i1,i2,Jcd,0);
+	    p1=bsearch (&key1,twob_array, numTBME, sizeof (twob_state), compare_tbme_item); 
+	    p2=bsearch (&key2,twob_array, numTBME, sizeof (twob_state), compare_tbme_item); 
+	    if(p1!=NULL){// p2!=NULL){
+	      printf("%d %d Hit T34=0 P1:%f %d %d %d %d \n",twob1,twob2,p1->_trel,i1,i2,j1,j2);
+	    }
+	    if(p2!=NULL){
+	      printf("%d %d Hit T34=0 P2: %f %d %d %d %d \n",twob1,twob2,p2->_trel,i1,i2,j1,j2);}
+	  
+	  }
+	}		 
 			}}}//}
 		  }
 		}
@@ -338,7 +354,7 @@ int readTBME(){
       perror("Error while opening the file.\n");
       exit(EXIT_FAILURE);
   }
-  printf("file %d \n ",(int)fd);
+  
 
   fscanf(fd,"%zd",&numTBME);
   twob_array=malloc(sizeof(twob_state)*numTBME);
@@ -346,15 +362,15 @@ int readTBME(){
   for(int i=0;i<(int)numTBME; i++){
     fscanf(fd,"%d %d %d %d %d %d %f %f %f %f %f %f",&a1,&a2,&c1,&c2,&J23,&T23,&f[0],&f[1],&f[2],&f[3],&f[4],&f[5]);
     uint64_t key= 
-	(((uint64_t) a1) <<  0) |   //a1
-	(((uint64_t) a2) << 11) |   //a2
-	(((uint64_t) c1) << 22) |   //c1
-	(((uint64_t) c2) << 33) |  //c2
+	(((uint64_t) a1-1) <<  0) |   //a1
+	(((uint64_t) a2-1) << 11) |   //a2
+	(((uint64_t) c1-1) << 22) |   //c1
+	(((uint64_t) c2-1) << 33) |  //c2
 	(((uint64_t) J23) << 44) | //anni_j
 	(((uint64_t) T23) << 51);/* | //crea_j
 	(((uint64_t) jtrans) << 58); */
 
-   	twob_array[i]._key=key;
+    twob_array[i]._key=key;
     twob_array[i]._trel=f[0];
     twob_array[i]._hrel=f[1];
     twob_array[i]._coul=f[2];
@@ -368,21 +384,20 @@ int readTBME(){
     perror("Error while closing file");
   }
   else{printf("Success!\n");}
-  printf("file %d \n ",(int)fd);
+  
 
   printf("%zu\n",numTBME);
 
   for (int i=0;i<(int)numTBME;i++){
   	printKey(twob_array[i]);
 
-    printf("%016llX %f %f %f %f \n",twob_array[i]._key,twob_array[i]._hrel,twob_array[i]._trel,twob_array[i]._coul,twob_array[i]._vpn);
+	printf("%llu %f %f %f %f \n",(unsigned long long int)twob_array[i]._key,twob_array[i]._hrel,twob_array[i]._trel,twob_array[i]._coul,twob_array[i]._vpn);
   }
     qsort (twob_array, numTBME, sizeof (twob_state), compare_tbme_item); 
   printf("\n After sorting: \n");
   for (int i=0;i<(int)numTBME;i++){
   	printKey(twob_array[i]);
-    printf(" %016llX %f %f %f %f \n",twob_array[i]._key,twob_array[i]._hrel,twob_array[i]._trel,twob_array[i]._coul,twob_array[i]._vpn);
+	printf(" %llu %f %f %f %f \n",(unsigned long long int)twob_array[i]._key,twob_array[i]._hrel,twob_array[i]._trel,twob_array[i]._coul,twob_array[i]._vpn);
   }
   return 0;
 }
-
