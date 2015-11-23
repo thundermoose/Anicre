@@ -67,7 +67,7 @@ int twob()
 #endif
   printf("Read NP-file\n");
 
- 
+ readTBME();
   
   int jtrans;
   int showJtrans;
@@ -86,7 +86,10 @@ int twob()
  //loop over all states. 
 
  
- for (jtrans = jtrans_min; jtrans <= jtrans_max; jtrans += 2)
+//for (jtrans = jtrans_min; jtrans <= jtrans_max; jtrans += 2)
+for (jtrans = jtrans_min; jtrans <= 0; jtrans += 2)
+
+ 	
     {
       showJtrans=1;
       
@@ -153,7 +156,21 @@ int twob()
 			  if(pow(-1,(lj1+lj2))!=pi2){continue;}
 			  if(j1==j2 && pow(-1,(Jcd+Tcd))!=-1){continue;}
 			  if(2*nj1+lj1+2*nj2+lj2>CFG_MAX_SUM_E){continue;}
-			  
+			  if(Jcd==Jab && Tcd==Tab ){
+				  //  printf("key: %d %d %d \n", Jcd,(int)getKey(i1,i2,j1,j2,Jcd,0), (int)getKey(i1,i2,j1,j2,Jcd,1));
+
+			      twob_state *p=NULL;
+			      uint64_t key=getKey(i1,i2,j1,j2,Jcd,1);
+			      p=bsearch (&key,twob_array, numTBME, sizeof (twob_state), compare_tbme_item); 
+			       if(p!=NULL){
+			  	    printf("Hit T34=1 %f %d %d %d %d \n",p->_hrel,i1,i2,j1,j2);
+			       }
+			      key=getKey(i1,i2,j1,j2,Jcd,0);
+			      p=bsearch (&key,twob_array, numTBME, sizeof (twob_state), compare_tbme_item); 
+			      if(p!=NULL){
+			  	    printf("Hit T23=0 %f %d %d %d %d \n",p->_hrel,i1,i2,j1,j2);
+			      }
+          }
 			  twob2++;
 			  double value_nn=findState2(_nlj_items_nn, _num_nlj_items_nn, i1, i2,  j1, j2, 2*Jab,2*Jcd,jtrans);
 			  double value_pp=findState2(_nlj_items_pp, _num_nlj_items_pp, i1, i2,  j1, j2, 2*Jab,2*Jcd,jtrans);
@@ -200,7 +217,18 @@ int twob()
 			  value_pp=value_pp*mult*clebsch_pp*Nab*Ncd;
 			  value_np=(value_np+rev1_np+rev2_np+rev3_np)*mult*clebsch_np*Nab*Ncd;
 				  
-
+        if ((fabs(value_np)>0.000001) ||( fabs(value_pp)>0.000001) ||( fabs(value_nn)>0.000001) ){   //roundoff-error?
+          if(showJtrans==1){
+            printf ("\n Jtrans= %2d\n", jtrans/2);
+            showJtrans=0;
+          }
+#if NP_ORDER
+          
+          printf(" (a+a+)J=%5d  (a-a-)J=%5d   td: np=%10.6f   pp=%10.6f   nn=%10.6f\n",twob1,twob2, value_np, value_pp,value_nn);//, Jab, Tab, Jcd,Tcd);
+#else 
+          printf(" (a+a+)J=%5d  (a-a-)J=%5d   td: pn=%10.6f   pp=%10.6f   nn=%10.6f\n",twob1,twob2, value_np, value_pp,value_nn);//, Jab, Tab, Jcd,Tcd);
+#endif
+        }
 			 
 			}}}//}
 		  }
@@ -215,10 +243,7 @@ int twob()
   free (_nlj_items_nn);
   free (_nlj_items_pp);
   free (_nlj_items_np);
-  if(twob_array==NULL){
-  	readTBME();
 
-  }
 //  else{printf("test %d \n",twob_array[0].a);}
   return 0;
 }
@@ -289,19 +314,37 @@ int printKey(twob_state p1 ){
 	return 0;
 }
 
+uint64_t getKey(int a1,int a2,int c1,int c2,int J23,int T23)
+{
+	uint64_t  key= 
+	(((uint64_t) a1) <<  0) |   //a1
+	(((uint64_t) a2) << 11) |   //a2
+	(((uint64_t) c1) << 22) |   //c1
+	(((uint64_t) c2) << 33) |  //c2
+	(((uint64_t) J23) << 44) | //anni_j
+	(((uint64_t) T23) << 51);
+
+	return key;
+
+}
 int readTBME(){
 
   printf("Read TBME.int\n");
-  FILE *fp;
+  FILE *fd;
   int a1,a2,c1,c2,J23,T23;
   float f[6];
-  fp=fopen("TBME.int","r");
-  fscanf(fp,"%zd",&numTBME);
+  fd=fopen("TBME.int","r");
+  if(fd==NULL){
+      perror("Error while opening the file.\n");
+      exit(EXIT_FAILURE);
+  }
+  printf("file %d \n ",(int)fd);
+
+  fscanf(fd,"%zd",&numTBME);
   twob_array=malloc(sizeof(twob_state)*numTBME);
   
   for(int i=0;i<(int)numTBME; i++){
-    fscanf(fp,"%d %d %d %d %d %d %f %f %f %f %f %f",&a1,&a2,&c1,&c2,&J23,&T23,&f[0],&f[1],&f[2],&f[3],&f[4],&f[5]);
- //   printf("%d %d \n",qn[0],qn[1]);
+    fscanf(fd,"%d %d %d %d %d %d %f %f %f %f %f %f",&a1,&a2,&c1,&c2,&J23,&T23,&f[0],&f[1],&f[2],&f[3],&f[4],&f[5]);
     uint64_t key= 
 	(((uint64_t) a1) <<  0) |   //a1
 	(((uint64_t) a2) << 11) |   //a2
@@ -320,6 +363,13 @@ int readTBME(){
     twob_array[i]._vnn=f[5];
     
   }
+  int err=fclose(fd);
+  if(err!=0){
+    perror("Error while closing file");
+  }
+  else{printf("Success!\n");}
+  printf("file %d \n ",(int)fd);
+
   printf("%zu\n",numTBME);
 
   for (int i=0;i<(int)numTBME;i++){

@@ -78,12 +78,13 @@ int main()
     printf("Run ./np_anicr (pn_anicr) to compute transition data\n");
     twob_file_exist=0;
   }
-  if(twob_file_exist){
-    if(access("TBME.int",F_OK)!=-1){
-      readTBME();
-    }
+ // if(twob_file_exist){
+   //if(access("TBME.int",F_OK)!=-1){
+   //  readTBME();
+     //Set flag that TBME are read.
+   // }
     twob();
-  }
+  //}
   return 0;
 }
 
