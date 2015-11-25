@@ -84,6 +84,7 @@ int twob()
   int twob1=0;
   double trelsum=0.0;
  double hrelsum=0.0;
+ double coulsum=0.0;
   printf("\n\n *** Transition matrix elements for states: ***\n");
  //loop over all states. 
 
@@ -224,36 +225,33 @@ for (jtrans = jtrans_min; jtrans <= 0; jtrans += 2)
 	    uint64_t key1=getKey(i1,i2,j1,j2,Jcd,Tcd);
 	   
 	    
-	    p1=bsearch (&key1,twob_array, numTBME, sizeof (twob_state), compare_tbme_item); 
-	    double trel=0.0;
-	    double hrel=0.0;
-	    double vpp=0.0;
-	    double vnn=0.0;
-	    double vpn=0.0;
+	    p1=bsearch (&key1,twob_array, numTBME, sizeof (twob_state), compare_tbme_item);
+	    if(twob1!=twob2 && p1==NULL){
+	      printf("Reveresed order\n");
+
+	      key1=getKey(j1,j2,i1,i2,Jcd,Tcd);
+	      p1=bsearch (&key1,twob_array, numTBME, sizeof (twob_state), compare_tbme_item);
+	    } 
+	
 	    if(p1!=NULL){// p2!=NULL){
+	      double trel=0.0;
+	      double hrel=0.0;
+	      double vpp=0.0;
+	      double vnn=0.0;
+	      double vpn=0.0;
+	      double coul=0.0;
 	      printf("%d %d Hit T34=%d P1:%f %d %d %d %d \n",twob1,twob2,Tcd,p1->_trel,i1,i2,j1,j2);
 	      trel=p1->_trel;
 	      hrel=p1->_hrel;
 	      vpp=p1->_vpp;
 	      vnn=p1->_vnn;
 	      vpn=p1->_vpn;
-	    }
-	    if(twob1!=twob2 && p1==NULL){
-	      printf("Reveresed order\n");
-	      twob_state *p2=NULL;
-
-	      uint64_t key2=getKey(j1,j2,i1,i2,Jcd,Tcd);
-	      p2=bsearch (&key2,twob_array, numTBME, sizeof (twob_state), compare_tbme_item);
+	      coul=p1->_coul;
+	      if(coul==0.0){
+		coul=vpp-vnn;
+	      }
 	     
-	      if(p2!=NULL){
-		printf("%d %d Hit T34=%d P2: %f %d %d %d %d \n",twob1,twob2, Tcd,p2->_trel,i1,i2,j1,j2);}
-	        trel=p2->_trel;
-                hrel=p2->_hrel;
-	        vpp=p2->_vpp;
-                vnn=p2->_vnn;
- 	        vpn=p2->_vpn;
-
-	    }
+	    
 	    if(trel!=0.0){
 	      double hw=20.0;
 	      int A=6;
@@ -266,7 +264,7 @@ for (jtrans = jtrans_min; jtrans <= 0; jtrans += 2)
 		printf("Trel=%f %f %f\n",trel*2.0*hw/A,trel*2.0*hw/A*(value_np+value_nn+value_pp)*sqrt(2*Jab+1.),trelsum);
 	      }
 	    }
-	    if(hrel!=0.0){
+	    if(hrel!=0.0||vpn!=0.0||vpp!=0.0||vnn!=0.0){
 
 	      double hw=20.0;
 	      int A=6;
@@ -279,10 +277,20 @@ for (jtrans = jtrans_min; jtrans <= 0; jtrans += 2)
 	      }
 	      else{
 		hrelsum+=((hrel+vpn)*value_np+(hrel+vnn)*value_nn+(hrel+vpp)*value_pp)*sqrt(2*Jab+1.);
-		printf("Hrel=%f %f %f\n",hrel+vpn,((hrel+vpn)*value_np+(hrel+vnn)*value_nn+(hrel+vpp)*value_pp)*sqrt(2*Jab+1.),hrelsum);
+		printf("Hrel=%f %f %f< %f %f\n",hrel+vpn,hrel+vpp,hrel+vnn,((hrel+vpn)*value_np+(hrel+vnn)*value_nn+(hrel+vpp)*value_pp)*sqrt(2*Jab+1.),hrelsum);
 	      }
 	    }
+	    if(coul!=0.0){
 
+	 
+
+	      if(Tab==1){
+		
+		coulsum+=(coul)*value_pp*sqrt(2*Jab+1.);
+		printf("Coul=%f %f %f\n",coul,(coul)*value_pp*sqrt(2*Jab+1.),coulsum);
+	      }
+
+	    }}
 	  }
 	}		 
 			}}}//}
