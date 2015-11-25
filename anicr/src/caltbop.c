@@ -85,6 +85,9 @@ int twob()
   double trelsum=0.0;
  double hrelsum=0.0;
  double coulsum=0.0;
+ double rppsum=0.0;
+ double rnnsum=0.0;
+ double rpnsum=0.0;
   printf("\n\n *** Transition matrix elements for states: ***\n");
  //loop over all states. 
 
@@ -288,7 +291,20 @@ for (jtrans = jtrans_min; jtrans <= 0; jtrans += 2)
 		printf("Coul=%f %f %f\n",coul,(coul)*value_pp*sqrt(2*Jab+1.),coulsum);
 	      }
 
-	    }}
+	    }
+	    if(ht!=0.0){
+	      if(Tab==1){
+		rnnsum+=2.0*sqrt(2*Jab+1.)*value_nn*ht;
+		rppsum+=2.0*sqrt(2*Jab+1.)*value_pp*ht;
+		rpnsum+=2.0*sqrt(2*Jab+1.)*value_np*ht;
+	      }
+	      else{
+       		rpnsum+=2.0*sqrt(2*Jab+1.)*value_np*ht;
+
+	      }
+	      printf("Radiues %f %f %f \n",rnnsum,rppsum,rpnsum);
+	    }
+	    }
 	  }
 	}		 
 			}}}//}
