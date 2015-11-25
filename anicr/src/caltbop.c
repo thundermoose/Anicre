@@ -240,9 +240,14 @@ for (jtrans = jtrans_min; jtrans <= 0; jtrans += 2)
 	      double vnn=0.0;
 	      double vpn=0.0;
 	      double coul=0.0;
+	      double ht=0.0;
+	      double hw=20.0;
+	      int A=6;
+	      double rdmavg=1;
+	      double hbc2=1;
 	      printf("%d %d Hit T34=%d P1:%f %d %d %d %d \n",twob1,twob2,Tcd,p1->_trel,i1,i2,j1,j2);
-	      trel=p1->_trel;
-	      hrel=p1->_hrel;
+	      trel=p1->_trel*2.0*hw/A;
+	      hrel=p1->_hrel*2.0*hw/A;
 	      vpp=p1->_vpp;
 	      vnn=p1->_vnn;
 	      vpn=p1->_vpn;
@@ -250,25 +255,20 @@ for (jtrans = jtrans_min; jtrans <= 0; jtrans += 2)
 	      if(coul==0.0){
 		coul=vpp-vnn;
 	      }
-	     
+	      ht=2*(hrel-trel)*hbc2/rdmavg/hw;
 	    
 	    if(trel!=0.0){
-	      double hw=20.0;
-	      int A=6;
+
 	      if(Tab==0){
-		trelsum+=trel*2.0*hw/A*value_np*sqrt(2*Jab+1.);
-		printf("Trel=%f %f %f\n",trel*2.0*hw/A,trel*2.0*hw/A*value_np*sqrt(2*Jab+1.),trelsum);
+		trelsum+=trel*value_np*sqrt(2*Jab+1.);
+		printf("Trel=%f %f %f\n",trel,trel*value_np*sqrt(2*Jab+1.),trelsum);
 	      }
 	      else{
-		trelsum+=trel*2.0*hw/A*(value_np+value_nn+value_pp)*sqrt(2*Jab+1.);
-		printf("Trel=%f %f %f\n",trel*2.0*hw/A,trel*2.0*hw/A*(value_np+value_nn+value_pp)*sqrt(2*Jab+1.),trelsum);
+		trelsum+=trel*(value_np+value_nn+value_pp)*sqrt(2*Jab+1.);
+		printf("Trel=%f %f %f\n",trel,trel*(value_np+value_nn+value_pp)*sqrt(2*Jab+1.),trelsum);
 	      }
 	    }
 	    if(hrel!=0.0||vpn!=0.0||vpp!=0.0||vnn!=0.0){
-
-	      double hw=20.0;
-	      int A=6;
-        	hrel=hrel*2.0*hw/A;
 
 	      if(Tab==0){
 		
@@ -281,8 +281,6 @@ for (jtrans = jtrans_min; jtrans <= 0; jtrans += 2)
 	      }
 	    }
 	    if(coul!=0.0){
-
-	 
 
 	      if(Tab==1){
 		
