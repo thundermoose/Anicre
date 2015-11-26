@@ -19,6 +19,8 @@ extern int _debug;
 
 extern int _t_2_initial;
 extern int _t_2_final;
+extern int _nporder;
+extern double _hw;
 
 template<class header_version_t, class fon_version_t>
 mr_antoine_reader<header_version_t, fon_version_t>::
@@ -1621,7 +1623,11 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
 			   (cfg._change_pn_at ? 1 : 0));
 
 	out_config.fprintf("#define CFG_ANICR_IDENT               \"%s\"\n",
-			   cfg._ident); 
+			   cfg._ident);
+	out_config.fprintf("#define NP_ORDER                   %d\n",
+			   _nporder);
+	out_config.fprintf("#define CFG_HW                   %f\n",
+			   _hw);
       }
     }
 
