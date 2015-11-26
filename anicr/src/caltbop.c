@@ -31,6 +31,12 @@ size_t numTBME=0;
 
 int twob()
 {
+
+  if (CFG_HW==0.0){
+    printf("ERROR: H.O frequency not set.\n");
+    return 1;
+
+  }
   printf("COMPUTE TWO-BODY OPERATORS\n");
   _nlj_items_nn = NULL;                                                                          
   _num_nlj_items_nn = 0;                                                                                 
@@ -88,8 +94,14 @@ int twob()
  double rppsum=0.0;
  double rnnsum=0.0;
  double rpnsum=0.0;
- int A=6;
- int Z=2;
+
+
+ int A=CFG_NUM_SP_STATES0+CFG_NUM_SP_STATES1;
+#if NP_ORDER
+ int Z=CFG_NUM_SP_STATES1;
+#else
+ int Z=CFG_NUM_SP_STATES0;
+#endif
  double mass_p=938.27231,mass_n=939.56563;
  double nucleon_rmass=2.0*(mass_p*mass_n)/(mass_p+mass_n);
  double hbc=197.327053;
