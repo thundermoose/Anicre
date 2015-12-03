@@ -98,9 +98,9 @@ int twob()
 
  int A=CFG_NUM_SP_STATES0+CFG_NUM_SP_STATES1;
 #if NP_ORDER
- int Z=CFG_NUM_SP_STATES1;
-#else
  int Z=CFG_NUM_SP_STATES0;
+#else
+ int Z=CFG_NUM_SP_STATES1;
 #endif
  double mass_p=938.27231,mass_n=939.56563;
  double nucleon_rmass=2.0*(mass_p*mass_n)/(mass_p+mass_n);
@@ -182,17 +182,17 @@ int twob()
 		     
 		     if(i1!=i2){
 		       rev1_np=findState2(_nlj_items_np,_num_nlj_items_np,i2,i1,j1,j2,2*Jab,2*Jcd,jtrans);  
-		       if(rev1_np!=0.0){rev1_np=rev1_np*pow(-1.,-(ji1+ji2)/2+Jab+Tab-1);}
+		       if(rev1_np!=0.0&&i2>i1){rev1_np=rev1_np*pow(-1.,-(ji1+ji2)/2+Jab+Tab-1);}
 		     }
 		     
 		     if(j2!=j1){  
 		       rev2_np=findState2(_nlj_items_np,_num_nlj_items_np,i1,i2,j2,j1,2*Jab,2*Jcd,jtrans);
-		       if(rev2_np!=0.0){rev2_np=rev2_np*pow(-1.,-(jj1+jj2)/2+Jcd+Tcd-1);}
+		       if(rev2_np!=0.0&&j2>j2){rev2_np=rev2_np*pow(-1.,-(jj1+jj2)/2+Jcd+Tcd-1);}
 		     }
 		     
 		     if(i1!=i2&&j2!=j1){
 		       rev3_np=findState2(_nlj_items_np,_num_nlj_items_np,i2,i1,j2,j1,2*Jab,2*Jcd,jtrans);
-		       if(rev3_np!=0.0){rev3_np=rev3_np*pow(-1.,-(ji1+ji2+jj1+jj2)/2+Jab+Jcd+Tab+Tcd); }
+		       if(rev3_np!=0.0&&j2>j1&&i2>i1){rev3_np=rev3_np*pow(-1.,-(ji1+ji2+jj1+jj2)/2+Jab+Jcd+Tab+Tcd); }
 		       
 		     }
 		     
@@ -247,8 +247,7 @@ int twob()
 			   double vpn=0.0;
 			   double coul=0.0;
 			   double ht=0.0;
-			   double hw=20.0;
-			 
+			   double hw=CFG_HW;
 			   printf("%d %d Hit T34=%d P1:%f %d %d %d %d \n",twob1,twob2,Tcd,p1->_trel,i1,i2,j1,j2);
 			   trel=p1->_trel*2.0*hw/A;
 			   hrel=p1->_hrel*2.0*hw/A;
