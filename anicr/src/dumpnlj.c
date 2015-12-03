@@ -339,6 +339,9 @@ int main()
 			  double value_np=findState2(_nlj_items_np, _num_nlj_items_np, i1, i2,  j1, j2, 2*Jab,2*Jcd,jtrans);  
 	        
 			  printf("%d %d %d %d: %f %f %f \n",i1,i2,j1,j2,value_np,value_nn,value_pp);
+			  double rev1_np=0.0;
+			  double rev2_np=0.0;
+			  double rev3_np=0.0;
 			  if(i1!=i2){
 			    rev1_np=findState2(_nlj_items_np,_num_nlj_items_np,i2,i1,j1,j2,2*Jab,2*Jcd,jtrans);
 			    
@@ -381,7 +384,7 @@ int main()
 			  double Ncd=norm(nj1,lj1,jj1,nj2,lj2,jj2,Jcd,Tcd);
 			 
 			  value_nn=value_nn*mult*clebsch_nn*Nab*Ncd;
-			  value_pp=(value_pp+rev1_pp+rev2_pp+rev3_pp)*mult*clebsch_pp*Nab*Ncd;
+			  value_pp=(value_pp)*mult*clebsch_pp*Nab*Ncd;
 			  value_np=(value_np+rev1_np+rev2_np+rev3_np)*mult*clebsch_np*Nab*Ncd;
 				  
 			  if(fabs(value_np)<0.000001){value_np=0.0;}
