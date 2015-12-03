@@ -421,7 +421,7 @@ void couple_accumulate_2()
 		      */
 		      /* No need to work on zero items. */
 
-		      if (value)
+		      if (value!=0.0)
 			{
 			  uint64_t nlj_key =
 			    (anni_nlj & ((1 << 22) - 1)) |
