@@ -182,12 +182,12 @@ int twob()
 		     
 		     if(i1!=i2){
 		       rev1_np=findState2(_nlj_items_np,_num_nlj_items_np,i2,i1,j1,j2,2*Jab,2*Jcd,jtrans);  
-		       if(rev1_np!=0.0&&i2>i1){rev1_np=rev1_np*pow(-1.,-(ji1+ji2)/2+Jab+Tab-1);}
+		       if(rev1_np!=0.0&&i2>i1){rev1_np=rev1_np*pow(-1.,-(ji1+ji2)/2+Jab+Tab);}
 		     }
 		     
 		     if(j2!=j1){  
 		       rev2_np=findState2(_nlj_items_np,_num_nlj_items_np,i1,i2,j2,j1,2*Jab,2*Jcd,jtrans);
-		       if(rev2_np!=0.0&&j2>j2){rev2_np=rev2_np*pow(-1.,-(jj1+jj2)/2+Jcd+Tcd-1);}
+		       if(rev2_np!=0.0&&j2>j1){rev2_np=rev2_np*pow(-1.,-(jj1+jj2)/2+Jcd+Tcd);}
 		     }
 		     
 		     if(i1!=i2&&j2!=j1){
@@ -311,8 +311,10 @@ int twob()
      }
    }
  }
- printf("<Hrel>=%f <Trel>=%f <Coul>=%f\n",hrelsum,trelsum,coulsum); //Jhat!
- printf("Rpp=%f Rnn=%f Rpn=%f\n",sqrt(rppsum/binomial(Z,2)),sqrt(rnnsum/binomial((A-Z),2)),sqrt(rpnsum/((double)(A-Z)*Z)));
+ double hat=sqrt(CFG_2J_FINAL+1.);
+ printf("Hat: %f\n",hat);
+ printf("<Hrel>=%f <Trel>=%f <Coul>=%f\n",hrelsum/hat,trelsum/hat,coulsum/hat); //Jhat!
+ printf("Rpp=%f Rnn=%f Rpn=%f\n",sqrt(rppsum/binomial(Z,2)/hat),sqrt(rnnsum/binomial((A-Z),2)/hat),sqrt(rpnsum/((double)(A-Z)*Z))/hat);
 
   free (_nlj_items_nn);
   free (_nlj_items_pp);
