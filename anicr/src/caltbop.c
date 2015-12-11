@@ -224,9 +224,9 @@ int twob()
 			 showJtrans=0;
 		       }
 #if NP_ORDER     
-		       printf(" (a+a+)J=%5d  (a-a-)J=%5d   td: np=%10.6f   pp=%10.6f   nn=%10.6f\n",twob1,twob2, value_np, value_pp,value_nn);//, Jab, Tab, Jcd,Tcd);
+		       //      printf(" (a+a+)J=%5d  (a-a-)J=%5d   td: np=%10.6f   pp=%10.6f   nn=%10.6f\n",twob1,twob2, value_np, value_pp,value_nn);//, Jab, Tab, Jcd,Tcd);
 #else 
-		       printf(" (a+a+)J=%5d  (a-a-)J=%5d   td: pn=%10.6f   pp=%10.6f   nn=%10.6f\n",twob1,twob2, value_np, value_pp,value_nn);//, Jab, Tab, Jcd,Tcd);
+		       //  printf(" (a+a+)J=%5d  (a-a-)J=%5d   td: pn=%10.6f   pp=%10.6f   nn=%10.6f\n",twob1,twob2, value_np, value_pp,value_nn);//, Jab, Tab, Jcd,Tcd);
 #endif			    
 		       if(Jcd==Jab && Tcd==Tab ){
 			 twob_state *p1=NULL;
@@ -234,7 +234,7 @@ int twob()
 			 
 			 p1=bsearch (&key1,twob_array, numTBME, sizeof (twob_state), compare_tbme_item);
 			 if(twob1!=twob2 && p1==NULL){
-			   printf("Reveresed order\n");
+			   //	   printf("Reveresed order\n");
 			   key1=getKey(j1,j2,i1,i2,Jcd,Tcd);
 			   p1=bsearch (&key1,twob_array, numTBME, sizeof (twob_state), compare_tbme_item);
 			 } 
@@ -248,7 +248,7 @@ int twob()
 			   double coul=0.0;
 			   double ht=0.0;
 			   double hw=CFG_HW;
-			   printf("%d %d Hit T34=%d P1:%f %d %d %d %d \n",twob1,twob2,Tcd,p1->_trel,i1,i2,j1,j2);
+			   //   printf("%d %d Hit T34=%d P1:%f %d %d %d %d \n",twob1,twob2,Tcd,p1->_trel,i1,i2,j1,j2);
 			   trel=p1->_trel*2.0*hw/A;
 			   hrel=p1->_hrel*2.0*hw/A;
 			   vpp=p1->_vpp;
@@ -263,27 +263,27 @@ int twob()
 			   if(trel!=0.0){
 			     if(Tab==0){
 			       trelsum+=trel*value_np*sqrt(2*Jab+1.);
-			       printf("Trel=%f %f %f\n",trel,trel*value_np*sqrt(2*Jab+1.),trelsum);
+			       // printf("Trel=%f %f %f\n",trel,trel*value_np*sqrt(2*Jab+1.),trelsum);
 			     }
 			     else{
 			       trelsum+=trel*(value_np+value_nn+value_pp)*sqrt(2*Jab+1.);
-			       printf("Trel=%f %f %f\n",trel,trel*(value_np+value_nn+value_pp)*sqrt(2*Jab+1.),trelsum);
+			       //printf("Trel=%f %f %f\n",trel,trel*(value_np+value_nn+value_pp)*sqrt(2*Jab+1.),trelsum);
 			     }
 			   }
 			   if(hrel!=0.0||vpn!=0.0||vpp!=0.0||vnn!=0.0){
 			     if(Tab==0){
 			       hrelsum+=(hrel+vpn)*value_np*sqrt(2*Jab+1.);
-			       printf("Hrel=%f %f %f\n",hrel+vpn,(hrel+vpn)*value_np*sqrt(2*Jab+1.),hrelsum);
+			       // printf("Hrel=%f %f %f\n",hrel+vpn,(hrel+vpn)*value_np*sqrt(2*Jab+1.),hrelsum);
 			     }
 			     else{
 			       hrelsum+=((hrel+vpn)*value_np+(hrel+vnn)*value_nn+(hrel+vpp)*value_pp)*sqrt(2*Jab+1.);
-			       printf("Hrel=%f %f %f< %f %f\n",hrel+vpn,hrel+vpp,hrel+vnn,((hrel+vpn)*value_np+(hrel+vnn)*value_nn+(hrel+vpp)*value_pp)*sqrt(2*Jab+1.),hrelsum);
+			       // printf("Hrel=%f %f %f< %f %f\n",hrel+vpn,hrel+vpp,hrel+vnn,((hrel+vpn)*value_np+(hrel+vnn)*value_nn+(hrel+vpp)*value_pp)*sqrt(2*Jab+1.),hrelsum);
 			     }
 			   }
 			   if(coul!=0.0){
 			     if(Tab==1){
 			       coulsum+=(coul)*value_pp*sqrt(2*Jab+1.);
-			       printf("Coul=%f %f %f\n",coul,(coul)*value_pp*sqrt(2*Jab+1.),coulsum);
+			       //  printf("Coul=%f %f %f\n",coul,(coul)*value_pp*sqrt(2*Jab+1.),coulsum);
 			     }
 			   }
 			   if(ht!=0.0){
@@ -291,7 +291,7 @@ int twob()
 			       rnnsum+=2.0*sqrt(2*Jab+1.)*value_nn*ht;
 			       rppsum+=2.0*sqrt(2*Jab+1.)*value_pp*ht;
 			       rpnsum+=2.0*sqrt(2*Jab+1.)*value_np*ht;
-			       printf("rnn %d %d %f %f%f \n",twob1,twob2,rnnsum,2.0*sqrt(2*Jab+1.)*value_nn*ht,ht);
+			       //			       printf("rnn %d %d %f %f%f \n",twob1,twob2,rnnsum,2.0*sqrt(2*Jab+1.)*value_nn*ht,ht);
 
 			     }
 			     else{
@@ -312,9 +312,10 @@ int twob()
    }
  }
  double hat=sqrt(CFG_2J_FINAL+1.);
- printf("Hat: %f\n",hat);
- printf("<Hrel>=%f <Trel>=%f <Coul>=%f\n",hrelsum/hat,trelsum/hat,coulsum/hat); //Jhat!
- printf("Rpp=%f Rnn=%f Rpn=%f\n",sqrt(rppsum/binomial(Z,2)/hat),sqrt(rnnsum/binomial((A-Z),2)/hat),sqrt(rpnsum/((double)(A-Z)*Z))/hat);
+ //printf("Hat: %f\n",hat);
+ printf("<Hrel>=%f <Trel>=%f <Coul>=%f\n",hrelsum/hat,trelsum/hat,coulsum/hat); 
+ // printf("rnp %f hat %f norm %f",rpnsum,hat,(double)(A-Z)*Z);
+   printf("Rpp=%f Rnn=%f Rpn=%f\n",sqrt(rppsum/binomial(Z,2)/hat),sqrt(rnnsum/binomial((A-Z),2)/hat),sqrt(rpnsum/((double)(A-Z)*Z)/hat));
 
   free (_nlj_items_nn);
   free (_nlj_items_pp);
