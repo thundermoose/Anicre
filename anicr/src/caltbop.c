@@ -259,7 +259,7 @@ int twob()
 			     coul=vpp-vnn;
 			   }
 			   ht=2*(p1->_hrel-p1->_trel)*pow(hbc,2.)/(nucleon_rmass*hw);
-			   printf("HT=%f %f %f %d %d \n",ht,hrel-trel,pow(hbc,2.)/(nucleon_rmass*hw),twob1,twob2);
+			   //		   printf("HT=%f %f %f %d %d \n",ht,hrel-trel,pow(hbc,2.)/(nucleon_rmass*hw),twob1,twob2);
 			   if(trel!=0.0){
 			     if(Tab==0){
 			       trelsum+=trel*value_np*sqrt(2*Jab+1.);
@@ -390,7 +390,7 @@ int printKey(twob_state p1 ){
   	c2 = (key >> 33) & 0x7ff;
   	j23 = (key >> 44) &  0x7f;
   	t23 = (key >> 51) &  0x7f;
-  	printf("a1: %d, a2: %d, c1: %d, c2: %d 2*J23: %d 2*T23: %d ",a1,a2,c1,c2,j23,t23);
+	//  	printf("a1: %d, a2: %d, c1: %d, c2: %d 2*J23: %d 2*T23: %d ",a1,a2,c1,c2,j23,t23);
 	return 0;
 }
 
@@ -455,13 +455,13 @@ int readTBME(){
   for (int i=0;i<(int)numTBME;i++){
   	printKey(twob_array[i]);
 
-	printf("%llu %f %f %f %f \n",(unsigned long long int)twob_array[i]._key,twob_array[i]._hrel,twob_array[i]._trel,twob_array[i]._coul,twob_array[i]._vpn);
+	//	printf("%llu %f %f %f %f \n",(unsigned long long int)twob_array[i]._key,twob_array[i]._hrel,twob_array[i]._trel,twob_array[i]._coul,twob_array[i]._vpn);
   }
     qsort (twob_array, numTBME, sizeof (twob_state), compare_tbme_item); 
-  printf("\n After sorting: \n");
+    // printf("\n After sorting: \n");
   for (int i=0;i<(int)numTBME;i++){
   	printKey(twob_array[i]);
-	printf(" %llu %f %f %f %f \n",(unsigned long long int)twob_array[i]._key,twob_array[i]._hrel,twob_array[i]._trel,twob_array[i]._coul,twob_array[i]._vpn);
+	//	printf(" %llu %f %f %f %f \n",(unsigned long long int)twob_array[i]._key,twob_array[i]._hrel,twob_array[i]._trel,twob_array[i]._coul,twob_array[i]._vpn);
   }
   return 0;
 }
