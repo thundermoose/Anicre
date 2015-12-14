@@ -21,3 +21,9 @@ size_t     _num_nlj_items_np;
 nlj_hash_item *_nlj_items_pn;
 size_t     _num_nlj_items_pn;
 
+typedef struct {
+  double _nn;
+  double _pp;
+  double _np;
+} retval;
+retval computeres(int i1, int i2,int j1,int j2,int Jab,int Jcd,int jtrans,int Tab,int Tcd,double mult);

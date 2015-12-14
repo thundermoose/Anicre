@@ -13,6 +13,10 @@
 #include <math.h>
 #include <stdint.h>
 #include "nlj.h"
+
+#include <gsl/gsl_errno.h>
+#include "gsl/gsl_sf_coupling.h"
+
 int compare_nlj_item(const void *p1, const void *p2)
 {
   uint64_t key1 = ((const nlj_hash_item *) p1)->_key;
@@ -154,4 +158,76 @@ void*  readDumpfile(char *filename, size_t *num_nlj_items)
   qsort (nlj_items, *num_nlj_items, sizeof (nlj_hash_item), compare_nlj_item); 
 
   return nlj_items;
+}
+retval computeres(int i1, int i2,int j1,int j2,int Jab,int Jcd,int jtrans,int Tab,int Tcd,double mult)
+{
+  double value_nn=findState2(_nlj_items_nn, _num_nlj_items_nn, i1, i2,  j1, j2, 2*Jab,2*Jcd,jtrans);
+  double value_pp=findState2(_nlj_items_pp, _num_nlj_items_pp, i1, i2,  j1, j2, 2*Jab,2*Jcd,jtrans);
+  double value_np=findState2(_nlj_items_np, _num_nlj_items_np, i1, i2,  j1, j2, 2*Jab,2*Jcd,jtrans);  
+
+  
+  printf("%d %d %d %d: %f %f %f \n",i1,i2,j1,j2,value_np,value_nn,value_pp);
+  double rev1_np=0.0;
+  double rev2_np=0.0;
+  double rev3_np=0.0;
+  int li1=_table_nlj_states[i1]._l;
+  int li2=_table_nlj_states[i2]._l;
+  int ni1=_table_nlj_states[i1]._n;
+  int ni2=_table_nlj_states[i2]._n;
+  int ji1=_table_nlj_states[i1]._j;
+  int ji2=_table_nlj_states[i2]._j;
+
+  int lj1=_table_nlj_states[j1]._l;
+  int lj2=_table_nlj_states[j2]._l;
+  int nj1=_table_nlj_states[j1]._n;
+  int nj2=_table_nlj_states[j2]._n;
+  int jj1=_table_nlj_states[j1]._j;
+  int jj2=_table_nlj_states[j2]._j;
+
+  if(i1!=i2){
+    rev1_np=findState2(_nlj_items_np,_num_nlj_items_np,i2,i1,j1,j2,2*Jab,2*Jcd,jtrans);
+    
+    //			    printf("i1!=i2: %f ",rev1_np);
+    if(rev1_np&& i2>i1){rev1_np=rev1_np*pow(-1.,-(ji1+ji2)/2+Jab+Tab);
+      //     printf("Phase: %f \n",pow(-1.,-(ji1+ji2)/2+Jab+Tab));
+    }
+    
+  }
+  
+  if(j2!=j1){  
+    rev2_np=findState2(_nlj_items_np,_num_nlj_items_np,i1,i2,j2,j1,2*Jab,2*Jcd,jtrans);
+    if(rev2_np&&j2>j1){rev2_np=rev2_np*pow(-1.,-(jj1+jj2)/2+Jcd+Tcd);}
+    
+  }
+  
+  if(i1!=i2&&j2!=j1){
+    rev3_np=findState2(_nlj_items_np,_num_nlj_items_np,i2,i1,j2,j1,2*Jab,2*Jcd,jtrans);
+    if(rev3_np&&i2>i1&&j1<j2){rev3_np=rev3_np*pow(-1.,-(ji1+ji2+jj1+jj2)/2+Jab+Jcd+Tab+Tcd); }
+    
+    
+  }
+  
+  double clebsch_nn=0.0;
+  double clebsch_pp=0.0;
+  double clebsch_np=0.0;
+  
+  if(Tab==1 && Tcd==1){
+    clebsch_nn=1.0;
+    clebsch_pp=1.0;
+  }
+  else{
+    clebsch_nn=0.0;
+    clebsch_pp=0.0;
+  }
+  
+  clebsch_np=gsl_sf_coupling_3j(1,1,2*Tab,1,-1,0)*gsl_sf_coupling_3j(1,1,2*Tcd,1,-1,0)*sqrt(2*Tab+1)*sqrt(2*Tcd+1);
+  
+  double Nab=norm(ni1,li1,ji1,ni2,li2,ji2,Jab,Tab);
+  double Ncd=norm(nj1,lj1,jj1,nj2,lj2,jj2,Jcd,Tcd);
+
+  retval ret;
+  ret._nn=value_nn*mult*clebsch_nn*Nab*Ncd;
+  ret._pp=(value_pp)*mult*clebsch_pp*Nab*Ncd;
+  ret._np=(value_np+rev1_np+rev2_np+rev3_np)*mult*clebsch_np*Nab*Ncd;
+  return ret;
 }
