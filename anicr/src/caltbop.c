@@ -32,6 +32,12 @@ size_t numTBME=0;
 int twob()
 {
 
+  FILE *fp;
+  fp=fopen("obs.txt","a");
+  if (fp == NULL) {
+  fprintf(stderr, "Can't open output file in!\n");
+  exit(1);
+  }
   if (CFG_HW==0.0){
     printf("ERROR: H.O frequency not set.\n");
     return 1;
@@ -313,9 +319,9 @@ int twob()
  }
  double hat=sqrt(CFG_2J_FINAL+1.);
  //printf("Hat: %f\n",hat);
- printf("<Hrel>=%f <Trel>=%f <Coul>=%f\n",hrelsum/hat,trelsum/hat,coulsum/hat); 
+ fprintf(fp,"<Hrel>=%f <Trel>=%f <Coul>=%f\n",hrelsum/hat,trelsum/hat,coulsum/hat); 
  // printf("rnp %f hat %f norm %f",rpnsum,hat,(double)(A-Z)*Z);
-   printf("Rpp=%f Rnn=%f Rpn=%f\n",sqrt(rppsum/binomial(Z,2)/hat),sqrt(rnnsum/binomial((A-Z),2)/hat),sqrt(rpnsum/((double)(A-Z)*Z)/hat));
+ fprintf(fp,"Rpp=%f Rnn=%f Rpn=%f\n",sqrt(rppsum/binomial(Z,2)/hat),sqrt(rnnsum/binomial((A-Z),2)/hat),sqrt(rpnsum/((double)(A-Z)*Z)/hat));
 
   free (_nlj_items_nn);
   free (_nlj_items_pp);

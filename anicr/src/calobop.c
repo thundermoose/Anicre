@@ -27,29 +27,11 @@ size_t     _num_nlj_items_pn = 0;
 
 #define MASSN 938.9187
 #define HBARC 197.326963
-/*double radialHO(double r,double b,int n,int l);
-double obmeSH(int l1,int jj1,int l2,int jj2,int lambda);
-double obmeQ(int na, int la, int jja,int nb, int lb,int jb,int lambda,double b);
-double computeB(double hw);
-double obmeSH(int l1,int jj1,int l2,int jj2,int lambda);*/
+
 int oneb()
 {
 
-  /*  _nlj_items_nn = NULL;
-  _num_nlj_items_nn = 0;
-  _nlj_items_pp = NULL;
-  _num_nlj_items_pp = 0;
-  _nlj_items_np = NULL;
-  _num_nlj_items_np = 0;
-  _nlj_items_pn = NULL;
-  _num_nlj_items_pn = 0;
-  
-  
-  char filename_nn[14]="nlj_out-nn.bin";
-  char filename_pp[14]="nlj_out-pp.bin";
-  char filename_np[14]="nlj_out-np.bin";
-  char filename_pn[14]="nlj_out-pn.bin";
-  */
+
   char filename_p[14]="nlj_out-p.bin";
   char filename_n[14]="nlj_out-n.bin";
  
@@ -116,45 +98,21 @@ int oneb()
   else{
      parity='-';
   }
-  float hw=20.0;
+  float hw=CFG_HW;
   
   int Nhw=2;
   int dim=5;
   int nhme=0;
-  int k1max=-1;
-  int mxnwd=1;
-  int mxsps=32;
-  int major=3;
-  int iparity=0; 
-  double T=(double)CFG_2T_INITIAL/2.0f;
-  double energy=-12.5466;
-  float ex=0.0;
-  int n1max=1;
-  int n12max=2;
-  int nasps=8;
+ 
 
   fprintf(fp," A=%3d   Z=%3d   N=%3d\n",A,Z,N);
   fprintf(fp," 2*MJ=%3d   2*MT=%3d  parity= %c \n",CFG_2M_INITIAL,two_MT,parity);
   fprintf(fp," hbar Omega=%8.4f   Nhw=%3d   dimension=%8d   nhme=%10d\n",hw,Nhw,dim,nhme);
-  fprintf(fp," k1max=%3d   mxnwd=%3d   mxsps=%8d   major=%2d   iparity= %d\n \n",k1max,mxnwd,mxsps,major,iparity);
-  
-  fprintf(fp," J=%7.4f    T=%7.4f     Energy=%12.4f     Ex=%12.4f\n \n",CFG_2J_INITIAL/2.,T,energy,ex);
-  fprintf(fp," N1_max=%4d   N12_max=%4d   Nasps=%4d\n \n",n1max,n12max,nasps);
-  fprintf(fp," wave functions of the states #%3d- #%3d used\n \n",1,1);   //Fixed for only gs.
-  fprintf(fp," wave functions of the states #%3d- #%3d used\n \n",1,1);   //Fixed for only gs.
-  fprintf(fp," number of single-nucleon states =%4d\n",CFG_NUM_NLJ_STATES);
 
-  printf("Write one-body matrix elements\n");
 
-  for (int i=0;i<CFG_NUM_NLJ_STATES; i++)
-  {
-    fprintf(fp," #%4d  n=%3d  l=%3d  j=%2d/2\n",i+1,_table_nlj_states[i]._n,_table_nlj_states[i]._l,_table_nlj_states[i]._j);
-  
-  }
+ 
   ii=0;
   
-  fprintf(fp,"\n\n *** Transition matrix elements for states: ***\n");
-  fprintf(fp," #  1 [2*(J,T),Ex]_f= %2d%2d  0.0000   #  1 [2*(J,T),Ex]_i= %2d%2d  0.0000\n",CFG_2J_FINAL,CFG_2T_FINAL,CFG_2J_INITIAL,CFG_2T_INITIAL); //i, excitation energy
 
    int showJtrans=0;
   double Qp=0.0,Qn=0.0;
@@ -243,7 +201,7 @@ int oneb()
        }  
      }
      ii++;
-     printf("B(E) %f p: %f n: %f \n", pow(Qp,2)/(CFG_2J_INITIAL+1),Qp,Qn);
+     fprintf(fp,"B(E) %f p: %f n: %f \n", pow(Qp,2)/(CFG_2J_INITIAL+1),Qp,Qn);
 
      char filename[15];
      sprintf(filename,"output_r_%d.txt",jtrans/2);
@@ -261,14 +219,7 @@ int oneb()
   fprintf(fp," ***************************************************************\n\n");
 
   fclose(fp);
-/*
-  for(double r=0.0;r<10;r+=0.1){
-    printf(" %f  %f \n",r,radialHO(r,1,2,1));
-  }
 
-  printf(" %f \n",obmeSH(1,1,1,1,0));
-  return 0;
-  */
   return 0;
 }
 
