@@ -166,7 +166,7 @@ retval computeres(int i1, int i2,int j1,int j2,int Jab,int Jcd,int jtrans,int Ta
   double value_np=findState2(_nlj_items_np, _num_nlj_items_np, i1, i2,  j1, j2, 2*Jab,2*Jcd,jtrans);  
 
   
-  printf("%d %d %d %d: %f %f %f \n",i1,i2,j1,j2,value_np,value_nn,value_pp);
+  // printf("%d %d %d %d: %f %f %f \n",i1,i2,j1,j2,value_np,value_nn,value_pp);
   double rev1_np=0.0;
   double rev2_np=0.0;
   double rev3_np=0.0;
