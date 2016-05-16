@@ -475,17 +475,24 @@ void mr_antoine_reader<header_version_t, fon_version_t>::dump_info()
 
   for (int k = 0; k < 2; k++)
     {
-      unsigned int chunk = 10;
-      if (chunk > _header.nslt[k] - 1)
-	chunk = _header.nslt[k] - 1;
+      if (_config._dump== DUMP_FULL)
+	{
+	  
+	  dump_occ_chunk(k,0,_header.nslt[k]);
 
-      dump_occ_chunk(k, 0, chunk);
+	}
+      else{
+	unsigned int chunk = 10;
+	if (chunk > _header.nslt[k] - 1)
+	  chunk = _header.nslt[k] - 1;
 
-      if (_header.nslt[k] > 11)
-	printf ("...\n");
+	dump_occ_chunk(k, 0, chunk);
 
-      dump_occ_chunk(k, _header.nslt[k] - 1, 1);
+	if (_header.nslt[k] > 11)
+	  printf ("...\n");
 
+	dump_occ_chunk(k, _header.nslt[k] - 1, 1);
+      }
       if (k == 0)
 	printf ("-----------------------------------\n");
     }
