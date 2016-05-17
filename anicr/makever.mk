@@ -15,7 +15,7 @@ OBS_OBJS = anicr_tables_sp.o util.o nlj.o calobop.o caltbop.o obs.o
 
 ####################################################################
 
-CFLAGS = -O3 -g -std=c99  -pg
+CFLAGS = -O3 -g -std=c99 
 
 LINKFLAGS += -g  -pg
 
