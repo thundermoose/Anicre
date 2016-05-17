@@ -1622,7 +1622,7 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
 
 	out_config.fprintf("#define CFG_NUM_SP_ANICR               %d\n",
 			   cfg._num_change);
-	out_config.fprintf("#define CFG_ANICRE_ONE                  %d\n",
+	out_config.fprintf("#define CFG_ANICR_ONE                  %d\n",
 			   (cfg._num_change == 1 ? 1 : 0));
 	out_config.fprintf("#define CFG_ANICR_TWO                  %d\n",
 			   (cfg._num_change == 2 ? 1 : 0));
