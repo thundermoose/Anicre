@@ -26,7 +26,10 @@
 extern double *_accumulate;
 #endif
 
+#if CFG_ANICR_ONE
 extern double one_coeff[CFG_NUM_SP_STATES][CFG_NUM_SP_STATES];
+#endif
+
 #if !CFG_CONN_TABLES
 void couple_accumulate()
 {
@@ -109,9 +112,9 @@ void couple_accumulate()
 
 #define J_STRIDE (CFG_NUM_NLJ_STATES * CFG_NUM_NLJ_STATES * CFG_NUM_NLJ_STATES * CFG_NUM_NLJ_STATES)
 
-#if CFG_ANICR_TWO
+#if CFG_ANICR_ONE
 
-#else
+
       double final_1b[CFG_NUM_NLJ_STATES * CFG_NUM_NLJ_STATES];
       int sp_anni;
       int sp_crea;
@@ -236,7 +239,7 @@ void alloc_couple_items(size_t max_anni, size_t max_crea)
     }
 }
 
-#if CFG_ANICR_TWO
+#if CFG_ANICR_TWO 
 void couple_accumulate_2()
 {
   /* Figure out jtrans limits. */

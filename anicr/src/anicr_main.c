@@ -711,12 +711,11 @@ int main(int argc, char *argv[])
   find_sp_comb(num_mp);
 #endif
 
-#if !CFG_ANICR_TWO  //DS - unused variables
+#if CFG_ANICR_ONE  //DS - unused variables
   (void)argv;
   (void)argc;
 #endif
 
-  //#if CFG_ANICR_TWO   //DS - No hashtable
 
 #if !CFG_CONN_TABLES /* lets not even set it up... */
   _hashed_mp = setup_hash_table(_mp,
@@ -787,11 +786,11 @@ int main(int argc, char *argv[])
 
   printf ("Found %"PRIu64"/%"PRIu64".\n", _found, _lookups);
 
-#if !CFG_ANICR_TWO
+#if CFG_ANICR_ONE
    couple_accumulate(); 
-#else
+#elif CFG_ANICR_TWO
    couple_accumulate_2();
-  write_nlj();
+   write_nlj();
 #endif
 #endif
 

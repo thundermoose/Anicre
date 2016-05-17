@@ -1386,7 +1386,7 @@ extern double *_accumulate;
 
 extern double _cur_val;
 
-#if !CFG_ANICR_TWO
+#if CFG_ANICR_ONE
 double one_coeff[CFG_NUM_SP_STATES][CFG_NUM_SP_STATES];
 #endif
 
@@ -1568,7 +1568,7 @@ void created_state(int *in_sp_other,
  
   accumulate_post_add(acc_x, val * _cur_val * sign);
 #endif
-#else
+#elif CFG_ANICR_ONE
   one_coeff[sp_anni][sp_crea]+=val*_cur_val*sign;
 #endif
   
