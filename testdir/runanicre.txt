@@ -1,0 +1,14 @@
+###### Howto use ANICRE  #######
+
+# Compile MFR
+
+
+# Run MFR
+
+
+# Compile ANICRE
+
+
+# Run ANICRE
+
+# Compute observables
