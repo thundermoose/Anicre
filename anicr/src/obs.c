@@ -54,12 +54,14 @@ int main()
   //   -Controll if correct number of TBME read
   // Write out what to compute
   int twob_file_exist=0;
+  
   printf("COMPUTE TWO-BODY OPERATORS\n");
   if(access("nlj_out-nn.bin",F_OK) !=-1){
     printf("nlj_out-nn.bin exists \n");
     twob_file_exist=1;
   }
   else{
+    (void) twob_file_exist;
     printf("Run ./nn_anicr to compute transition data\n");
   }
 
