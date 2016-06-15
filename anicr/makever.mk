@@ -17,7 +17,7 @@ OBS_OBJS = anicr_tables_sp.o util.o nlj.o calobop.o caltbop.o obs.o
 
 CFLAGS = -O3 -g -std=c99 
 
-LINKFLAGS += -g  -pg
+LINKFLAGS += -g 
 
 CFLAGS += -Wall -Wno-unused-function -Wno-unused-label \
 	-W -Wshadow -Wwrite-strings -Wconversion \
