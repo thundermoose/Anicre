@@ -2,13 +2,35 @@
 
 # Compile MFR
 
+  $make
 
 # Run MFR
 
+  $./mfr --hw=20.0 --np=0 --Ti=0 testdir/6Li_nmax2.egv --td-dir=test
 
+  Sets up a directory, test, for computing transition densities.
+  To correctly compute observables, frequency and isospin needs to be set at this stage.
+  -np - sets the order of protons and neutrons in the wave function. --np=0 corresponds to the trdens-order. 
+  
 # Compile ANICRE
+  $make n-anicr-test
+  $make p-anicr-test
+  $make pp-anicr-test
+  $make nn-anicr-test
+  $make np-anicr-test
 
-
+  Where test is the directory where mfr placed the results from the setup-phase.
+  
 # Run ANICRE
+  ./n_anicr
+  ./p_anicr
+  ./nn_anicr
+  ./pp_anicr
+  ./np_anicr
+
+  Running these files generates transition densities in binary form, saved in files named for example nlj_out-nn.bin
 
 # Compute observables
+
+  ./dumpnlj - generates trdens-like output-file (output.txt)
+  
