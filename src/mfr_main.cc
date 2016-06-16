@@ -133,7 +133,7 @@ void usage(char *cmdname)
   printf ("  --Ti=2*T           Set isospin for initial state\n");
   printf ("  --Tf=2*T           Set isospin for final state, if not given Ti=Tf will be assumed.\n");
   printf ("  --hw=FREQ          Set H.O. frequency. (hw=0.0) \n");
-  printf ("  --nporder=1|0      Are the wavefunctions given in NP- or PN-order. (nporder=True) \n"); 
+  printf ("  --np=1|0      Are the wavefunctions given in NP- or PN-order. (nporder=True) \n"); 
   printf ("  --help             Print this usage information and quit.\n");
   printf ("\n");
 }
