@@ -10,7 +10,8 @@
 
   Sets up a directory, test, for computing transition densities.
   To correctly compute observables, frequency and isospin needs to be set at this stage.
-  -np - sets the order of protons and neutrons in the wave function. --np=0 corresponds to the trdens-order. 
+  -np - sets the order of protons and neutrons in the wave function e.g. are the wavefuntion in proton-neutron order np=0)
+  --np=0 corresponds to the trdens-order. 
   
 # Compile ANICRE
   $make n-anicr-test
@@ -21,6 +22,9 @@
 
   Where test is the directory where mfr placed the results from the setup-phase.
   
+ (../anicr/src/create.c:1138:38: warning: array subscript is above array bounds [-Warray-bounds]
+     while (crea_sp > (uint32_t) out_sp[fill+(!CFG_ANICR_NP ? 2 : 1)])) - This compile warning seems not to effect the results. I have tried to solve it without success.
+     
 # Run ANICRE
   ./n_anicr
   ./p_anicr
@@ -33,4 +37,6 @@
 # Compute observables
 
   ./dumpnlj - generates trdens-like output-file (output.txt)
+  
+  ./obs - computes one- and two-body observables. Two-body observables if TBME.int is available.
   
