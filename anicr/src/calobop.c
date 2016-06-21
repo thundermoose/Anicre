@@ -110,6 +110,7 @@ int oneb()
 
   ii=0;
   //  printf(" b= %f hw= %f\n",b,hw);
+  fprintf(fp,"\n Magnetic moment:\n");
   for (jtrans = jtrans_min; jtrans <= jtrans_max; jtrans += 2)
    {
 
@@ -175,7 +176,7 @@ int oneb()
        }  
      }
      ii++;
-     fprintf(fp,"\n Magnetic moment:\n");
+
      fprintf(fp,"B(E) %f p: %f n: %f \n", pow(Qp,2)/(CFG_2J_INITIAL+1),Qp,Qn);
 
      char filename[15];
