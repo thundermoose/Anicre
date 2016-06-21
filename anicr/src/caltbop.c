@@ -33,6 +33,7 @@ int twob()
 {
 
   FILE *fp;
+  printf("Continuing writing to obs.txt");
   fp=fopen("obs.txt","a");
   if (fp == NULL) {
   fprintf(stderr, "Can't open output file in!\n");
@@ -43,15 +44,16 @@ int twob()
     return 1;
 
   }
-  printf("COMPUTE TWO-BODY OPERATORS\n");
+
   _nlj_items_nn = NULL;                                                                          
-  _num_nlj_items_nn = 0;                                                                                 
-  _nlj_items_pp = NULL;                                                                              
-  _num_nlj_items_pp = 0;                                                                                 
+  _num_nlj_items_nn = 0;                                                                     
+  _nlj_items_pp = NULL;                                                                           
+  _num_nlj_items_pp = 0;                                                                            
   _nlj_items_np = NULL;                                                                              
-  _num_nlj_items_np = 0;                                                                                 
+  _num_nlj_items_np = 0;                                                                            
   _nlj_items_pn = NULL;                                                                              
-  _num_nlj_items_pn = 0;                                                                                 
+  _num_nlj_items_pn = 0;
+  
   char filename_nn[14]="nlj_out-nn.bin";
   char filename_pp[14]="nlj_out-pp.bin";
   char filename_np[14]="nlj_out-np.bin";
@@ -110,9 +112,7 @@ int twob()
 #endif
  double mass_p=938.27231,mass_n=939.56563;
  double nucleon_rmass=2.0*(mass_p*mass_n)/(mass_p+mass_n);
- double hbc=197.327053;
- printf("\n\n *** Transition matrix elements for states: ***\n");
- //loop over all states. 
+ double hbc=197.327053; 
 
 //for (jtrans = jtrans_min; jtrans <= jtrans_max; jtrans += 2)
  if(jtrans_min>0)
@@ -185,7 +185,7 @@ int twob()
 		     double value_nn=res._nn;
 		     if ((fabs(value_np)>0.000001) ||( fabs(value_pp)>0.000001) ||( fabs(value_nn)>0.000001) ){   //roundoff-error?
 		       if(showJtrans==1){
-			 printf ("\n Jtrans= %2d\n", jtrans/2);
+			 //			 printf ("\n Jtrans= %2d\n", jtrans/2);
 			 showJtrans=0;
 		       }
 #if NP_ORDER     
@@ -278,6 +278,7 @@ int twob()
  }
  double hat=sqrt(CFG_2J_FINAL+1.);
  //printf("Hat: %f\n",hat);
+ 
  fprintf(fp,"<Hrel>=%f <Trel>=%f <Coul>=%f\n",hrelsum/hat,trelsum/hat,coulsum/hat); 
  // printf("rnp %f hat %f norm %f",rpnsum,hat,(double)(A-Z)*Z);
  fprintf(fp,"Rpp=%f Rnn=%f Rpn=%f\n",sqrt(rppsum/binomial(Z,2)/hat),sqrt(rnnsum/binomial((A-Z),2)/hat),sqrt(rpnsum/((double)(A-Z)*Z)/hat));
@@ -412,17 +413,8 @@ int readTBME(){
   if(err!=0){
     perror("Error while closing file");
   }
-  else{printf("Success!\n");}
-  
-
-  printf("%zu\n",numTBME);
-
-  // for (int i=0;i<(int)numTBME;i++){
-    //  	printKey(twob_array[i]);
-
-	//	printf("%llu %f %f %f %f \n",(unsigned long long int)twob_array[i]._key,twob_array[i]._hrel,twob_array[i]._trel,twob_array[i]._coul,twob_array[i]._vpn);
-  // }
-    qsort (twob_array, numTBME, sizeof (twob_state), compare_tbme_item); 
+ 
+   qsort (twob_array, numTBME, sizeof (twob_state), compare_tbme_item); 
 
   return 0;
 }

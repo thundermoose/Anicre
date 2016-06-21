@@ -138,7 +138,7 @@ void*  readDumpfile(char *filename, size_t *num_nlj_items)
 
   full_read (fd, num_nlj_items, sizeof (*num_nlj_items));
 
-  printf ("%zd nlj items.\n", *num_nlj_items);
+  //  printf ("%zd nlj items.\n", *num_nlj_items);
 
   size_t sz_nlj_items = sizeof (nlj_hash_item) * *num_nlj_items;
   nlj_items = (nlj_hash_item *) malloc (sz_nlj_items);
