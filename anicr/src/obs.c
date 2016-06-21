@@ -20,7 +20,11 @@ size_t     _num_nlj_items_pn = 0;
 
 int main()
 {
+  print("*****COMPUTE OBSERVABLES*****\n \n");
   int oneb_files_exist=0;
+  printf("ONE-BODY OPERATORS\n");
+
+  
   //Check if p- n-file exist
   if(access("nlj_out-n.bin",F_OK) !=-1){
     printf("nlj_out-n.bin exists \n");
@@ -39,7 +43,6 @@ int main()
   }
   //Write out what to compute
   if(oneb_files_exist){
-      printf("COMPUTE ONE-BODY OPERATORS\n");
   //Compute observables
       oneb();
   }
@@ -55,7 +58,7 @@ int main()
   // Write out what to compute
   int twob_file_exist=0;
   
-  printf("COMPUTE TWO-BODY OPERATORS\n");
+  printf("\nTWO-BODY OPERATORS\n");
   if(access("nlj_out-nn.bin",F_OK) !=-1){
     printf("nlj_out-nn.bin exists \n");
     twob_file_exist=1;
