@@ -15,22 +15,11 @@
 #include "caltbop.h"
 //#define M_PI 3.14159265358979323846
 
-/*nlj_hash_item *_nlj_items_nn = NULL;
-size_t     _num_nlj_items_nn = 0;
-nlj_hash_item *_nlj_items_pp = NULL;
-size_t     _num_nlj_items_pp = 0;
-nlj_hash_item *_nlj_items_np = NULL;
-size_t     _num_nlj_items_np = 0;
-nlj_hash_item *_nlj_items_pn = NULL;
-size_t     _num_nlj_items_pn = 0;
-*/
-
 #define MASSN 938.9187
 #define HBARC 197.326963
 
 int oneb()
 {
-
 
   char filename_p[14]="nlj_out-p.bin";
   char filename_n[14]="nlj_out-n.bin";
@@ -40,7 +29,7 @@ int oneb()
   int jtrans_max = CFG_2J_INITIAL + CFG_2J_FINAL;
   
   int num_jtrans=(jtrans_max-jtrans_min)/2+1;
-  //  printf("Jtrans Max=%d Min=%d num=%d \n",jtrans_max,jtrans_min,num_jtrans);
+ 
   double final_p[num_jtrans][num_nlj_2];
   double final_n[num_jtrans][num_nlj_2];
  
@@ -51,11 +40,11 @@ int oneb()
   fn=fopen(filename_n,"rb");
   int jtrans;
   int ii=0;
+  printf("Reading transition densities\n");
   for(ii=0;ii<num_jtrans;ii++){
     if(fpr!=NULL){
       fread(final_p[ii],sizeof(double),num_nlj_2,fpr);
-      //  printf("ii=%d\n",ii);
-      
+     
     }
     else{
       perror("open");
@@ -79,12 +68,7 @@ int oneb()
   fprintf(stderr, "Can't open output file in!\n");
   exit(1);
   }
-  printf("Write trdens-like file: output.txt\n");
-  fprintf(fp," OBDME calculation\n");
-  fprintf(fp," T \n"); //if diagonal elements.
-  fprintf(fp," Wave functions read from anto.egv file");
-  fprintf(fp,"\n \n *** Nuclear states ***\n");
-  fprintf(fp," Nucleus:\n");
+  printf("Writing output to obs.txt\n");
   int A=CFG_NUM_SP_STATES0+CFG_NUM_SP_STATES1;
   
   //check coul! check order!
@@ -99,22 +83,14 @@ int oneb()
      parity='-';
   }
   float hw=CFG_HW;
-  
-  int Nhw=2;
-  int dim=5;
-  int nhme=0;
  
-
   fprintf(fp," A=%3d   Z=%3d   N=%3d\n",A,Z,N);
   fprintf(fp," 2*MJ=%3d   2*MT=%3d  parity= %c \n",CFG_2M_INITIAL,two_MT,parity);
-  fprintf(fp," hbar Omega=%8.4f   Nhw=%3d   dimension=%8d   nhme=%10d\n",hw,Nhw,dim,nhme);
-
-
+  fprintf(fp," hbar Omega=%8.4f",hw);
  
   ii=0;
   
-
-   int showJtrans=0;
+  int showJtrans=0;
   double Qp=0.0,Qn=0.0;
   double b=computeB(hw);
   int numberStep=100;
@@ -133,7 +109,7 @@ int oneb()
   gsl_sf_result result;
 
   ii=0;
-  printf(" b= %f hw= %f\n",b,hw);
+  //  printf(" b= %f hw= %f\n",b,hw);
   for (jtrans = jtrans_min; jtrans <= jtrans_max; jtrans += 2)
    {
 
@@ -165,12 +141,10 @@ int oneb()
 	   
 	         if(showJtrans==1){
 	           fprintf(fp,"\n Jtrans=%3d\n",jtrans/2);
-		         printf("\n Jtrans=%3d\n",jtrans/2);
+		   //        printf("\n Jtrans=%3d\n",jtrans/2);
 	           showJtrans=0;
 	         }
 
-//	         printf(" a+=%3d    a-=%3d     td(a+,a-): p=%10.6f     n=%10.6f\n",sp_crea+1,sp_anni+1,final_p[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES],final_n[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES]);
-//	         printf("Q= %f Q*td= %f \n",obmeQ(na,la,ja,nb,lb,jb,jtrans/2,b),obmeQ(na,la,ja,nb,lb,jb,jtrans/2,b)*final_p[ii][sp_anni+sp_crea*CFG_NUM_NLJ_STATES]);
 		
 	      	 int ret =
 		   		   gsl_sf_coupling_3j_e(CFG_2J_INITIAL,jtrans,CFG_2J_FINAL,CFG_2J_INITIAL,0,-CFG_2J_INITIAL,
@@ -205,7 +179,7 @@ int oneb()
 
      char filename[15];
      sprintf(filename,"output_r_%d.txt",jtrans/2);
-
+     printf("Writing radial output to: output_r_%d.txt\n",jtrans/2);
      FILE *routput;
      
      routput = fopen(filename, "w");
@@ -216,7 +190,6 @@ int oneb()
 
    }
 
-  fprintf(fp," ***************************************************************\n\n");
 
   fclose(fp);
 
