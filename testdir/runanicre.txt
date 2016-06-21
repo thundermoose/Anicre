@@ -45,5 +45,7 @@
 
    
   ./obs - computes one- and two-body observables. Two-body observables if TBME.int is available.
-  ($ln -sf ../testdir/TBME.int)
+  
+  (TBME-file is included in testdir:
+  $ln -sf ../testdir/TBME_6li_Nmax2_20.int TBME.int  )
   
