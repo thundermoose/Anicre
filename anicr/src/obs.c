@@ -20,7 +20,7 @@ size_t     _num_nlj_items_pn = 0;
 
 int main()
 {
-  print("*****COMPUTE OBSERVABLES*****\n \n");
+  printf("\n*****COMPUTE OBSERVABLES*****\n \n");
   int oneb_files_exist=0;
   printf("ONE-BODY OPERATORS\n");
 
@@ -83,13 +83,9 @@ int main()
     printf("Run ./np_anicr (pn_anicr) to compute transition data\n");
     twob_file_exist=0;
   }
- // if(twob_file_exist){
-   //if(access("TBME.int",F_OK)!=-1){
-   //  readTBME();
-     //Set flag that TBME are read.
-   // }
-    twob();
-  //}
+
+   twob();
+  
   return 0;
 }
 
