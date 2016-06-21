@@ -20,11 +20,16 @@
   $make nn-anicr-test
   $make np-anicr-test
 
+  or
+
+  $make all-anicr-test
+
   Where test is the directory where mfr placed the results from the setup-phase.
   
  (../anicr/src/create.c:1138:38: warning: array subscript is above array bounds [-Warray-bounds]
      while (crea_sp > (uint32_t) out_sp[fill+(!CFG_ANICR_NP ? 2 : 1)])) - This compile warning seems not to effect the results. I have tried to solve it without success.
-     
+
+  
 # Run ANICRE
   ./n_anicr
   ./p_anicr
@@ -35,8 +40,10 @@
   Running these files generates transition densities in binary form, saved in files named for example nlj_out-nn.bin
 
 # Compute observables
-
-  ./dumpnlj - generates trdens-like output-file (output.txt)
   
+  ./dumpnlj - generates trdens-like output-file (output.txt)
+
+   
   ./obs - computes one- and two-body observables. Two-body observables if TBME.int is available.
+  ($ln -sf ../testdir/TBME.int)
   
