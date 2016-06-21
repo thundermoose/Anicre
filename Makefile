@@ -115,11 +115,6 @@ np-anicr-%: %/tables_rev.h
 
 ####################################################################
 
-pn-anicr-%: %/tables_rev.h
-	make -C $* -f ../anicr/makever.mk ANICR_PREFIX=pn
-
-####################################################################
-
 n-tables-anicr-%: %/tables_forw.h
 	make -C $* -f ../anicr/makever.mk ANICR_PREFIX=n_tables TABLE_PREFIX=n
 
