@@ -110,7 +110,7 @@ int oneb()
 
   ii=0;
   //  printf(" b= %f hw= %f\n",b,hw);
-  fprintf(fp,"\n Magnetic moment:\n");
+  fprintf(fp,"\n\n Magnetic moment:\n");
   for (jtrans = jtrans_min; jtrans <= jtrans_max; jtrans += 2)
    {
 
