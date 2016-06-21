@@ -188,11 +188,7 @@ int twob()
 			 //			 printf ("\n Jtrans= %2d\n", jtrans/2);
 			 showJtrans=0;
 		       }
-#if NP_ORDER     
-		       //      printf(" (a+a+)J=%5d  (a-a-)J=%5d   td: np=%10.6f   pp=%10.6f   nn=%10.6f\n",twob1,twob2, value_np, value_pp,value_nn);//, Jab, Tab, Jcd,Tcd);
-#else 
-		       //  printf(" (a+a+)J=%5d  (a-a-)J=%5d   td: pn=%10.6f   pp=%10.6f   nn=%10.6f\n",twob1,twob2, value_np, value_pp,value_nn);//, Jab, Tab, Jcd,Tcd);
-#endif			    
+	    
 		       if(Jcd==Jab && Tcd==Tab ){
 			 twob_state *p1=NULL;
 			 uint64_t key1=getKey(i1,i2,j1,j2,Jcd,Tcd);
@@ -224,7 +220,7 @@ int twob()
 			     coul=vpp-vnn;
 			   }
 			   ht=2*(p1->_hrel-p1->_trel)*pow(hbc,2.)/(nucleon_rmass*hw);
-			   //		   printf("HT=%f %f %f %d %d \n",ht,hrel-trel,pow(hbc,2.)/(nucleon_rmass*hw),twob1,twob2);
+		      
 			   if(trel!=0.0){
 			     if(Tab==0){
 			       trelsum+=trel*value_np*sqrt(2*Jab+1.);
@@ -278,9 +274,10 @@ int twob()
  }
  double hat=sqrt(CFG_2J_FINAL+1.);
  //printf("Hat: %f\n",hat);
- 
+
  fprintf(fp,"<Hrel>=%f <Trel>=%f <Coul>=%f\n",hrelsum/hat,trelsum/hat,coulsum/hat); 
  // printf("rnp %f hat %f norm %f",rpnsum,hat,(double)(A-Z)*Z);
+ fprintf(fp,"\n\n Nucleon-Nucleon distances:\n");
  fprintf(fp,"Rpp=%f Rnn=%f Rpn=%f\n",sqrt(rppsum/binomial(Z,2)/hat),sqrt(rnnsum/binomial((A-Z),2)/hat),sqrt(rpnsum/((double)(A-Z)*Z)/hat));
 
   free (_nlj_items_nn);

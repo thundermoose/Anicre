@@ -175,6 +175,7 @@ int oneb()
        }  
      }
      ii++;
+     fprintf(fp,"\n Magnetic moment:\n");
      fprintf(fp,"B(E) %f p: %f n: %f \n", pow(Qp,2)/(CFG_2J_INITIAL+1),Qp,Qn);
 
      char filename[15];
