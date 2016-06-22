@@ -213,8 +213,8 @@ void couple_accumulate()
 	exit(0);
 
       }
-      printf ("nz nlj items: %zd\n", nz);
-
+      //  printf ("nz nlj items: %zd\n", nz);
+      //      printf("Number of combinations of sp states(nlj) in one-body transitions:%zs\n",nz); 
 #endif
     }
   fclose(fp);

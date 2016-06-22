@@ -965,7 +965,7 @@ void prepare_nlj()
 	}
     }
 
-  printf ("%zd nlj pair combinations\n", num_nlj_comb);
+  printf ("%zd two-body combinations possible\n", num_nlj_comb);
 
   for (_nlj_hash_mask = 1;
        _nlj_hash_mask < num_nlj_comb * 2; _nlj_hash_mask <<= 1)

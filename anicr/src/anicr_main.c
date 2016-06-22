@@ -874,7 +874,7 @@ int main(int argc, char *argv[])
 	  tot_ini_states,
 	  _num_mp_cut_E_M, _num_mp_cut_E_M);
 
-  printf ("Found %"PRIu64"/%"PRIu64".\n", _found, _lookups);
+  printf ("Found mb state in hashtable %"PRIu64" of %"PRIu64" lookups.\n", _found, _lookups);
   
 #endif
   
