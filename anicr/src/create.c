@@ -1525,6 +1525,17 @@ void created_state(int *in_sp_other,
   find_mp_state_pre(lookfor_packed, &lookfor_x);   //Find possible initia and final states      
   find_mp_state_prefetch(lookfor_x);
 
+  /*
+    The following block is to generate the index lists needed for solving the Z+N body Schrödinger
+    equation with three body forces
+
+   */
+#if PRINT_INDICES
+  printf("Hi, I'm mr Meeseeks, look at me!\n");
+
+  
+  
+#endif
 #if CFG_CONN_TABLES
   uint64_t ind;
 
@@ -1538,6 +1549,7 @@ void created_state(int *in_sp_other,
 
 
 #else
+  
   double val;
 
   if (!find_mp_state_post(lookfor_packed, lookfor_x, &val))
@@ -1576,6 +1588,8 @@ void created_state(int *in_sp_other,
   /* printf ("%5d %15.10f\n", acc_i, val * _cur_val * sign); */
   printf ("%15.10f\n", val * _cur_val * sign);
 #endif
+
+  
 #endif
 }
 
