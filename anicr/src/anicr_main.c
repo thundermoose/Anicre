@@ -608,11 +608,13 @@ hash_mp_wf *setup_hash_table(uint64_t *mp,
 	{
 	  hashed_mp->_hashed[j]._mp[k] = mp[k];
 	}
-#if !CFG_CONN_TABLES
+#if !CFG_CONN_TABLES && !CFG_IND_TABLES
       for (k = 0; k < CFG_WAVEFCNS; k++)
 	{
 	  hashed_mp->_hashed[j]._wf[k] = wf[k];
 	}
+#else
+      hashed_mp->_hashed[j]._index = i;
 #endif
 
       mp += CFG_PACK_WORDS;
@@ -760,6 +762,7 @@ int main(int argc, char *argv[])
   double   *wf = _wf;
   for (i = 0; i < num_mp; i++)
     {
+      printf("mbstate = %ld\n",i);
       _cur_val = wf[0];
 
       if (packed)

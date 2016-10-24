@@ -1530,12 +1530,7 @@ void created_state(int *in_sp_other,
     equation with three body forces
 
    */
-#if PRINT_INDICES
-  printf("Hi, I'm mr Meeseeks, look at me!\n");
 
-  
-  
-#endif
 #if CFG_CONN_TABLES
   uint64_t ind;
 
@@ -1589,6 +1584,31 @@ void created_state(int *in_sp_other,
   printf ("%15.10f\n", val * _cur_val * sign);
 #endif
 
+  
+#endif
+
+
+#if CFG_IND_TABLES
+  //printf("Hi, I'm mr Meeseeks, look at me!\n");
+  
+  uint64_t indout;
+
+  if (!find_mp_state_post(lookfor_packed, lookfor_x, &indout))
+    {
+      fprintf (stderr, "NOT FOUND!\n");
+      exit (1);
+    }
+
+  (void) phase_i;
+  
+  //uint64_t ind;
+#if CFG_ANICR_TWO
+  printf("i:%d j:%d aout:%d bout:%d ain:%d bin:%d\n",
+	 ind, indout, /*Currently I do not know if ind is out index or in index*/
+	 sp_anni1,sp_anni2,sp_crea1,sp_crea2);
+#else
+  printf("not sup\n");
+#endif
   
 #endif
 }

@@ -8,7 +8,7 @@
 typedef struct hash_mp_wf_item_t
 {
   uint64_t _mp[CFG_PACK_WORDS];
-#if CFG_CONN_TABLES
+#if CFG_CONN_TABLES || CFG_IND_TABLES
   uint64_t _index;
 #else
   double   _wf[CFG_WAVEFCNS];
@@ -78,7 +78,7 @@ inline void find_mp_state_prefetch(uint64_t x)
 }
 
 inline int find_mp_state_post(uint64_t *lookfor, uint64_t x, 
-#if CFG_CONN_TABLES
+#if CFG_CONN_TABLES || CFG_IND_TABLES
 			      uint64_t *ind
 #else
 			      double *val
@@ -101,7 +101,7 @@ inline int find_mp_state_post(uint64_t *lookfor, uint64_t x,
       
       {
 	_found++;
-#if CFG_CONN_TABLES
+#if CFG_CONN_TABLES || CFG_IND_TABLES
 	*ind = p->_index;
 #else
 	*val = p->_wf[0];

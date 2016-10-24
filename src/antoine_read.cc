@@ -1447,23 +1447,28 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
   {
     const char *_ident;
     bool        _conn_tables_output;
+    bool        _ind_tables_output;
     bool        _use_forw_states;
     int         _num_change;
     int         _change_pn_at;
     int         _sp_pairs_table;
   }np_config[]= {
-       { "p",  false, true,  1, 0, -1 },
-       { "n",  false, false, 1, 0, -1 },
-       { "pp", false, true,  2, 0, 0 },
-       { "nn", false, false, 2, 0, 1 },
-       { "np", false, true,  2, 1, 2 },
+       { "p",  false, false, true,  1, 0, -1 },
+       { "n",  false, false, false, 1, 0, -1 },
+       { "pp", false, false, true,  2, 0, 0 },
+       { "nn", false, false, false, 2, 0, 1 },
+       { "np", false, false, true,  2, 1, 2 },
        
-       { "p_tables",   true,  true,  1, 0, -1 },
-       { "n_tables",   true,  false, 1, 0, -1 },
-       { "pp_tables",  true,  true,  2, 0, 0 },
-       { "nn_tables",  true,  false, 2, 0, 1 },
-       { "nnn_tables", true,  true,  3, 0, 0 },
-       { "ppp_tables", true,  false, 3, 0, 1 },
+       { "p_tables",   true, false, true,  1, 0, -1 },
+       { "n_tables",   true, false, false, 1, 0, -1 },
+       { "pp_tables",  true, false, true,  2, 0, 0 },
+       { "nn_tables",  true, false, false, 2, 0, 1 },
+       { "nnn_tables", true, false, true,  3, 0, 0 },
+       { "ppp_tables", true, false, false, 3, 0, 1 },
+       /* New configurations for the index lists*/
+       { "pp_inds", false, true, true, 2, 0, 0},
+       { "nn_inds", false, true, true, 2, 0, 1},
+       { "np_inds", false, true, true, 2, 1, 2}
     }; 
 
  
@@ -1540,7 +1545,8 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
 	out_config.fprintf("\n");
 	out_config.fprintf("#define CFG_CONN_TABLES                %d\n",
 			   cfg._conn_tables_output ? 1 : 0);
-
+	out_config.fprintf("#define CFG_IND_TABLES                %d\n",
+			   cfg._ind_tables_output ? 1 : 0);
 	out_config.fprintf("#define CFG_MP_STATES_FR               \"%s\"\n",
 			   cfg._use_forw_states ? "forw" : "rev");
 	out_config.fprintf("#define CFG_FILENAME_TABLES_FR_H       \"tables_%s.h\"\n",
