@@ -335,7 +335,7 @@ void packed_created_state(uint64_t *packed,
   find_mp_state_pre(packed, &lookfor_x);
   find_mp_state_prefetch(lookfor_x);
 
-#if CFG_CONN_TABLES
+#if CFG_CONN_TABLES || CFG_IND_TABLES
 
 
 #else

@@ -13,6 +13,10 @@
 #include "accumulate.h"
 #include "mp_states.h"
 
+#if CFG_IND_TABLES
+#include "indexoutput.h"
+#endif
+
 #include CFG_FILENAME_CODE_FR_H
 
 #include "tmp_config.h"
@@ -1543,7 +1547,7 @@ void created_state(int *in_sp_other,
   (void) phase_i;
 
 
-#else
+#elif !CFG_IND_TABLES
   
   double val;
 
@@ -1555,7 +1559,6 @@ void created_state(int *in_sp_other,
   /* printf ("%4d %4d\n", sp_anni, sp_crea); */
 
   int sign = 1 - 2 * (phase_i & 1);
-
 #if ACC_TABLE
   _accumulate[acc_i] += val * _cur_val * sign;
 #endif
@@ -1585,10 +1588,10 @@ void created_state(int *in_sp_other,
 #endif
 
   
-#endif
+  //#endif
+#else
 
-
-#if CFG_IND_TABLES
+  //#if CFG_IND_TABLES
   //printf("Hi, I'm mr Meeseeks, look at me!\n");
   
   uint64_t indout;
@@ -1599,12 +1602,18 @@ void created_state(int *in_sp_other,
       exit (1);
     }
 
-  (void) phase_i;
+  //(void) phase_i;
   
   //uint64_t ind;
 #if CFG_ANICR_TWO
-  printf("i:%d j:%d aout:%d bout:%d ain:%d bin:%d\n",
-	 ind, indout, /*Currently I do not know if ind is out index or in index*/
+  //printf("phase_i = %ld\n",phase_i);
+  int sign = 1-2*(phase_i&1);
+  writeOutput(indin,indout,sign,
+	      sp_crea1,sp_crea2,
+	      sp_anni1,sp_anni2);
+  printf("i:%ld j:%ld sgn:%d aout:%d bout:%d ain:%d bin:%d\n",
+	 indin, indout,
+	 sign,
 	 sp_anni1,sp_anni2,sp_crea1,sp_crea2);
 #else
   printf("not sup\n");

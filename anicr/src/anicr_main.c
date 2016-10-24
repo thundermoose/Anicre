@@ -760,9 +760,14 @@ int main(int argc, char *argv[])
 
   uint64_t *mp = _mp;
   double   *wf = _wf;
+#if CFG_IND_TABLES
+  initFile();
+#endif
   for (i = 0; i < num_mp; i++)
     {
-      printf("mbstate = %ld\n",i);
+#if CFG_IND_TABLES
+      indin = i;
+#endif
       _cur_val = wf[0];
 
       if (packed)
@@ -784,7 +789,9 @@ int main(int argc, char *argv[])
 	  fflush (stdout);
 	}
     }
-
+#if CFG_IND_TABLES
+  closeFile();
+#endif  
   printf ("Annihilated-created for %zd mp states.\n", num_mp);
 
   printf ("Found %"PRIu64"/%"PRIu64".\n", _found, _lookups);

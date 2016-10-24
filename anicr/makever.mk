@@ -7,7 +7,7 @@ all: $(ANICR_PREFIX)_anicr dumpnlj obs
 
 OBJS = anicr_main.o anicr_tables.o anicr_tables_sp.o accumulate.o\
 	create.o packed_create.o\
-	util.o couple.o
+	util.o couple.o indexoutput.o
 
 NLJ_OBJS = anicr_tables_sp.o util.o nlj.o dumpnlj.o
 
