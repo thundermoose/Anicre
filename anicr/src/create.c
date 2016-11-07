@@ -1591,8 +1591,6 @@ void created_state(int *in_sp_other,
   //#endif
 #else
 
-  //#if CFG_IND_TABLES
-  //printf("Hi, I'm mr Meeseeks, look at me!\n");
   
   uint64_t indout;
 
@@ -1611,10 +1609,12 @@ void created_state(int *in_sp_other,
   writeOutput(indin,indout,sign,
 	      sp_crea1,sp_crea2,
 	      sp_anni1,sp_anni2);
+#if DEBUG_ANICR
   printf("i:%ld j:%ld sgn:%d aout:%d bout:%d ain:%d bin:%d\n",
-	 indin, indout,
+	 indin+1, indout+1,
 	 sign,
-	 sp_anni1,sp_anni2,sp_crea1,sp_crea2);
+	 sp_anni1+1,sp_anni2+1,sp_crea1+1,sp_crea2+1);
+#endif
 #else
   printf("not sup\n");
 #endif

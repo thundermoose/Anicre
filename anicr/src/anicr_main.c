@@ -1,11 +1,11 @@
-
+#include "tmp_config.h"
 #include "anicr_config.h"
 #include "create.h"
 #include "packed_create.h"
 #include "accumulate.h"
 #include "util.h"
 #include "mp_states.h"
-
+#include "indexoutput.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -758,10 +758,29 @@ int main(int argc, char *argv[])
 #endif
   size_t i;
 
+#if DEBUG_ANICR
+  /* print the mp basis*/
+  uint64_t *mmp = _mp;
+  printf("The mp basis\n");
+  for (i = 0; i < num_mp; i++){
+    int list[CFG_NUM_SP_STATES0+CFG_NUM_SP_STATES1];
+    packed_to_int_list(list,mmp);
+    int j;
+    printf("(%ld): ",i);
+    for (j = 0; j<CFG_NUM_SP_STATES0+CFG_NUM_SP_STATES1; j++){
+      printf("%d ",list[j]);
+    }
+    printf("\n");
+    mmp+=CFG_PACK_WORDS;
+  }
+  
+#endif
+  
   uint64_t *mp = _mp;
   double   *wf = _wf;
 #if CFG_IND_TABLES
-  initFile();
+  initFile(num_mp);
+  //i = 27;
 #endif
   for (i = 0; i < num_mp; i++)
     {
@@ -788,7 +807,9 @@ int main(int argc, char *argv[])
 	  printf ("anicr %zd / %zd\r", i, num_mp);
 	  fflush (stdout);
 	}
+
     }
+
 #if CFG_IND_TABLES
   closeFile();
 #endif  

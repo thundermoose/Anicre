@@ -3,10 +3,11 @@
 #if CFG_IND_TABLES
 FILE* outputfile;
 
-void initFile(){
+void initFile(size_t dim){
   char filename[256];
   sprintf(filename,"%s_index_list",CFG_ANICR_IDENT);
   outputfile = fopen(filename,"w");
+  fprintf(outputfile,"dim %ld\n",dim);
 }
 
 void writeOutput(uint64_t i, uint64_t j,

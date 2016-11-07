@@ -1,9 +1,10 @@
 #ifndef __INDEXOUTPUT_H__
 #define __INDEXOUTPUT_H__
 #include <stdint.h>
+#include <stdlib.h>
 #include "anicr_config.h"
 #if CFG_IND_TABLES
-void initFile();
+void initFile(size_t dim);
 void writeOutput(uint64_t i, uint64_t j,
 		 int sgn,
 		 int ain,
