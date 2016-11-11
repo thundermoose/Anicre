@@ -33,16 +33,16 @@ void sp_states_table(file_output &out, vect_sp_state &sps)
   out.fprintf("\n");
   out.fprintf("sp_state_info _table_sp_states[] =\n");
   out.fprintf("{\n");
-  out.fprintf("  /*       i   N        n    l   2j   2m  nlj */\n");
+  out.fprintf("  /*       i   N        n    l   2j   2m  nlj   spi*/\n");
   out.fprintf("\n");
   
   for (size_t i = 0; i < sps.size(); i++)
     {
       const sp_state &sp = sps[i];
 
-      out.fprintf("  /* %7zd %3d */ { %3d, %3d, %3d, %3d, %3d },\n",
+      out.fprintf("  /* %7zd %3d */ { %3d, %3d, %3d, %3d, %3d, %3ld },\n",
 		  i, 2 * sp._n + sp._l,
-		  sp._n, sp._l, sp._j, sp._m, sp._nlj);
+		  sp._n, sp._l, sp._j, sp._m, sp._nlj,sp._spi);
     }
   
   out.fprintf("};\n");

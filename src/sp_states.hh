@@ -30,7 +30,7 @@ void nlj_states_table(file_output &out, vect_nlj_state &nljs);
 struct sp_state
 {
 public:
-  sp_state(int n, int l, int j, int m, int nlj)
+  sp_state(int n, int l, int j, int m, int nlj,size_t spi)
   {
     _n = n;
     _l = l;
@@ -38,6 +38,7 @@ public:
     _m = m;
 
     _nlj = nlj;
+    _spi = spi;
   }
 
 public:
@@ -47,6 +48,7 @@ public:
   int _m;
 
   int _nlj;
+  size_t _spi;
 };
 
 typedef std::vector<sp_state> vect_sp_state;

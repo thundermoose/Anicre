@@ -2,7 +2,7 @@
 
 EGVFILE=$1
 
-if [ 1 = 0 ]
+if [ 1 = 1 ]
 then
 
 ./mfr /net/data1/saaf/trdens-sample/$EGVFILE.egv --td-dir=$EGVFILE.td
@@ -29,6 +29,9 @@ cd $EGVFILE.td
 else
 cd $EGVFILE.td
 fi
+
+cd ..
+exit 0
 
 for nforce in 1 2 3
 do

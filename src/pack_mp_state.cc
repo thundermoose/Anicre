@@ -1,6 +1,7 @@
 
 #include "pack_mp_state.hh"
 #include <stdlib.h>
+#include <stdio.h>
 #include <stdint.h>
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>

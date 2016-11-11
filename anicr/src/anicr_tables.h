@@ -21,6 +21,7 @@ typedef struct sp_state_info_t
   int _m;
 
   int _nlj;
+  int _spi;
 } sp_state_info;
 
 typedef uint32_t state_for_miss_m_N;

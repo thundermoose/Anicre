@@ -12,7 +12,7 @@
 
 #include <string.h>
 #include <limits.h>
-
+#include <stdio.h>
 #include <algorithm>
 
 extern int _debug;
@@ -843,7 +843,6 @@ void mr_antoine_reader<header_version_t, fon_version_t>::find_nlj_used()
 	    sizeof (BITSONE_CONTAINER_TYPE));
 
   BITSONE_CONTAINER_TYPE *jm_u = _jm_used;
-
   for (size_t j = 0; j < _jm_used_items_per_slot; j++)
     {
       BITSONE_CONTAINER_TYPE used = jm_u[j];
@@ -962,7 +961,7 @@ void mr_antoine_reader<header_version_t, fon_version_t>::make_sps_map()
 	      _sps_map[i] = (int) _sps.size();
 
 	      _sps.push_back(sp_state(shell.nr, shell.ll, shell.jj, mpr.mpr,
-				      _nljs_map[sh]));
+				      _nljs_map[sh],i));
 	    }
 
 	  used >>= 1;
@@ -1466,7 +1465,7 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
        { "nnn_tables", true, false, true,  3, 0, 0 },
        { "ppp_tables", true, false, false, 3, 0, 1 },
        /* New configurations for the index lists*/
-       { "pp_inds", false, true, true, 2, 0, 0},
+       { "pp_inds", false, true, false, 2, 0, 0},
        { "nn_inds", false, true, true, 2, 0, 1},
        { "np_inds", false, true, true, 2, 1, 2}
     }; 

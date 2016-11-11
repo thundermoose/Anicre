@@ -29,6 +29,9 @@ void writeOutput(uint64_t i, uint64_t j,
 		 int cout
 #endif
 		 ){
+  if (i>j)
+    return;
+  
 #if CFG_ANICR_ONE
   fprintf(outputfile,"%ld %ld %d %d %d\n",
 	  i,j,sgn,aout,ain);

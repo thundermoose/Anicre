@@ -1607,8 +1607,8 @@ void created_state(int *in_sp_other,
   //printf("phase_i = %ld\n",phase_i);
   int sign = 1-2*(phase_i&1);
   writeOutput(indin,indout,sign,
-	      sp_crea1,sp_crea2,
-	      sp_anni1,sp_anni2);
+	      sp_info[sp_crea1]._spi,sp_info[sp_crea2]._spi,
+	      sp_info[sp_anni1]._spi,sp_info[sp_anni2]._spi);
 #if DEBUG_ANICR
   printf("i:%ld j:%ld sgn:%d aout:%d bout:%d ain:%d bin:%d\n",
 	 indin+1, indout+1,
