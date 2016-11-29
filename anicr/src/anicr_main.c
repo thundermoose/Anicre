@@ -134,13 +134,13 @@ uint64_t _found = 0;
 double   _cur_val;
 
 hash_mp_wf *setup_hash_table(uint64_t *mp,
-#if !CFG_CONN_TABLES
+#if !CFG_CONN_TABLES && !CFG_IND_TABLES
 			     double   *wf,
 #endif
 			     size_t num_mp,
 			     int verbose);
 
-#if CFG_CONN_TABLES
+#if CFG_CONN_TABLES || CFG_IND_TABLES
 size_t sort_mp_by_E_M(size_t num_mp)
 {
   /* First, remove all 'other' particles from the states, as we
@@ -173,9 +173,9 @@ size_t sort_mp_by_E_M(size_t num_mp)
   
   qsort (_mp, num_mp, sizeof (uint64_t) * CFG_PACK_WORDS,
 	 compare_packed_mp_state_E_M);
-  
+#if CFG_CONN_TABLES
   printf ("Sorted %zd mp states.\n", num_mp);
-
+#endif
   size_t reduced_num_mp = 1;
 
   uint64_t *mp_in  = _mp + CFG_PACK_WORDS;
@@ -202,9 +202,9 @@ size_t sort_mp_by_E_M(size_t num_mp)
     }
 
   mp_out += CFG_PACK_WORDS;
-
+#if CFG_CONN_TABLES
   printf ("Reduced %zd mp states.\n", reduced_num_mp);
-
+#endif
   _num_mp_cut_E_M = 0;
 
   mp_cut_E_M tmp_E_M;
@@ -303,9 +303,9 @@ size_t sort_mp_by_E_M(size_t num_mp)
     }
 
   _mp_cut_E_M[cut_E_M]._start = reduced_num_mp;
-
+#if CFG_CONN_TABLES
   printf ("%zd mp state E-M pairs\n", _num_mp_cut_E_M);
-
+#endif
   for (i = 0; i < _num_mp_cut_E_M; i++)
     {
       size_t mp_states = _mp_cut_E_M[i+1]._start - _mp_cut_E_M[i]._start;
@@ -314,11 +314,12 @@ size_t sort_mp_by_E_M(size_t num_mp)
 	setup_hash_table(_mp + _mp_cut_E_M[i]._start * CFG_PACK_WORDS,
 			 mp_states,
 			 0);
-
+#if CFG_CONN_TABLES
       printf (TABLE_PREFIX "_" "E_M_PAIR  %2d %3d : %10zd\n",
 	      _mp_cut_E_M[i]._E,
 	      _mp_cut_E_M[i]._M,
 	      mp_states);
+#endif
     }
 
   return reduced_num_mp;
@@ -477,7 +478,7 @@ void find_sp_comb(size_t num_mp)
     printf("comb[%ld] = 0x%lx\n",i,_sp_comb[i]);
   }
 #endif
-#if !CFG_IND_TABLES
+  //#if !CFG_IND_TABLES
   _num_sp_comb_cut_E_M = 0;
 
   mp_cut_E_M tmp_E_M;
@@ -552,18 +553,19 @@ void find_sp_comb(size_t num_mp)
                          sp_combs,
                          0);
       */
-
+#if CFG_CONN_TABLES
       printf (TABLE_PREFIX "_" "V_E_M_PAIR  %2d %3d : %10zd\n",
               _sp_comb_cut_E_M[i]._E,
               _sp_comb_cut_E_M[i]._M,
               sp_combs);
-    }
 #endif
+    }
+  //#endif
 }
 #endif
 
 hash_mp_wf *setup_hash_table(uint64_t *mp,
-#if !CFG_CONN_TABLES
+#if !CFG_CONN_TABLES && !CFG_IND_TABLES
 			     double   *wf,
 #endif
 			     size_t num_mp,
@@ -639,7 +641,7 @@ hash_mp_wf *setup_hash_table(uint64_t *mp,
 #endif
 
       mp += CFG_PACK_WORDS;
-#if !CFG_CONN_TABLES
+#if !CFG_CONN_TABLES && !CFG_IND_TABLES
       wf += CFG_WAVEFCNS;
 #endif
     }
@@ -728,7 +730,7 @@ int main(int argc, char *argv[])
   printf ("Read %zd wf coeffs.\n", num_mp);
 #endif
 
-#if CFG_CONN_TABLES
+#if CFG_CONN_TABLES || CFG_IND_TABLES
   num_mp = sort_mp_by_E_M(num_mp);
 
   find_sp_comb(num_mp);
@@ -742,7 +744,7 @@ int main(int argc, char *argv[])
 
 #if !CFG_CONN_TABLES /* lets not even set it up... */
   _hashed_mp = setup_hash_table(_mp,
-#if !CFG_CONN_TABLES
+#if !CFG_CONN_TABLES && !CFG_IND_TABLES
 				_wf,
 #endif
 				num_mp,
@@ -768,7 +770,7 @@ int main(int argc, char *argv[])
     packed = 1;
 
   (void) packed;
-#if !CFG_CONN_TABLES
+#if !CFG_CONN_TABLES && !CFG_IND_TABLES
   
 #if CFG_ANICR_TWO  //DS
   prepare_accumulate();
@@ -848,7 +850,11 @@ int main(int argc, char *argv[])
 #endif
 #endif
 
-#if CFG_CONN_TABLES
+#if CFG_CONN_TABLES || CFG_IND_TABLES
+#if CFG_IND_TABLES
+   initFile(num_mp);
+#endif
+   
   size_t cut_ini_i;
   size_t cut_fin_i;
 
@@ -875,7 +881,11 @@ int main(int argc, char *argv[])
 
 	  int max_depth =
 	    cut_ini->_E;
+#if CFG_IND_TABLES
+	  //writeMarker("new cut");
+#endif
 
+	  
 #if CFG_ANICR_THREE
 	  if (diff_M != 0)
 	    continue;
@@ -886,16 +896,22 @@ int main(int argc, char *argv[])
 	  for (depth = 0; depth <= max_depth; depth++)
 	    {
 	      uint64_t *mp = _mp + cut_ini->_start * CFG_PACK_WORDS;
-
+#if CFG_IND_TABLES
+	      newOutputBlock(diff_E,diff_M,depth);
+#endif
 	      for (i = 0; i < mp_states; i++)
 		{
+#if CFG_IND_TABLES
+		  indin = i;
+#endif
 		  annihilate_packed_states(mp,
 					   diff_E & 1, diff_M, diff_E,
 					   depth);
 
 		  mp += CFG_PACK_WORDS;
-		}
 
+		}
+#if CFG_CONN_TABLES
 	      printf (TABLE_PREFIX "_" "CONN "
 		      "%2d %3d  ->  %2d %3d  : %2d :  "
 		      "dE=%2d dM=%3d  : %10zd %10zd : "
@@ -909,7 +925,7 @@ int main(int argc, char *argv[])
 		      mp_states,
 		      (cut_fin+1)->_start - cut_fin->_start,
 		      _found - prev_found);
-
+#endif
 	      prev_found = _found;
 
 	      tot_ini_states += mp_states;
@@ -929,7 +945,9 @@ int main(int argc, char *argv[])
 	  _num_mp_cut_E_M, _num_mp_cut_E_M);
 
   printf ("Found mb state in hashtable %"PRIu64" of %"PRIu64" lookups.\n", _found, _lookups);
-  
+#if CFG_IND_TABLES
+  closeFile();
+#endif 
 #endif
   
   return 0;

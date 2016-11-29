@@ -107,7 +107,7 @@ void create_states(int *in_sp_other,
 #endif
 		   int phase_i,
 		   int miss_parity, int miss_m, 
-#if CFG_CONN_TABLES
+#if CFG_CONN_TABLES || CFG_IND_TABLES
 		   int miss_E
 #else
 		   int E
@@ -124,7 +124,7 @@ void create_states_1st(int *in_sp_other,
 #endif
 		       int phase_i,
 		       int miss_parity, int miss_m,
-#if CFG_CONN_TABLES
+#if CFG_CONN_TABLES || CFG_IND_TABLES
 		       int miss_E
 #else
 		       int E
@@ -136,7 +136,7 @@ void create_states_2nd(int *in_sp_other,
 		       int sp_anni1, int sp_anni2, int sp_anni3,
 		       int phase_i,
 		       int miss_parity, int miss_m,
-#if CFG_CONN_TABLES
+#if CFG_CONN_TABLES || CFG_IND_TABLES
 		       int miss_E
 #else
 		       int E
@@ -162,7 +162,7 @@ void annihilate_states_2nd(int *in_sp_other,
 			   int sp_anni1,
 			   int phase_i,
 			   int miss_parity, int miss_m,
-#if CFG_CONN_TABLES
+#if CFG_CONN_TABLES || CFG_IND_TABLES
 			   int miss_E, int depth
 #else
 			   int E
@@ -174,7 +174,7 @@ void annihilate_states_3rd(int *in_sp_other,
 			   int sp_anni1, int sp_anni2,
 			   int phase_i,
 			   int miss_parity, int miss_m,
-#if CFG_CONN_TABLES
+#if CFG_CONN_TABLES || CFG_IND_TABLES
 			   int miss_E, int depth
 #else
 			   int E
@@ -182,7 +182,7 @@ void annihilate_states_3rd(int *in_sp_other,
 			   );
 
 void annihilate_packed_states(uint64_t *packed
-#if CFG_CONN_TABLES
+#if CFG_CONN_TABLES || CFG_IND_TABLES
 			      ,
 			      int miss_parity, int miss_m, int miss_E,
 			      int depth
@@ -194,7 +194,7 @@ void annihilate_packed_states(uint64_t *packed
   packed_to_int_list(list,packed);   //Verkar skapa en lista med alla tillstånd.
    
   annihilate_states(list + CFG_NUM_SP_STATES0, list
-#if CFG_CONN_TABLES
+#if CFG_CONN_TABLES || CFG_IND_TABLES
 		    ,
 		    miss_parity, miss_m, miss_E,
 		    depth
@@ -274,7 +274,7 @@ int sp_comb_M(uint64_t sp)
 
 void annihilate_states(int *in_sp_other,
 		       int *in_sp
-#if CFG_CONN_TABLES
+#if CFG_CONN_TABLES || CFG_IND_TABLES
 		       ,
 		       int miss_parity, int miss_m, int miss_E,
 		       int depth
@@ -282,7 +282,7 @@ void annihilate_states(int *in_sp_other,
 		       )
 {
   int i;
-#if !CFG_CONN_TABLES
+#if !CFG_CONN_TABLES && !CFG_IND_TABLES
   int miss_parity = 0;
   int miss_m = 0;
 #endif
@@ -305,7 +305,7 @@ void annihilate_states(int *in_sp_other,
 
   int out_sp[NSP];
  
-#if CFG_CONN_TABLES
+#if CFG_CONN_TABLES || CFG_IND_TABLES
   for (i = 1; i < NSP; i++)
     {
       out_sp[i] = in_sp[i];
@@ -346,7 +346,7 @@ void annihilate_states(int *in_sp_other,
 
   /* The out_sp list is missing sp state 0. */
 
-#if CFG_CONN_TABLES
+#if CFG_CONN_TABLES || CFG_IND_TABLES
 # if CFG_ANICR_TWO || CFG_ANICR_THREE
   if (SP_STATE_E(sp_info[in_sp[0]]) <= depth)
 # else
@@ -360,7 +360,7 @@ void annihilate_states(int *in_sp_other,
 			    0,
 			    (sp_info[in_sp[0]]._l ^ miss_parity) & 1,
 			    miss_m + sp_info[in_sp[0]]._m,
-#if CFG_CONN_TABLES
+#if CFG_CONN_TABLES || CFG_IND_TABLES
 			    miss_E + SP_STATE_E(sp_info[in_sp[0]]),
 			    depth - SP_STATE_E(sp_info[in_sp[0]])
 #else
@@ -373,7 +373,7 @@ void annihilate_states(int *in_sp_other,
 		    in_sp[0], 0,
 		    (sp_info[in_sp[0]]._l ^ miss_parity) & 1,
 		    miss_m + sp_info[in_sp[0]]._m,
-#if CFG_CONN_TABLES
+#if CFG_CONN_TABLES || CFG_IND_TABLES
 		    miss_E + SP_STATE_E(sp_info[in_sp[0]])
 #else
 		    E
@@ -382,7 +382,7 @@ void annihilate_states(int *in_sp_other,
 #endif
     }
 
-#if !CFG_CONN_TABLES
+#if !CFG_CONN_TABLES && !CFG_IND_TABLES
   E += SP_STATE_E(sp_info[in_sp[0]]);
 #endif
 
@@ -395,7 +395,7 @@ void annihilate_states(int *in_sp_other,
 
       out_sp[i+1] = in_sp[i];
 
-#if CFG_CONN_TABLES
+#if CFG_CONN_TABLES || CFG_IND_TABLES
 # if CFG_ANICR_TWO || CFG_ANICR_THREE
       if (SP_STATE_E(sp_info[in_sp[i+1]]) <= depth)
 # else
@@ -409,7 +409,7 @@ void annihilate_states(int *in_sp_other,
 				i+1,
 				(sp_info[in_sp[i+1]]._l ^ miss_parity) & 1,
 				miss_m + sp_info[in_sp[i+1]]._m,
-#if CFG_CONN_TABLES
+#if CFG_CONN_TABLES || CFG_IND_TABLES
 				miss_E + SP_STATE_E(sp_info[in_sp[i+1]]),
 				depth - SP_STATE_E(sp_info[in_sp[i+1]])
 #else
@@ -422,7 +422,7 @@ void annihilate_states(int *in_sp_other,
 			in_sp[i+1], i+1,
 			(sp_info[in_sp[i+1]]._l ^ miss_parity) & 1,
 			miss_m + sp_info[in_sp[i+1]]._m,
-#if CFG_CONN_TABLES
+#if CFG_CONN_TABLES || CFG_IND_TABLES
 			miss_E + SP_STATE_E(sp_info[in_sp[i+1]])
 #else
 			E - SP_STATE_E(sp_info[in_sp[i+1]])
@@ -438,7 +438,7 @@ void annihilate_states_2nd(int *in_sp_other,
 			   int *in_sp, int sp_anni1,
 			   int phase_i,
 			   int miss_parity, int miss_m,
-#if CFG_CONN_TABLES
+#if CFG_CONN_TABLES || CFG_IND_TABLES
 			   int miss_E, int depth
 #else
 			   int E
@@ -489,7 +489,7 @@ void annihilate_states_2nd(int *in_sp_other,
 # endif
 	annihilate_states_3rd
 #else
-# if CFG_CONN_TABLES
+# if CFG_CONN_TABLES || CFG_IND_TABLES
       if (SP_STATE_E(sp_info[in_sp[1]]) == depth)
 # endif
 	create_states_1st
@@ -498,7 +498,7 @@ void annihilate_states_2nd(int *in_sp_other,
 			  out_sp, sp_anni1, in_sp[1], phase_i ^ 1,
 			  (sp_info[in_sp[1]]._l ^ miss_parity) & 1,
 			  miss_m + sp_info[in_sp[1]]._m,
-#if CFG_CONN_TABLES
+#if CFG_CONN_TABLES || CFG_IND_TABLES
 			  miss_E + SP_STATE_E(sp_info[in_sp[1]])
 #if CFG_ANICR_THREE
 			  ,depth - SP_STATE_E(sp_info[in_sp[1]])
@@ -520,12 +520,12 @@ void annihilate_states_2nd(int *in_sp_other,
       if (sp_anni1 < in_sp[i+1])
 	{
 #if CFG_ANICR_THREE
-# if CFG_CONN_TABLES
+# if CFG_CONN_TABLES || CFG_IND_TABLES
 	  if (SP_STATE_E(sp_info[in_sp[i+1]]) <= depth)
 # endif
 	    annihilate_states_3rd
 #else
-# if CFG_CONN_TABLES
+# if CFG_CONN_TABLES || CFG_IND_TABLES
 	  if (SP_STATE_E(sp_info[in_sp[i+1]]) == depth)
 # endif
 	    create_states_1st
@@ -534,7 +534,7 @@ void annihilate_states_2nd(int *in_sp_other,
 			  out_sp, sp_anni1, in_sp[i+1], phase_i ^ (i+1),
 			  (sp_info[in_sp[i+1]]._l ^ miss_parity) & 1,
 			  miss_m + sp_info[in_sp[i+1]]._m,
-#if CFG_CONN_TABLES
+#if CFG_CONN_TABLES || CFG_IND_TABLES
 			  miss_E + SP_STATE_E(sp_info[in_sp[i+1]])
 #if CFG_ANICR_THREE
 			  ,depth - SP_STATE_E(sp_info[in_sp[i+1]])
@@ -587,7 +587,7 @@ void annihilate_states_3rd(int *in_sp_other,
 			   int sp_anni1, int sp_anni2,
 			   int phase_i,
 			   int miss_parity, int miss_m,
-#if CFG_CONN_TABLES
+#if CFG_CONN_TABLES || CFG_IND_TABLES
 			   int miss_E, int depth
 #else
 			   int E
@@ -631,7 +631,7 @@ void annihilate_states_3rd(int *in_sp_other,
 
   if (sp_anni2 < in_sp[2])
     {
-#if CFG_CONN_TABLES
+#if CFG_CONN_TABLES || CFG_IND_TABLES
       if (SP_STATE_E(sp_info[in_sp[2]]) == depth)
 #endif
 	create_states_2nd(in_sp_other,
@@ -639,7 +639,7 @@ void annihilate_states_3rd(int *in_sp_other,
 			  sp_anni1, sp_anni2, in_sp[2], phase_i ^ 2,
 			  (sp_info[in_sp[2]]._l ^ miss_parity) & 1,
 			  miss_m + sp_info[in_sp[2]]._m,
-#if CFG_CONN_TABLES
+#if CFG_CONN_TABLES || CFG_IND_TABLES
 			  miss_E + SP_STATE_E(sp_info[in_sp[2]])
 #else
 			  E - SP_STATE_E(sp_info[in_sp[2]])
@@ -657,7 +657,7 @@ void annihilate_states_3rd(int *in_sp_other,
 
       if (sp_anni2 < in_sp[i+1])
 	{
-#if CFG_CONN_TABLES
+#if CFG_CONN_TABLES || CFG_IND_TABLES
 	  if (SP_STATE_E(sp_info[in_sp[i+1]]) == depth)
 #endif
 	    create_states_2nd(in_sp_other,
@@ -665,7 +665,7 @@ void annihilate_states_3rd(int *in_sp_other,
 			      sp_anni1, sp_anni2, in_sp[i+1], phase_i ^ (i+1),
 			      (sp_info[in_sp[i+1]]._l ^ miss_parity) & 1,
 			      miss_m + sp_info[in_sp[i+1]]._m,
-#if CFG_CONN_TABLES
+#if CFG_CONN_TABLES || CFG_IND_TABLES
 			      miss_E + SP_STATE_E(sp_info[in_sp[i+1]])
 #else
 			      E - SP_STATE_E(sp_info[in_sp[i+1]])
@@ -695,7 +695,7 @@ void create_states(int *in_sp_other,
 #endif
 		   int phase_i,
 		   int miss_parity, int miss_m,
-#if CFG_CONN_TABLES
+#if CFG_CONN_TABLES || CFG_IND_TABLES
 		   int miss_E
 #else
 		   int E
@@ -753,7 +753,7 @@ void create_states(int *in_sp_other,
 
   /* Find the list of potential sp states to use. */
 
-#if CFG_CONN_TABLES
+#if CFG_CONN_TABLES || CFG_IND_TABLES
   /* Can be fixed earlier? */
 
   if (!(miss_m >= miss_info->_m_min &&
@@ -765,7 +765,7 @@ void create_states(int *in_sp_other,
 	  miss_m <  miss_info->_m_min + miss_info->_m_steps);
 #endif
 
-#if CFG_CONN_TABLES
+#if CFG_CONN_TABLES || CFG_IND_TABLES
   int max_add_E = miss_E;
   int min_add_E = miss_E;
 
@@ -967,7 +967,7 @@ void create_states_1st(int *in_sp_other,
 #endif
 		       int phase_i,
 		       int miss_parity, int miss_m,
-#if CFG_CONN_TABLES
+#if CFG_CONN_TABLES || CFG_IND_TABLES
 		       int miss_E
 #else
 		       int E
@@ -1023,7 +1023,7 @@ void create_states_1st(int *in_sp_other,
 
   /* Find the list of potential sp states to use. */
 
-#if CFG_CONN_TABLES
+#if CFG_CONN_TABLES || CFG_IND_TABLES
   /* Can be fixed earlier? */
 
   if (!(miss_m >= miss_info->_m_min &&
@@ -1035,7 +1035,7 @@ void create_states_1st(int *in_sp_other,
 	  miss_m <  miss_info->_m_min + miss_info->_m_steps);
 #endif
 
-#if CFG_CONN_TABLES
+#if CFG_CONN_TABLES || CFG_IND_TABLES
   int max_add_E = miss_E;
 
   if (miss_E < 0)
@@ -1185,7 +1185,7 @@ void create_states_1st(int *in_sp_other,
 			phase_i ^ fill,
 			(sp_info[crea_sp]._l ^ miss_parity) & 1,
 			miss_m - sp_info[crea_sp]._m,
-#if CFG_CONN_TABLES
+#if CFG_CONN_TABLES || CFG_IND_TABLES
 			miss_E - SP_STATE_E(sp_info[crea_sp])
 #else
 			E + SP_STATE_E(sp_info[crea_sp])
@@ -1210,7 +1210,7 @@ void create_states_2nd(int *in_sp_other,
 		       int sp_anni1, int sp_anni2, int sp_anni3,
 		       int phase_i,
 		       int miss_parity, int miss_m,
-#if CFG_CONN_TABLES
+#if CFG_CONN_TABLES || CFG_IND_TABLES
 		       int miss_E
 #else
 		       int E
@@ -1253,7 +1253,7 @@ void create_states_2nd(int *in_sp_other,
 
   /* Find the list of potential sp states to use. */
 
-#if CFG_CONN_TABLES
+#if CFG_CONN_TABLES || CFG_IND_TABLES
   /* Can be fixed earlier? */
 
   if (!(miss_m >= miss_info->_m_min &&
@@ -1265,7 +1265,7 @@ void create_states_2nd(int *in_sp_other,
 	  miss_m <  miss_info->_m_min + miss_info->_m_steps);
 #endif
 
-#if CFG_CONN_TABLES
+#if CFG_CONN_TABLES || CFG_IND_TABLES
   int max_add_E = miss_E;
 
   if (miss_E < 0)
@@ -1376,7 +1376,7 @@ void create_states_2nd(int *in_sp_other,
 			phase_i ^ fill,
 			(sp_info[crea_sp]._l ^ miss_parity) & 1,
 			miss_m - sp_info[crea_sp]._m,
-#if CFG_CONN_TABLES
+#if CFG_CONN_TABLES || CFG_IND_TABLES
 			miss_E - SP_STATE_E(sp_info[crea_sp])
 #else
 			E + SP_STATE_E(sp_info[crea_sp])

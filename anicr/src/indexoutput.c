@@ -1,19 +1,27 @@
 #include "indexoutput.h"
 #include "anicr_tables.h"
 #include <stdio.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #if CFG_IND_TABLES
-#define CFG_IND_OLD 1
+#define CFG_IND_OLD 0
 #if CFG_IND_OLD
 FILE* outputfile;
 #endif
 #if !CFG_IND_OLD
-FILE* outputfilePos;
-FILE* outputfileNeg;
+FILE* header;
+int outputfilePos_num_writes = 0;
+char outputfilePos_filename[256];
+FILE* outputfilePos = NULL;
+int outputfileNeg_num_writes = 0;
+char outputfileNeg_filename[256];
+FILE* outputfileNeg = NULL;
 //uint64_t* sp_in_out_comb;
 //size_t num_in_out_comb;
 uint64_t* sp_comb_hash_keys;
 size_t* sp_comb_hash_indices;
 size_t max_num_sp_comb_hash;
+char foldername[256];
 
 void set_up(){
   //num_in_out_comb = (num_sp_comb*(num_sp_comb+1))/2;
@@ -56,9 +64,17 @@ void initFile(size_t dim){
   fprintf(outputfile,"dim %ld\n",dim);
 #endif
 #if !CFG_IND_OLD
+  
+  sprintf(foldername,"%s_index_lists",CFG_ANICR_IDENT);
+  { // check if folder exists, and if not create it
+    struct stat sb;
+    if (stat(foldername,&sb)!=0 || !S_ISDIR(sb.st_mode)){
+      mkdir(foldername,0700);
+    }
+  }
   char filename[256];
-  sprintf(filename,"%s_index_header",CFG_ANICR_IDENT);
-  FILE* header = fopen(filename,"w");
+  sprintf(filename,"%s/header",foldername);
+  header = fopen(filename,"w");
   fprintf(header,"Dim: %ld\n",dim);
 #if CFG_ANICR_ONE
   fprintf(header,"#particles: 1\n");
@@ -67,13 +83,15 @@ void initFile(size_t dim){
 #elif CFG_ANICR_THREE
   fprintf(header,"#particles: 3\n");
 #endif
+  /*
   sprintf(filename,"%s_index_list_pos",CFG_ANICR_IDENT);
   fprintf(header,"Positive indices: %s\n",filename);
   outputfilePos = fopen(filename,"w");
   sprintf(filename,"%s_index_list_neg",CFG_ANICR_IDENT);
   fprintf(header,"Negagive indices: %s\n",filename);
   outputfileNeg = fopen(filename,"w");
-  sprintf(filename,"%s_conf_list",CFG_ANICR_IDENT);
+  */
+  sprintf(filename,"%s/conf_list",foldername);
   fprintf(header,"Configurations: %s\n",filename);
   FILE* confFile = fopen(filename,"w");
   size_t i;
@@ -90,9 +108,47 @@ void initFile(size_t dim){
     fwrite(&outcomb,sizeof(uint64_t),1,confFile);
   }
   fclose(confFile);
-  fclose(header);
   set_up();
 #endif
+  fprintf(header,"IndexLists:\n");
+}
+
+void newOutputBlock(int diff_E,int diff_M,int depth){
+  char filename[256];
+  if (outputfilePos != NULL){
+    fclose(outputfilePos);
+    outputfilePos = NULL;
+    //if (outputfilePos_num_writes==0){
+      //remove(outputfilePos_filename);
+      //usleep(10000);
+      //printf("removed file: %s\n",outputfilePos_filename);
+      //}else{
+    fprintf(header,"%s\n",outputfilePos_filename);
+      //printf("did not remove file: %s\n",outputfilePos_filename);
+      //}
+  }
+  outputfilePos_num_writes = 0;
+  if (outputfileNeg != NULL){
+    fclose(outputfileNeg);
+    outputfileNeg = NULL;
+    //if (outputfileNeg_num_writes==0){
+    //remove(outputfileNeg_filename);
+      //usleep(10000);
+      //printf("removed file: %s\n",outputfileNeg_filename);
+    //}else{
+    fprintf(header,"%s\n",outputfileNeg_filename);
+      //printf("did not remove file: %s\n",outputfileNeg_filename);
+      //}
+  }
+  outputfileNeg_num_writes = 0;
+  sprintf(outputfilePos_filename,
+	  "%s/index_list_dE%d_dM%d_depth%d_pos",
+	  foldername,diff_E,diff_M,depth);
+  outputfilePos = fopen(outputfilePos_filename,"w");
+  sprintf(outputfileNeg_filename,"%s/index_list_dE%d_dM%d_depth%d_neg",
+	  foldername,diff_E,diff_M,depth);
+  outputfileNeg = fopen(outputfileNeg_filename,"w");
+  
 }
 
 void writeOutput(uint64_t i, uint64_t j,
@@ -118,8 +174,8 @@ void writeOutput(uint64_t i, uint64_t j,
 		 int cout
 #endif
 		 ){
-  if (i>j)
-    return;
+  //if (i>j)
+  //return;
 #if !CFG_IND_OLD
   uint64_t combin = (uint64_t)ain&0xFFFF;
   uint64_t combout = (uint64_t)aout&0xFFFF;
@@ -145,6 +201,12 @@ void writeOutput(uint64_t i, uint64_t j,
     exit(1);
   }
   size_t k = i_in*(num_sp_comb_ind_tables-1)+1+i_out;
+  if (sgn>0){
+    outputfilePos_num_writes++;
+    //printf("This happen\n");
+  }else{
+    outputfileNeg_num_writes++;
+  }
   FILE* outputfile = sgn>0 ? outputfilePos : outputfileNeg;
   fprintf(outputfile,"%ld %ld %ld\n",
 	  i,j,k);
@@ -163,10 +225,16 @@ void writeOutput(uint64_t i, uint64_t j,
 #endif
 }
 
+void writeMarker(char* str){
+  fprintf(outputfilePos,"%s\n",str);
+  fprintf(outputfileNeg,"%s\n",str);
+}
+
 void closeFile(){
 #if !CFG_IND_OLD
   fclose(outputfilePos);
   fclose(outputfileNeg);
+  fclose(header);
 #endif
 #if CFG_IND_OLD
   fclose(outputfile);

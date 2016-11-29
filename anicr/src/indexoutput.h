@@ -7,6 +7,9 @@
 uint64_t* sp_comb_ind_tables;
 size_t num_sp_comb_ind_tables;
 void initFile(size_t dim);
+
+void newOutputBlock(int diff_E,int diff_M,int depth);
+
 void writeOutput(uint64_t i, uint64_t j,
 		 int sgn,
 #if CFG_ANICR_ONE
@@ -30,6 +33,7 @@ void writeOutput(uint64_t i, uint64_t j,
 		 int cout
 #endif
 		 );
+void writeMarker(char* str);
 void closeFile();
 #endif
 		
