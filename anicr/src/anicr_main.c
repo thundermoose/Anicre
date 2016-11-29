@@ -339,7 +339,7 @@ typedef struct sp_comb_cut_E_M_t
 sp_comb_cut_E_M    *_sp_comb_cut_E_M;
 size_t          _num_sp_comb_cut_E_M;
 
-#if CFG_CONN_TABLES
+#if CFG_CONN_TABLES || CFG_IND_TABLES
 void find_sp_comb(size_t num_mp)
 {
   /* For each mp state, we can find 
@@ -456,7 +456,28 @@ void find_sp_comb(size_t num_mp)
   sp_comb_out++;
 
   printf ("Reduced %zd sp combinations.\n", reduced_num_sp_comb);
-
+#if CFG_IND_TABLES
+  sp_comb_ind_tables = (uint64_t*)malloc(sizeof(uint64_t)*reduced_num_sp_comb);
+  memcpy(sp_comb_ind_tables,_sp_comb,sizeof(uint64_t)*reduced_num_sp_comb);
+  num_sp_comb_ind_tables = reduced_num_sp_comb;
+  for (i = 0; i<reduced_num_sp_comb; i++){
+#if CFG_ANICR_ONE
+    printf("comb[%ld] = %ld\n",
+	   i,_sp_comb[i]&0xFFFF);
+#elif CFG_ANICR_TWO
+    printf("comb[%ld] = %ld %ld\n",
+	   i,_sp_comb[i]&0xFFFF,
+	   (_sp_comb[i]>>16)&0xFFFF);
+#elif CFG_ANICR_THREE
+    printf("comb[%ld] = %ld %ld %ld\n",
+	   i,_sp_comb[i]&0xFFFF,
+	   (_sp_comb[i]>>16)&0xFFFF,
+	   (_sp_comb[i]>>32)&0xFFFF);
+#endif
+    printf("comb[%ld] = 0x%lx\n",i,_sp_comb[i]);
+  }
+#endif
+#if !CFG_IND_TABLES
   _num_sp_comb_cut_E_M = 0;
 
   mp_cut_E_M tmp_E_M;
@@ -537,7 +558,7 @@ void find_sp_comb(size_t num_mp)
               _sp_comb_cut_E_M[i]._M,
               sp_combs);
     }
-
+#endif
 }
 #endif
 
@@ -758,7 +779,7 @@ int main(int argc, char *argv[])
 #endif
   size_t i;
 
-#if DEBUG_ANICR
+#if DEBUG_ANICR || 1
   /* print the mp basis*/
   uint64_t *mmp = _mp;
   printf("The mp basis\n");
@@ -779,6 +800,8 @@ int main(int argc, char *argv[])
   uint64_t *mp = _mp;
   double   *wf = _wf;
 #if CFG_IND_TABLES
+  find_sp_comb(num_mp);
+  
   initFile(num_mp);
   //i = 27;
 #endif

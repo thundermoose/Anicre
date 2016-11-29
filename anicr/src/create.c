@@ -458,7 +458,7 @@ void annihilate_states_2nd(int *in_sp_other,
   for (i = 0; i < CFG_NUM_SP_STATES1; i++)
     printf (" %4d", in_sp_other[i]);
 #endif
-  printf ("\n");
+  printf (" (phase:%d)\n", phase_i);
 #endif
 
 #if DEBUG_ANICR
@@ -607,7 +607,7 @@ void annihilate_states_3rd(int *in_sp_other,
   for (i = 0; i < CFG_NUM_SP_STATES1; i++)
     printf (" %4d", in_sp_other[i]);
 #endif
-  printf ("\n");
+  printf (" (phase:%d)\n", phase_i);
 #endif
 
 #if DEBUG_ANICR
@@ -631,10 +631,12 @@ void annihilate_states_3rd(int *in_sp_other,
 
   if (sp_anni2 < in_sp[2])
     {
+#if CFG_CONN_TABLES
       if (SP_STATE_E(sp_info[in_sp[2]]) == depth)
+#endif
 	create_states_2nd(in_sp_other,
 			  out_sp, 
-			  sp_anni1, sp_anni2, in_sp[2], phase_i ^ 1,
+			  sp_anni1, sp_anni2, in_sp[2], phase_i ^ 2,
 			  (sp_info[in_sp[2]]._l ^ miss_parity) & 1,
 			  miss_m + sp_info[in_sp[2]]._m,
 #if CFG_CONN_TABLES
@@ -655,7 +657,9 @@ void annihilate_states_3rd(int *in_sp_other,
 
       if (sp_anni2 < in_sp[i+1])
 	{
+#if CFG_CONN_TABLES
 	  if (SP_STATE_E(sp_info[in_sp[i+1]]) == depth)
+#endif
 	    create_states_2nd(in_sp_other,
 			      out_sp,
 			      sp_anni1, sp_anni2, in_sp[i+1], phase_i ^ (i+1),
@@ -739,6 +743,7 @@ void create_states(int *in_sp_other,
   for (i = CFG_ANICR_TWO ? 2 : 1; i < CFG_NUM_SP_STATES0; i++)
     printf (" %4d", in_sp[i]); 
 #endif
+  printf (" (phase:%d)", phase_i);
 #if CFG_CONN_TABLES
   printf (" : ~E=%3d  ~m=%3d  ~p=%d\n", miss_E, miss_m, miss_parity);
 #else
@@ -894,6 +899,7 @@ void create_states(int *in_sp_other,
 
 #if DEBUG_ANICR
       printf ("%4d @ %3d\n", crea_sp, fill);
+      printf ("phase_i = %d\n",phase_i);
 #endif
 
       created_state(in_sp_other,
@@ -931,8 +937,9 @@ void create_states(int *in_sp_other,
 
 #if DEBUG_ANICR
       printf ("%4d @ %3d\n", crea_sp, fill);
+      printf ("phase_i = %d\n",phase_i);
 #endif
-
+      
       created_state(out_sp_other,
 		    in_sp,
 #if CFG_ANICR_THREE
@@ -1006,6 +1013,7 @@ void create_states_1st(int *in_sp_other,
   for (i = (!CFG_ANICR_NP ? 0 : 1); i < CFG_NUM_SP_STATES1; i++)
     printf (" %4d", in_sp_other[i]);
 #endif
+  printf (" (phase:%d)", phase_i);
 #if CFG_CONN_TABLES
   printf (" : ~E=%3d  ~m=%3d  ~p=%d\n", miss_E, miss_m, miss_parity);
 #else
@@ -1235,6 +1243,7 @@ void create_states_2nd(int *in_sp_other,
   for (i = (!CFG_ANICR_NP ? 0 : 1); i < CFG_NUM_SP_STATES1; i++)
     printf (" %4d", in_sp_other[i]);
 #endif
+  printf (" (phase:%d)", phase_i);
 #if CFG_CONN_TABLES
   printf (" : ~E=%3d  ~m=%3d  ~p=%d\n", miss_E, miss_m, miss_parity);
 #else
@@ -1422,6 +1431,7 @@ void created_state(int *in_sp_other,
   for (i = 0; i < CFG_NUM_SP_STATES1; i++)
     printf (" %4d", in_sp_other[i]);
 #endif
+  printf (" (phase:%d)", phase_i);
   printf (" <- find\n");
 #endif
 
@@ -1603,21 +1613,51 @@ void created_state(int *in_sp_other,
   //(void) phase_i;
   
   //uint64_t ind;
-#if CFG_ANICR_TWO
   //printf("phase_i = %ld\n",phase_i);
   int sign = 1-2*(phase_i&1);
+    writeOutput(indin,indout,sign,
+	      sp_crea1
+#if CFG_ANICR_TWO || CFG_ANICR_THREE
+	      ,sp_crea2
+#endif
+#if CFG_ANICR_THREE
+	      ,sp_crea3
+#endif
+	      ,sp_anni1
+#if CFG_ANICR_TWO || CFG_ANICR_THREE
+	      ,sp_anni2
+#endif
+#if CFG_ANICR_THREE
+	      ,sp_anni3
+#endif
+	      );
+  
+  
+  /*
   writeOutput(indin,indout,sign,
-	      sp_info[sp_crea1]._spi,sp_info[sp_crea2]._spi,
-	      sp_info[sp_anni1]._spi,sp_info[sp_anni2]._spi);
-#if DEBUG_ANICR
-  printf("i:%ld j:%ld sgn:%d aout:%d bout:%d ain:%d bin:%d\n",
-	 indin+1, indout+1,
-	 sign,
-	 sp_anni1+1,sp_anni2+1,sp_crea1+1,sp_crea2+1);
+	      sp_info[sp_crea1]._spi
+#if CFG_ANICR_TWO || CFG_ANICR_THREE
+	      ,sp_info[sp_crea2]._spi
 #endif
-#else
-  printf("not sup\n");
+#if CFG_ANICR_THREE
+	      ,sp_info[sp_crea3]._spi
 #endif
+	      ,sp_info[sp_anni1]._spi
+#if CFG_ANICR_TWO || CFG_ANICR_THREE
+	      ,sp_info[sp_anni2]._spi
+#endif
+#if CFG_ANICR_THREE
+	      ,sp_info[sp_anni3]._spi
+#endif
+	      );
+  */
+#if CFG_ANICR_THREE && DEBUG_ANICR
+  printf("Found: %ld %ld %d : %d %d %d %d %d %d\n",
+	 indin,indout,sign,
+	 sp_crea1,sp_crea2,sp_crea3,
+	 sp_anni1,sp_anni2,sp_anni3);
+#endif
+
   
 #endif
 }

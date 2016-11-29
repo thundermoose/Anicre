@@ -1465,9 +1465,11 @@ void mr_antoine_reader<header_version_t, fon_version_t>::
        { "nnn_tables", true, false, true,  3, 0, 0 },
        { "ppp_tables", true, false, false, 3, 0, 1 },
        /* New configurations for the index lists*/
-       { "pp_inds", false, true, false, 2, 0, 0},
-       { "nn_inds", false, true, true, 2, 0, 1},
-       { "np_inds", false, true, true, 2, 1, 2}
+       { "pp_inds", false, true, false,  2,  0, 0},
+       { "nn_inds", false, true, true,   2,  0, 1},
+       { "np_inds", false, true, true,   2,  1, 2},
+       { "nnn_inds", false, true, true,  3,  0, 0},
+       { "ppp_inds", false, true, false, 3,  0, 1}
     }; 
 
  
