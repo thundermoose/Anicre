@@ -1616,19 +1616,23 @@ void created_state(int *in_sp_other,
   //printf("phase_i = %ld\n",phase_i);
   int sign = 1-2*(phase_i&1);
     writeOutput(indin,indout,sign,
-	      sp_crea1
 #if CFG_ANICR_TWO || CFG_ANICR_THREE
-	      ,sp_crea2
+		sp_crea1
+		,sp_crea2
+#else
+		sp_crea
 #endif
 #if CFG_ANICR_THREE
-	      ,sp_crea3
+		,sp_crea3
 #endif
-	      ,sp_anni1
 #if CFG_ANICR_TWO || CFG_ANICR_THREE
-	      ,sp_anni2
+		,sp_anni1
+		,sp_anni2
+#else
+		,sp_anni
 #endif
 #if CFG_ANICR_THREE
-	      ,sp_anni3
+		,sp_anni3
 #endif
 	      );
   

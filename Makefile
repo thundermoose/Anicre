@@ -145,6 +145,18 @@ ppp-tables-anicr-%: %/tables_rev.h
 
 ####################################################################
 
+n-inds-anicr-%: %/tables_forw.h
+	make -C $* -f ../anicr/makever.mk ANICR_PREFIX=n_inds
+
+
+####################################################################
+
+p-inds-anicr-%: %/tables_rev.h
+	make -C $* -f ../anicr/makever.mk ANICR_PREFIX=p_inds
+
+
+####################################################################
+
 nn-inds-anicr-%: %/tables_forw.h
 	make -C $* -f ../anicr/makever.mk ANICR_PREFIX=nn_inds
 

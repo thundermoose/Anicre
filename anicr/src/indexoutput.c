@@ -200,7 +200,10 @@ void writeOutput(uint64_t i, uint64_t j,
     fprintf(stderr,"combout = %lx\n",combout);
     exit(1);
   }
-  size_t k = i_in*(num_sp_comb_ind_tables-1)+1+i_out;
+  // To square matrix
+  size_t k = i_in*num_sp_comb_ind_tables+i_out;
+
+  
   if (sgn>0){
     outputfilePos_num_writes++;
     //printf("This happen\n");
