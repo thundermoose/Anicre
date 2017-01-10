@@ -1,6 +1,8 @@
 #include "indexoutput.h"
 #include "anicr_tables.h"
 #include <stdio.h>
+#include <errno.h>
+#include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #if CFG_IND_TABLES
@@ -113,7 +115,10 @@ void initFile(size_t dim){
   fprintf(header,"IndexLists:\n");
 }
 
-void newOutputBlock(int diff_E,int diff_M,int depth){
+void newOutputBlock(int E_in, int E_out,
+		    int M_in, int M_out,
+		    int diff_E,int diff_M,
+		    int depth){
   char filename[256];
   if (outputfilePos != NULL){
     fclose(outputfilePos);
@@ -142,13 +147,25 @@ void newOutputBlock(int diff_E,int diff_M,int depth){
   }
   outputfileNeg_num_writes = 0;
   sprintf(outputfilePos_filename,
-	  "%s/index_list_dE%d_dM%d_depth%d_pos",
-	  foldername,diff_E,diff_M,depth);
+	  "%s/index_list_E_in%d_E_out%d_M_in%d_M_out%d_dE%d_dM%d_depth%d_pos",
+	  foldername,E_in,E_out,M_in,M_out,diff_E,diff_M,depth);
   outputfilePos = fopen(outputfilePos_filename,"w");
-  sprintf(outputfileNeg_filename,"%s/index_list_dE%d_dM%d_depth%d_neg",
-	  foldername,diff_E,diff_M,depth);
+  if (outputfilePos == NULL){
+    fprintf(stderr,"file_name: %s\n",outputfilePos_filename);
+    fprintf(stderr,"Something is terrible wrong, %s\n",
+	    strerror(errno));
+    exit(1);
+  }
+  sprintf(outputfileNeg_filename,
+	  "%s/index_list_E_in%d_E_out%d_M_in%d_M_out%d_dE%d_dM%d_depth%d_neg",
+	  foldername,E_in,E_out,M_in,M_out,diff_E,diff_M,depth);
   outputfileNeg = fopen(outputfileNeg_filename,"w");
-  
+  if (outputfileNeg == NULL){
+    fprintf(stderr,"file_name: %s\n",outputfileNeg_filename);
+    fprintf(stderr,"Something is terrible wrong, %s\n",
+	    strerror(errno));
+    exit(1);
+  }
 }
 
 void writeOutput(uint64_t i, uint64_t j,

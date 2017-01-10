@@ -291,7 +291,7 @@ int main(int argc, char *argv[])
 	   */
 
 	  cblock_t *bestblockid = NULL;
-	  /* uint64_t bestunloadsz = 0; */
+	  uint64_t bestunloadsz = 0;
 	  uint64_t bestloadsz = (uint64_t) -1;
 
 	  for (size_t i = 0; i < currentid->_arrays.size(); i++)
@@ -344,12 +344,12 @@ int main(int argc, char *argv[])
 		  // any remaining isib or icur cannot match!
 		  
 		  uint64_t loadsz   = siblingid->_tot_size - reusesz;
-		  /* uint64_t unloadsz = currentid->_tot_size - reusesz; */
+		  uint64_t unloadsz = currentid->_tot_size - reusesz; 
 
 		  if (loadsz < bestloadsz)
 		    {
 		      bestblockid = siblingid;
-		      /* bestunloadsz = unloadsz; */
+		      bestunloadsz = unloadsz;
 		      bestloadsz = loadsz;
 		    }
 		}
@@ -357,10 +357,10 @@ int main(int argc, char *argv[])
 
 	  if (!bestblockid)
 	    break;
-	  /*
-	  printf ("%p : %" PRIu64 " : %" PRIu64 "\n",
-		  bestblockid, bestunloadsz, bestloadsz);
-	  */
+	  
+	  printf ("%p : -%" PRIu64 " : %" PRIu64 "\n",
+		  bestblockid, -bestunloadsz, bestloadsz);
+	  
 	  /* (void) bestunloadsz; */
 
 	  currentid = bestblockid;

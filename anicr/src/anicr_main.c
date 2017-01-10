@@ -853,7 +853,29 @@ int main(int argc, char *argv[])
 #if CFG_CONN_TABLES || CFG_IND_TABLES
 #if CFG_IND_TABLES
    initFile(num_mp);
+   {
+     // Lists all cuts
+     size_t cut_i;
+     char filename[256];
+     sprintf(filename,"%s_cut_out_list",CFG_ANICR_IDENT);
+     FILE* cut_out_list = fopen(filename,"w");
+     fprintf(cut_out_list,
+	     "E\tM\tstart\tend\n");
+     for (cut_i = 0; cut_i< _num_mp_cut_E_M; cut_i++)
+       {
+	 fprintf(cut_out_list,
+		 "%d\t%d\t%d\t%d\n",
+		 _mp_cut_E_M[cut_i]._E,
+		 _mp_cut_E_M[cut_i]._M,
+		 _mp_cut_E_M[cut_i]._start,
+		 _mp_cut_E_M[cut_i+1]._start);
+       }
+     fclose(cut_out_list);
+   }
 #endif
+   
+
+
    
   size_t cut_ini_i;
   size_t cut_fin_i;
@@ -897,7 +919,9 @@ int main(int argc, char *argv[])
 	    {
 	      uint64_t *mp = _mp + cut_ini->_start * CFG_PACK_WORDS;
 #if CFG_IND_TABLES
-	      newOutputBlock(diff_E,diff_M,depth);
+	      newOutputBlock(cut_ini->_E,cut_fin->_E,
+			     cut_ini->_M,cut_fin->_M,
+			     diff_E,diff_M,depth);
 #endif
 	      for (i = 0; i < mp_states; i++)
 		{

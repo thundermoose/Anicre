@@ -30,8 +30,8 @@ else
 cd $EGVFILE.td
 fi
 
-cd ..
-exit 0
+#cd ..
+#exit 0
 
 for nforce in 1 2 3
 do

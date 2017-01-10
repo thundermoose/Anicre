@@ -8,7 +8,10 @@ uint64_t* sp_comb_ind_tables;
 size_t num_sp_comb_ind_tables;
 void initFile(size_t dim);
 
-void newOutputBlock(int diff_E,int diff_M,int depth);
+void newOutputBlock(int E_in, int E_out,
+		    int M_in, int M_out,
+		    int diff_E,int diff_M,
+		    int depth);
 
 void writeOutput(uint64_t i, uint64_t j,
 		 int sgn,

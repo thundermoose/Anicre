@@ -3,7 +3,7 @@
 EGVFILE=$1
 
 ./mfr /net/data1/saaf/trdens-sample/$EGVFILE.egv --td-dir=$EGVFILE.jupiter
-
+./mfr /net/data1/saaf/trdens-sample/$EGVFILE.egv --dump=full > $EGVFILE.jupiter/$EGVFILE-basis.jupiter
 
 for part in "n" "nn" "nnn" "p" "pp" "ppp"
 do
