@@ -3,6 +3,15 @@
 use strict;
 use warnings;
 
+my %run_modes = (
+    "p"=>1,
+    "n"=>1,
+    "pp"=>1,
+    "nn"=>1,
+    "nnn"=>1,
+    "ppp"=>1
+    );
+
 my %E_M_states = ();
 
 my %V_E_M_combs = ();
@@ -55,6 +64,12 @@ while (my $line = <>)
     elsif ($line =~ /^CFG_MAX_E:\s*([-\d]*)$/) { $maxE = $1; }
     elsif ($line =~ /^CFG_M:\s*([-\d]*)$/)     { $totM = $1; }
     elsif ($line =~ /^CFG_P:\s*([-\d]*)$/)     { $totP = $1; }
+    elsif ($line =~ /^NO\_([pn]*)_INTERACTIONS$/)
+    {
+	my $pn = $1;
+
+	$run_modes{"${pn}"} = 0;
+    }
     else
     {
 	# print "BAD: ".$line;
@@ -470,15 +485,24 @@ sub dia_conn($$)
 		   "\n",
 		   $xtype, $total_conn);
 }
-
-dia_conn("p",1);
-dia_conn("n",1);
-
-dia_conn("pp",2);
-dia_conn("nn",2);
-
-dia_conn("ppp",3);
-dia_conn("nnn",3);
+if ($run_modes{"p"}==1){
+    dia_conn("p",1);
+}
+if ($run_modes{"n"}==1){
+    dia_conn("n",1);
+}
+if ($run_modes{"pp"}==1){
+    dia_conn("pp",2);
+}
+if ($run_modes{"nn"}==1){
+    dia_conn("nn",2);
+}
+if ($run_modes{"ppp"}==1){
+    dia_conn("ppp",3);
+}
+if ($run_modes{"nnn"}==1){
+    dia_conn("nnn",3);
+}
 
 my $max_conn_len_1n = 0;
 my $sum_conn_len_1n = 0;

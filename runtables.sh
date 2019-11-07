@@ -18,7 +18,7 @@ cd $EGVFILE.td
 
   ./p_tables_anicr >   p_table.txt
  ./pp_tables_anicr >  pp_table.txt
-./ppp_tables_anicr > ppp_table.txt
+./ppp_tables_anicr > ppp_table.txt # there is an unresolved bug when num_ppp_cons = 0
   ./n_tables_anicr >   n_table.txt
  ./nn_tables_anicr >  nn_table.txt
 ./nnn_tables_anicr > nnn_table.txt

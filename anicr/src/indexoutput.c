@@ -255,8 +255,7 @@ void closeFile(){
   fclose(outputfilePos);
   fclose(outputfileNeg);
   fclose(header);
-#endif
-#if CFG_IND_OLD
+#else
   fclose(outputfile);
 #endif
 }

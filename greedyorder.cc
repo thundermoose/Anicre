@@ -1,5 +1,5 @@
 /*
-  cd ~/mfrtd ; g++ -Wall -W -o greedyorder greedyorder.cc -O3
+  cd ~/mfrtd ; g++ --std=c++11 -Wall -W -o greedyorder greedyorder.cc -O3
  */
 
 
@@ -45,6 +45,18 @@ struct cblock_t
 {
   cblock_t       *_checked; // temporary while checking siblings
   uint64_t        _tot_size;
+  /*
+  int E_p_in;
+  int E_n_in;
+  int M_p_in;
+  int M_n_in;
+  int E_p_out;
+  int E_n_out;
+  int M_p_out;
+  int M_n_out;
+  int depth_p;
+  int depth_n;
+  */
   vect_array_id   _aids;
   vect_array_ptr  _arrays; 
 };
@@ -54,11 +66,31 @@ typedef std::map<int,array_t *> map_array_ptr;
 map_array_ptr  _arrayids;
 set_cblock_ptr _cblockids;
 
+enum interaction_type : int {n=0,nn=1,nnn=2,p=3,pp=4,ppp=5,np=6,npp=7,nnp=8};
+
+
+void print_cblock(cblock_t *cblock){
+  
+  printf("BLOCK: ");
+  for (int v : cblock->_aids){
+    printf("%d ",v);
+  }
+  printf("\n");
+}
+
+void print_cblock_unload(cblock_t *cblock){
+  printf("BLOCK_UNLOAD: ");
+  for (int v : cblock->_aids){
+    printf("%d ",v);
+  }
+  printf("\n");
+}
+
 int main(int argc, char *argv[])
 {
   int maxforce = 0;
   int blocksize = 1;
-
+ 
   if (argc < 3)
     {
       fprintf (stderr, "  %s <maxforce> <blocksize>\n", argv[0]);
@@ -66,7 +98,10 @@ int main(int argc, char *argv[])
     }
   maxforce = atoi(argv[1]);
   blocksize = atoi(argv[2]);
-
+  /*
+  interaction_type current_int_type;
+  bool is_diagonal = false;
+  */
   while (!feof(stdin))
     {
       char line[1024];
@@ -126,7 +161,37 @@ int main(int argc, char *argv[])
 	  if (n == 5 || n == 6)
 	    {
 	      cblock_t *cblock = new cblock_t;
-
+	      /*
+	      if (is_diagonal)
+		{
+		  if (current_int_type<3)
+		    {
+		      // the differing particles are neutrons
+		    }
+		  else
+		    {
+		      // the differing particles are protons
+		    }
+		  
+		}
+	      else
+		{
+		  sscanf(line,
+			 " %d %d %d %d %d "
+			 " %d %d %d %d %d ",
+			 &cblock->E_p_in,
+			 &cblock->M_p_in,
+			 &cblock->E_n_in,
+			 &cblock->M_n_in,
+			 &cblock->depth_p,
+			 &cblock->E_p_out,
+			 &cblock->M_p_out,
+			 &cblock->E_n_out,
+			 &cblock->M_n_out,
+			 &cblock->depth_n);
+		}
+	      */
+	      
 	      for (int i = 0; i < n-1; i++)
 		{
 		  cblock->_aids.push_back(a[i]);
@@ -138,7 +203,8 @@ int main(int argc, char *argv[])
 	  else
 	    goto bad_line;
 	}
-
+      
+      
       continue;
     bad_line:
       fprintf (stderr, "BAD LINE: %s\n", line);
@@ -158,7 +224,6 @@ int main(int argc, char *argv[])
       cblock_t *cblock = *cbiter;
 
       cblock->_tot_size = 0;
-
       for (size_t i = 0; i < cblock->_aids.size(); i++)
 	{
 	  map_array_ptr::iterator iter;
@@ -223,7 +288,7 @@ int main(int argc, char *argv[])
    */
 
   uint64_t sumgreedyload = 0;
-
+  cblock_t *prev_loaded = NULL;
   while (!_cblockids.empty())
     {
       /* We are at start, or have no better idea.  Find largest one.
@@ -252,9 +317,18 @@ int main(int argc, char *argv[])
 	      largestsz = sz;
 	    }
 	}
-      /*
-      printf ("%p : %" PRIu64 "\n", largestid, largestsz);
-      */
+      
+      //printf ("%p : %" PRIu64 "\n", largestid, largestsz);
+      if (prev_loaded == NULL){
+	prev_loaded = largestid;
+      }else{
+	printf("UNLOAD_");
+	print_cblock(prev_loaded);
+	prev_loaded = largestid;
+      }
+      print_cblock(largestid);
+      
+      
       cblock_t *currentid = largestid;
 
       sumgreedyload += largestsz;
@@ -357,11 +431,19 @@ int main(int argc, char *argv[])
 
 	  if (!bestblockid)
 	    break;
-	  
+	  /*
 	  printf ("%p : -%" PRIu64 " : %" PRIu64 "\n",
-		  bestblockid, -bestunloadsz, bestloadsz);
+	  bestblockid, -bestunloadsz, bestloadsz);*/
+	  if (prev_loaded == NULL){
+	    prev_loaded = bestblockid;
+	  }else{
+	    printf("UNLOAD_");
+	    print_cblock(prev_loaded);
+	    prev_loaded = bestblockid;
+	  }
+	  print_cblock(bestblockid);
 	  
-	  /* (void) bestunloadsz; */
+	   (void) bestunloadsz; 
 
 	  currentid = bestblockid;
 

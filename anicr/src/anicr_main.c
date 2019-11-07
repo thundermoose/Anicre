@@ -1,5 +1,6 @@
 #include "tmp_config.h"
 #include "anicr_config.h"
+#include "anicr_tables.h"
 #include "create.h"
 #include "packed_create.h"
 #include "accumulate.h"
@@ -359,9 +360,9 @@ void find_sp_comb(size_t num_mp)
 #if CFG_ANICR_THREE
   max_num_sp_comb = ((max_num_sp_comb) * (CFG_NUM_SP_STATES0 - 2)) / 3;
 #endif
-
-  _sp_comb = (uint64_t *) malloc (max_num_sp_comb * sizeof (uint64_t));
-
+  printf("max_num_sp_comb: %ld\n",max_num_sp_comb);
+  _sp_comb = (uint64_t *) calloc (max_num_sp_comb, sizeof (uint64_t));
+  printf("_sp_comb = %p\n",_sp_comb);
   if (!_sp_comb)
     {
       fprintf (stderr, "Memory allocation error (%zd bytes).\n",
@@ -408,12 +409,14 @@ void find_sp_comb(size_t num_mp)
 		{
 		  comb3 = comb2 | (((uint64_t) list[i3]) << 32);
 		  comb = comb3;
+		  
 #elif CFG_ANICR_TWO
 		  comb = comb2;
 #else
 		  comb = comb1;
 #endif
 		  *(sp_comb++) = comb;
+		  printf("COMB: %0.16lx\n",comb);
 #if CFG_ANICR_THREE
 		}
 #endif
@@ -424,7 +427,6 @@ void find_sp_comb(size_t num_mp)
 
       mp += CFG_PACK_WORDS;
     }
-
   printf ("%zd sp combinations\n", max_num_sp_comb);
 
   qsort (_sp_comb, max_num_sp_comb, sizeof (uint64_t),
@@ -526,6 +528,7 @@ void find_sp_comb(size_t num_mp)
 
       if (E != tmp_E_M._E || M != tmp_E_M._M)
         {
+
 	  _sp_comb_cut_E_M[cut_E_M]._E = E;
           _sp_comb_cut_E_M[cut_E_M]._M = M;
           _sp_comb_cut_E_M[cut_E_M]._start = i;
@@ -537,7 +540,8 @@ void find_sp_comb(size_t num_mp)
 
       sp_comb++;
     }
-
+  printf("cut_E_M: %ld\n",cut_E_M);
+  printf("_num_sp_comb_cut_E_M: %ld\n",_num_sp_comb_cut_E_M);
   _sp_comb_cut_E_M[cut_E_M]._start = reduced_num_sp_comb;
 
   printf ("%zd sp comb E-M pairs\n", _num_sp_comb_cut_E_M);
@@ -554,6 +558,7 @@ void find_sp_comb(size_t num_mp)
                          0);
       */
 #if CFG_CONN_TABLES
+      printf("i = %ld\n",i);
       printf (TABLE_PREFIX "_" "V_E_M_PAIR  %2d %3d : %10zd\n",
               _sp_comb_cut_E_M[i]._E,
               _sp_comb_cut_E_M[i]._M,
@@ -666,6 +671,17 @@ int main(int argc, char *argv[])
 
   assert(sizeof (uint64_t) == sizeof (double));
 
+#if CFG_CONN_TABLES
+#if (CFG_ANICR_TWO && CFG_NUM_SP_STATES0<2) || (CFG_ANICR_THREE && CFG_NUM_SP_STATES0<3)
+  printf("NO_"TABLE_PREFIX"_INTERACTIONS\n");
+  return 0;
+#endif
+#elif CFG_IND_TABLES
+#if (CFG_ANICR_TWO && CFG_NUM_SP_STATES0<2) || (CFG_ANICR_THREE && CFG_NUM_SP_STATES0<3)
+  return 0;
+#endif
+#endif
+  
 #if CFG_CONN_TABLES
   printf ("CFG_MAX_E: %d\n", CFG_MAX_SUM_E);
   printf ("CFG_M:     %d\n", CFG_SUM_M);
@@ -859,8 +875,12 @@ int main(int argc, char *argv[])
      char filename[256];
      sprintf(filename,"%s_cut_out_list",CFG_ANICR_IDENT);
      FILE* cut_out_list = fopen(filename,"w");
+     sprintf(filename,"%s_basis_out_list",CFG_ANICR_IDENT);
+     FILE* basis_list = fopen(filename,"w");
+     fprintf(basis_list,"Num part: %ld\n",CFG_NUM_SP_STATES0);
      fprintf(cut_out_list,
 	     "E\tM\tstart\tend\n");
+     size_t mps_i = 0;
      for (cut_i = 0; cut_i< _num_mp_cut_E_M; cut_i++)
        {
 	 fprintf(cut_out_list,
@@ -869,8 +889,22 @@ int main(int argc, char *argv[])
 		 _mp_cut_E_M[cut_i]._M,
 		 _mp_cut_E_M[cut_i]._start,
 		 _mp_cut_E_M[cut_i+1]._start);
+	 uint64_t *mp = _mp + _mp_cut_E_M[cut_i]._start * CFG_PACK_WORDS;
+	 size_t i;
+	 for (i = 0; i<_mp_cut_E_M[cut_i+1]._start-_mp_cut_E_M[cut_i]._start; i++){
+	   int list[CFG_NUM_SP_STATES0+CFG_NUM_SP_STATES1];
+	   packed_to_int_list(list,mp);
+	   size_t j;
+	   fprintf(basis_list,"(%ld): ",mps_i++);
+	   for (j = 0; j<CFG_NUM_SP_STATES0; j++){
+	     fprintf(basis_list,"%d ",_table_sp_states[list[j]]._spi);
+	   }
+	   fprintf(basis_list,"\n");
+	   mp+=CFG_PACK_WORDS;
+	 }
        }
      fclose(cut_out_list);
+     fclose(basis_list);
    }
 #endif
    
