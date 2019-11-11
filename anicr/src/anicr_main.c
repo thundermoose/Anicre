@@ -820,7 +820,7 @@ int main(int argc, char *argv[])
 #if CFG_IND_TABLES
   find_sp_comb(num_mp);
   
-  initFile(num_mp);
+  initiate_index_file(num_mp);
   //i = 27;
 #endif
   for (i = 0; i < num_mp; i++)
@@ -852,7 +852,7 @@ int main(int argc, char *argv[])
     }
 
 #if CFG_IND_TABLES
-  closeFile();
+  close_file();
 #endif  
   printf ("Annihilated-created for %zd mp states.\n", num_mp);
 
@@ -868,7 +868,7 @@ int main(int argc, char *argv[])
 
 #if CFG_CONN_TABLES || CFG_IND_TABLES
 #if CFG_IND_TABLES
-   initFile(num_mp);
+   initiate_index_file(num_mp);
    {
      // Lists all cuts
      size_t cut_i;
@@ -953,7 +953,7 @@ int main(int argc, char *argv[])
 	    {
 	      uint64_t *mp = _mp + cut_ini->_start * CFG_PACK_WORDS;
 #if CFG_IND_TABLES
-	      newOutputBlock(cut_ini->_E,cut_fin->_E,
+	      new_output_block(cut_ini->_E,cut_fin->_E,
 			     cut_ini->_M,cut_fin->_M,
 			     diff_E,diff_M,depth);
 #endif
@@ -1004,7 +1004,7 @@ int main(int argc, char *argv[])
 
   printf ("Found mb state in hashtable %"PRIu64" of %"PRIu64" lookups.\n", _found, _lookups);
 #if CFG_IND_TABLES
-  closeFile();
+  close_file();
 #endif 
 #endif
   

@@ -1602,7 +1602,7 @@ void created_state(int *in_sp_other,
 #else
 
   
-  uint64_t indout;
+  uint64_t indout = -1;
 
   if (!find_mp_state_post(lookfor_packed, lookfor_x, &indout))
     {
@@ -1615,7 +1615,7 @@ void created_state(int *in_sp_other,
   //uint64_t ind;
   //printf("phase_i = %ld\n",phase_i);
   int sign = 1-2*(phase_i&1);
-    writeOutput(indin,indout,sign,
+  write_output(indin,indout,sign,
 #if CFG_ANICR_TWO || CFG_ANICR_THREE
 		sp_crea1
 		,sp_crea2
@@ -1638,7 +1638,7 @@ void created_state(int *in_sp_other,
   
   
   /*
-  writeOutput(indin,indout,sign,
+  write_output(indin,indout,sign,
 	      sp_info[sp_crea1]._spi
 #if CFG_ANICR_TWO || CFG_ANICR_THREE
 	      ,sp_info[sp_crea2]._spi

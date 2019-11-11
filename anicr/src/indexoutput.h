@@ -6,38 +6,38 @@
 #if CFG_IND_TABLES
 uint64_t* sp_comb_ind_tables;
 size_t num_sp_comb_ind_tables;
-void initFile(size_t dim);
+void initiate_index_file(size_t dim);
 
-void newOutputBlock(int E_in, int E_out,
-		    int M_in, int M_out,
-		    int diff_E,int diff_M,
-		    int depth);
+void new_output_block(int energy_in, int energy_out,
+		int M_in, int M_out,
+		int difference_E,int difference_M,
+		int depth);
 
-void writeOutput(uint64_t i, uint64_t j,
-		 int sgn,
+void write_output(uint64_t i, uint64_t j,
+		int sgn,
 #if CFG_ANICR_ONE
-		 int ain,
+		int ain,
 #elif CFG_ANICR_TWO
-		 int ain,
-		 int bin,
+		int ain,
+		int bin,
 #elif CFG_ANICR_THREE
-		 int ain,
-		 int bin,
-		 int cin,
+		int ain,
+		int bin,
+		int cin,
 #endif
 #if CFG_ANICR_ONE
-		 int aout
+		int aout
 #elif CFG_ANICR_TWO
-		 int aout,
-		 int bout
+		int aout,
+		int bout
 #elif CFG_ANICR_THREE
-		 int aout,
-		 int bout,
-		 int cout
+		int aout,
+		int bout,
+		int cout
 #endif
-		 );
-void writeMarker(char* str);
-void closeFile();
+);
+void write_marker(char* str);
+void close_file();
 #endif
-		
+
 #endif

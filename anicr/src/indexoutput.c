@@ -56,7 +56,7 @@ size_t get_index(size_t comb)
 	uint64_t key = comb;
 	size_t hash = (key^(key<<16));
 	while (sp_comb_hash_indices[hash%max_num_sp_comb_hash] != (uint64_t)-1 &&
-			sp_comb_hash_keys[hash%max_num_sp_comb_hash] != key)
+	       sp_comb_hash_keys[hash%max_num_sp_comb_hash] != key)
 	{
 		hash++;
 	}
@@ -64,7 +64,7 @@ size_t get_index(size_t comb)
 }
 
 #endif
-void initFile(size_t dim)
+void initiate_index_file(size_t dim)
 {
 #if CFG_IND_OLD
 	char filename[256];
@@ -116,89 +116,73 @@ void initFile(size_t dim)
 	fprintf(header,"IndexLists:\n");
 }
 
-void newOutputBlock(int E_in, int E_out,
-		int M_in, int M_out,
-		int diff_E,int diff_M,
-		int depth)
+void new_output_block(int energy_in, int energy_out,
+		    int M_in, int M_out,
+		    int difference_energy,int difference_M,
+		    int depth)
 {
 	char filename[256];
 	if (outputfile_positive != NULL)
 	{
 		fclose(outputfile_positive);
 		outputfile_positive = NULL;
-		//if (outputfile_positive_num_writes==0)
-		{
-			//remove(outputfile_positive_filename);
-			//usleep(10000);
-			//printf("removed file: %s\n",outputfile_positive_filename);
-			//}else{
 		fprintf(header,"%s\n",outputfile_positive_filename);
-		//printf("did not remove file: %s\n",outputfile_positive_filename);
-		//}
 	}
 	outputfile_positive_num_writes = 0;
 	if (outputfile_negative != NULL)
 	{
 		fclose(outputfile_negative);
 		outputfile_negative = NULL;
-		//if (outputfile_negative_num_writes==0)
-		{
-			//remove(outputfile_negative_filename);
-			//usleep(10000);
-			//printf("removed file: %s\n",outputfile_negative_filename);
-			//}else{
 		fprintf(header,"%s\n",outputfile_negative_filename);
-		//printf("did not remove file: %s\n",outputfile_negative_filename);
-		//}
 	}
 	outputfile_negative_num_writes = 0;
 	sprintf(outputfile_positive_filename,
-			"%s/index_list_E_in%d_E_out%d_M_in%d_M_out%d_dE%d_dM%d_depth%d_pos",
-			foldername,E_in,E_out,M_in,M_out,diff_E,diff_M,depth);
-	outputfile_positive = fopen(outputfilePos_filename,"w");
+		"%s/index_list_E_in%d_E_out%d_M_in%d_M_out%d_dE%d_dM%d_depth%d_pos",
+		foldername,energy_in,energy_out,M_in,M_out,difference_energy,difference_M,depth);
+	outputfile_positive = fopen(outputfile_positive_filename,"w");
 	if (outputfile_positive == NULL)
 	{
 		fprintf(stderr,"file_name: %s\n",outputfile_positive_filename);
 		fprintf(stderr,"Something is terrible wrong, %s\n",
-				strerror(errno));
+			strerror(errno));
 		exit(1);
 	}
 	sprintf(outputfile_negative_filename,
-			"%s/index_list_E_in%d_E_out%d_M_in%d_M_out%d_dE%d_dM%d_depth%d_neg",
-			foldername,E_in,E_out,M_in,M_out,diff_E,diff_M,depth);
-	outputfile_negative = fopen(outputfileNeg_filename,"w");
+		"%s/index_list_E_in%d_E_out%d_M_in%d_M_out%d_dE%d_dM%d_depth%d_neg",
+		foldername,energy_in,energy_out,M_in,M_out,difference_energy,difference_M,depth);
+	outputfile_negative = fopen(outputfile_negative_filename,"w");
 	if (outputfile_negative == NULL)
 	{
 		fprintf(stderr,"file_name: %s\n",outputfile_negative_filename);
 		fprintf(stderr,"Something is terrible wrong, %s\n",
-				strerror(errno));
+			strerror(errno));
 		exit(1);
 	}
 }
 
-void writeOutput(uint64_t i, uint64_t j,
-		int sgn,
+void write_output(uint64_t i, uint64_t j,
+		 int sgn,
 #if CFG_ANICR_ONE
-		int ain,
+		 int ain,
 #elif CFG_ANICR_TWO
-		int ain,
-		int bin,
+		 int ain,
+		 int bin,
 #elif CFG_ANICR_THREE
-		int ain,
-		int bin,
-		int cin,
+		 int ain,
+		 int bin,
+		 int cin,
 #endif
 #if CFG_ANICR_ONE
-		int aout
+		 int aout
 #elif CFG_ANICR_TWO
-		int aout,
-		int bout
+		 int aout,
+		 int bout
 #elif CFG_ANICR_THREE
-		int aout,
-		int bout,
-		int cout
+		 int aout,
+		 int bout,
+		 int cout
 #endif
-)
+	)
 {
 	//if (i>j)
 	//return;
@@ -241,29 +225,29 @@ void writeOutput(uint64_t i, uint64_t j,
 	}
 	FILE* outputfile = sgn>0 ? outputfile_positive : outputfile_negative;
 	fprintf(outputfile,"%ld %ld %ld\n",
-			i,j,k);
+		i,j,k);
 #endif
 #if CFG_IND_OLD
 #if CFG_ANICR_ONE
 	fprintf(outputfile,"%ld %ld %d %d %d\n",
-			i,j,sgn,aout,ain);
+		i,j,sgn,aout,ain);
 #elif CFG_ANICR_TWO
 	fprintf(outputfile,"%ld %ld %d %d %d %d %d\n",
-			i,j,sgn,aout,bout,ain,bin);
+		i,j,sgn,aout,bout,ain,bin);
 #elif CFG_ANICR_THREE
 	fprintf(outputfile,"%ld %ld %d %d %d %d %d %d %d\n",
-			i,j,sgn,aout,bout,cout,ain,bin,cin);
+		i,j,sgn,aout,bout,cout,ain,bin,cin);
 #endif
 #endif
 }
 
-void writeMarker(char* str)
+void write_marker(char* str)
 {
 	fprintf(outputfile_positive,"%s\n",str);
 	fprintf(outputfile_negative,"%s\n",str);
 }
 
-void closeFile()
+void close_file()
 {
 #if !CFG_IND_OLD
 	fclose(outputfile_positive);
