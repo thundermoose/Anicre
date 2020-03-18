@@ -6,6 +6,7 @@ if [ 1 = 1 ]
 then
 
 ./mfr /net/data1/saaf/trdens-sample/$EGVFILE.egv --td-dir=$EGVFILE.td
+#./mfr ./he4_n2losat_nmax_0_hw_20.egv --td-dir=$EGVFILE.td
 
 make   p-tables-anicr-$EGVFILE.td
 make  pp-tables-anicr-$EGVFILE.td

@@ -36,7 +36,7 @@ void write_output(uint64_t i, uint64_t j,
 		int cout
 #endif
 );
-void write_marker(char* str);
+//void write_marker(char* str);
 void close_file();
 #endif
 
