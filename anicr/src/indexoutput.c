@@ -11,6 +11,7 @@
 FILE* outputfile;
 #endif
 #if !CFG_IND_OLD
+const size_t no_index = -1;
 FILE* header;
 int outputfile_positive_num_writes = 0;
 char outputfile_positive_filename[256];
@@ -20,47 +21,152 @@ char outputfile_negative_filename[256];
 FILE* outputfile_negative = NULL;
 //uint64_t* sp_in_out_comb;
 //size_t num_in_out_comb;
-uint64_t* sp_comb_hash_keys;
-size_t* sp_comb_hash_indices;
-size_t max_num_sp_comb_hash;
+typedef struct
+{
+#if CFG_ANICR_ONE	
+	short a_in,a_out;
+#elif CFG_ANICR_TWO
+	short a_in,b_in,a_out,b_out;
+#elif CFG_ANICR_THREE
+	short a_in,b_in,c_in,a_out,b_out,c_out;
+#endif
+} configuration_t;
+
+struct _sp_comb_hash_
+{
+	configuration_t* keys;
+	size_t* indices;
+	size_t num_buckets;
+} sp_comb_hash;
 char foldername[256];
 
-void set_up()
+void initate_sp_comb_hash()
 {
 	//num_in_out_comb = (num_sp_comb*(num_sp_comb+1))/2;
 	//sp_in_out_comb = (uint64_t*)malloc(sizeof(uint64_t)*num_in_out_comb);
-	max_num_sp_comb_hash = num_sp_comb_ind_tables*4;
-	sp_comb_hash_keys = (uint64_t*)malloc(sizeof(uint64_t)*max_num_sp_comb_hash);
-	sp_comb_hash_indices = (size_t*)malloc(sizeof(size_t)*max_num_sp_comb_hash);
+	sp_comb_hash.num_buckets = num_sp_comb_ind_tables*4;
+	sp_comb_hash.keys = (uint64_t*)malloc(sizeof(uint64_t)*sp_comb_hash.num_buckets);
+	sp_comb_hash.indices = (size_t*)malloc(sizeof(size_t)*sp_comb_hash.num_buckets);
 	size_t i;
-	for (i = 0; i<max_num_sp_comb_hash; i++)
+	for (i = 0; i<sp_comb_hash.num_buckets; i++)
 	{
-		sp_comb_hash_indices[i] = (uint64_t)-1;
+		sp_comb_hash.indices[i] = no_index;
 	}
 	for (i = 0; i<num_sp_comb_ind_tables; i++)
 	{
 		uint64_t key = sp_comb_ind_tables[i];
 		size_t hash = (key^(key<<16));
-		while (sp_comb_hash_indices[hash%max_num_sp_comb_hash] != (uint64_t)-1)
+		while (sp_comb_hash.indices[hash%sp_comb_hash.num_buckets] != (uint64_t)-1)
 		{
 			hash++;
 		}
-		sp_comb_hash_keys[hash%max_num_sp_comb_hash]=key;
-		sp_comb_hash_indices[hash%max_num_sp_comb_hash] = i;
+		sp_comb_hash.keys[hash%sp_comb_hash.num_buckets]=key;
+		sp_comb_hash.indices[hash%sp_comb_hash.num_buckets] = i;
 	}
 
+}
+
+void setup_sp_comb_basis_and_hash(int energy_in,
+				  int energy_out,
+				  int M_in,
+				  int M_out,
+				  int depth_in)
+{
+	int difference_energy = energy_in-energy_out;
+       	int depth_out = difference_energy+depth_in;	
+	size_t in_block_start = find_block_start(depth_in,M_in);
+	size_t out_block_start = find_block_start(depth_out,M_out);
+	size_t in_block_length = determine_block_length(in_block_start,
+							depth_in,M_in);
+	size_t out_block_length = determine_block_length(out_block_start,
+							 depth_out,M_out);
+
+	size_t num_configurations = in_block_length*out_block_length;
+	configuration_t *configurations =
+	       	(configuration_t*)malloc(num_configurations*
+					 sizeof(configuration_t));
+	if (num_configurations > 2*sp_comb_hash.num_buckets)
+	{
+		// TODO: Move this to a separate function, and make it
+		// always reset the memory
+		sp_comb_hash.num_buckets = 2*num_configurations;
+		if (sp_comb_hash.keys != NULL)
+			free(sp_comb_hash.keys);
+		if (sp_comb_hash.indices != NULL)
+			free(sp_comb_hash.indices);
+		sp_comb_hash.keys =
+		       	(configuration_t*)calloc(sp_comb_hash.num_buckets,
+						 sizeof(configuration_t));
+		sp_comb_hash.indices =
+			(size_t*)calloc(sp_comb_hash.num_buckets,
+					sizeof(size_t));
+	}
+	for (size_t i = 0; i<in_block_length; i++)
+	{
+		uint64_t in_configuration =
+		       	sp_comb_ind_tables[i+in_block_start];
+		for (size_t j = 0; j<out_block_length; j++)
+		{
+			uint64_t out_configuration =
+				sp_comb_ind_tables[j+out_block_start];
+			size_t index = i*out_block_length+j;
+			configuration_t current = 
+			{
+#if CFG_ANICR_ONE
+				.a_in = in_configuration & 0x000000000000FFFF,
+				.a_out = out_configuration & 0x000000000000FFFF,
+#elif CFG_ANICR_TWO
+				.a_in = in_configuration & 0x000000000000FFFF,
+				.b_in = in_configuration & 0x00000000FFFF0000,
+				.a_out = out_configuration & 0x000000000000FFFF,
+				.b_out = out_configuration & 0x00000000FFFF0000,
+#elif CFG_ANICR_THREE
+				.a_in = in_configuration & 0x000000000000FFFF,
+				.b_in = in_configuration & 0x00000000FFFF0000,
+				.c_in = in_configuration & 0x0000FFFF00000000,
+				.a_out = out_configuration & 0x000000000000FFFF,
+				.b_out = out_configuration & 0x00000000FFFF0000,
+				.c_out = out_configuration & 0x0000FFFF00000000,
+#endif
+			};		
+			configurations[index] = current;
+			insert_configuration(current,index);	
+		}
+	}
+	// TODO: Save configurations to an appropriately named file
+	char file_name[2048];
+	sprintf(file_name,"%s/conn_E_in_%d_M_in_%d_E_out_%d_M_out_%d_depth_%d",
+		foldername,energy_in,M_in,energy_out,M_out,depth_in);
+	FILE *configuration_file = fopen(file_name,"w");
+	if (configuration_file == NULL)
+	{
+		fprintf(stderr,"Could not open file %s.%s\n",
+			file_name,strerror(errno));
+		exit(EXIT_FAILURE);
+	}
+	if (fwrite(configurations,
+		   sizeof(configuration_t),
+		   num_configurations,
+		   configuration_file)<num_configurations)
+	{
+		fprintf(stderr,"Could not write configurations to %s\n",
+			file_name);
+		exit(EXIT_FAILURE);
+	}
+	fclose(configuration_file);
+	free(configurations);
 }
 
 size_t get_index(size_t comb)
 {
 	uint64_t key = comb;
 	size_t hash = (key^(key<<16));
-	while (sp_comb_hash_indices[hash%max_num_sp_comb_hash] != (uint64_t)-1 &&
-	       sp_comb_hash_keys[hash%max_num_sp_comb_hash] != key)
+	while (sp_comb_hash.indices[hash%sp_comb_hash.num_buckets] != (uint64_t)-1 &&
+	       sp_comb_hash.keys[hash%sp_comb_hash.num_buckets] != key)
 	{
 		hash++;
 	}
-	return sp_comb_hash_indices[hash%max_num_sp_comb_hash];
+	return sp_comb_hash.indices[hash%sp_comb_hash.num_buckets];
 }
 
 #endif
@@ -111,7 +217,7 @@ void initiate_index_file(size_t dim)
 		fwrite(&outcomb,sizeof(uint64_t),1,confFile);
 	}
 	fclose(confFile);
-	set_up();
+	initate_sp_comb_hash();
 #endif
 	fprintf(header,"IndexLists:\n");
 }
@@ -224,8 +330,18 @@ void write_output(uint64_t i, uint64_t j,
 		outputfile_negative_num_writes++;
 	}
 	FILE* outputfile = sgn>0 ? outputfile_positive : outputfile_negative;
-	fprintf(outputfile,"%ld %ld %ld\n",
-		i,j,k);
+#if CFG_ANICR_ONE
+	fprintf(outputfile,"%ld %ld %ld, %d %d\n",
+		i,j,k,ain,aout);
+#elif CFG_ANICR_TWO
+	fprintf(outputfile,"%ld %ld %ld, %d %d %d %d\n",
+		i,j,k,ain,bin,aout,bout);
+#elif CFG_ANICR_THREE
+	fprintf(outputfile,"%ld %ld %ld, %d %d %d %d\n",
+		i,j,k,ain,bin,aout,bout);
+#endif
+	//fprintf(outputfile,"%ld %ld %ld\n",
+	//	i,j,k);
 #endif
 #if CFG_IND_OLD
 #if CFG_ANICR_ONE
