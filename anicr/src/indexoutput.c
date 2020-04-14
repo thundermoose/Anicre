@@ -66,6 +66,111 @@ void initate_sp_comb_hash()
 
 }
 
+#define PARTICLE1 comb&0x000000000000FFFF
+#define PARTICLE2 comb&0x00000000FFFF0000
+#define PARTICLE3 comb&0x0000FFFF00000000
+
+int combination_energy(uint64_t comb)
+{
+#if CFG_ANICR_ONE
+	int comb_energy =
+		_table_sp_states[PARTICLE1]._n*2+
+		_table_sp_states[PARTICLE1]._l;
+#elif CFG_ANICR_TWO
+	int comb_energy =
+		_table_sp_states[PARTICLE1]._n*2+
+		_table_sp_states[PARTICLE1]._l+
+		_table_sp_states[PARTICLE2]._n*2+
+		_table_sp_states[PARTICLE2]._l;
+#elif CFG_ANICR_THREE
+	int comb_energy =
+		_table_sp_states[PARTICLE1]._n*2+
+		_table_sp_states[PARTICLE1]._l+
+		_table_sp_states[PARTICLE2]._n*2+
+		_table_sp_states[PARTICLE2]._l+
+		_table_sp_states[PARTICLE3]._n*2+
+		_table_sp_states[PARTICLE3]._l;
+#endif
+	return comb_energy;
+}
+
+int combination_M(uint64_t comb)
+{
+#if CFG_ANICR_ONE
+	int comb_M = 
+		_table_sp_states[PARTICLE1]._m;
+#elif CFG_ANICR_TWO
+	int comb_M = 
+		_table_sp_states[PARTICLE1]._m+
+		_table_sp_states[PARTICLE2]._m;
+#elif CFG_ANICR_THREE
+	int comb_M = 
+		_table_sp_states[PARTICLE1]._m+
+		_table_sp_states[PARTICLE2]._m+
+		_table_sp_states[PARTICLE3]._m;
+#endif
+	return comb_M;
+}
+
+size_t find_block_start(int energy,int M)
+{
+	for (size_t i = 0; i<num_sp_comb_ind_tables; i++)
+	{
+		uint64_t comb = sp_comb_ind_tables[i];
+		if (energy == combination_energy(comb) &&
+		    M == combination_M(comb))
+			return i;
+	}
+	return no_index;
+}
+
+size_t determine_block_length(size_t block_start,
+			      int energy,int M)
+{
+	for (size_t i = block_start; i<num_sp_comb_ind_tables; i++)
+	{
+		uint64_t comb = sp_comb_ind_tables[i];
+		if (energy != combination_energy(comb) ||
+		    M != combination_M(comb))
+			return i-block_start+1;
+	}
+	return num_sp_comb_ind_tables-block_start;
+}
+
+void reset_sp_comb_hash(size_t num_configurations)
+{
+	if (2*num_configurations > sp_comb_hash.num_buckets)
+	{
+		sp_comb_hash.num_buckets = 2*num_configurations;
+		if (sp_comb_hash.keys != NULL)
+			free(sp_comb_hash.keys);
+		if (sp_comb_hash.indices != NULL)
+			free(sp_comb_hash.indices);
+		sp_comb_hash.keys =
+		       	(configuration_t*)calloc(sp_comb_hash.num_buckets,
+						 sizeof(configuration_t));
+		sp_comb_hash.indices =
+			(size_t*)calloc(sp_comb_hash.num_buckets,
+					sizeof(size_t));
+	}
+	else
+	{
+		memset(sp_comb_hash.keys,
+		       0,
+		       sp_comb_hash.num_buckets*sizeof(configuration_t));
+		memset(sp_comb_hash.indices,
+		       0,
+		       sp_comb_hash.num_buckets*sizeof(size_t));
+	}
+}
+
+void insert_configuration(configuration_t configuration,
+			  size_t index)
+{
+	uint64_t hash = configuration_hash_value(configuration);
+	while (sp_comb_hash.
+}
+
 void setup_sp_comb_basis_and_hash(int energy_in,
 				  int energy_out,
 				  int M_in,
@@ -80,27 +185,11 @@ void setup_sp_comb_basis_and_hash(int energy_in,
 							depth_in,M_in);
 	size_t out_block_length = determine_block_length(out_block_start,
 							 depth_out,M_out);
-
 	size_t num_configurations = in_block_length*out_block_length;
 	configuration_t *configurations =
 	       	(configuration_t*)malloc(num_configurations*
 					 sizeof(configuration_t));
-	if (num_configurations > 2*sp_comb_hash.num_buckets)
-	{
-		// TODO: Move this to a separate function, and make it
-		// always reset the memory
-		sp_comb_hash.num_buckets = 2*num_configurations;
-		if (sp_comb_hash.keys != NULL)
-			free(sp_comb_hash.keys);
-		if (sp_comb_hash.indices != NULL)
-			free(sp_comb_hash.indices);
-		sp_comb_hash.keys =
-		       	(configuration_t*)calloc(sp_comb_hash.num_buckets,
-						 sizeof(configuration_t));
-		sp_comb_hash.indices =
-			(size_t*)calloc(sp_comb_hash.num_buckets,
-					sizeof(size_t));
-	}
+	reset_sp_comb_hash(num_configurations);
 	for (size_t i = 0; i<in_block_length; i++)
 	{
 		uint64_t in_configuration =
@@ -133,7 +222,6 @@ void setup_sp_comb_basis_and_hash(int energy_in,
 			insert_configuration(current,index);	
 		}
 	}
-	// TODO: Save configurations to an appropriately named file
 	char file_name[2048];
 	sprintf(file_name,"%s/conn_E_in_%d_M_in_%d_E_out_%d_M_out_%d_depth_%d",
 		foldername,energy_in,M_in,energy_out,M_out,depth_in);
