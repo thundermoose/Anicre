@@ -6,12 +6,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #if CFG_IND_TABLES
-#define CFG_IND_OLD 0
-#if CFG_IND_OLD
-FILE* outputfile;
-#endif
-#if !CFG_IND_OLD
-const size_t no_index = -1;
+const size_t no_index = (size_t)-1;
 FILE* header;
 int outputfile_positive_num_writes = 0;
 char outputfile_positive_filename[256];
@@ -40,35 +35,9 @@ struct _sp_comb_hash_
 } sp_comb_hash;
 char foldername[256];
 
-void initate_sp_comb_hash()
-{
-	//num_in_out_comb = (num_sp_comb*(num_sp_comb+1))/2;
-	//sp_in_out_comb = (uint64_t*)malloc(sizeof(uint64_t)*num_in_out_comb);
-	sp_comb_hash.num_buckets = num_sp_comb_ind_tables*4;
-	sp_comb_hash.keys = (uint64_t*)malloc(sizeof(uint64_t)*sp_comb_hash.num_buckets);
-	sp_comb_hash.indices = (size_t*)malloc(sizeof(size_t)*sp_comb_hash.num_buckets);
-	size_t i;
-	for (i = 0; i<sp_comb_hash.num_buckets; i++)
-	{
-		sp_comb_hash.indices[i] = no_index;
-	}
-	for (i = 0; i<num_sp_comb_ind_tables; i++)
-	{
-		uint64_t key = sp_comb_ind_tables[i];
-		size_t hash = (key^(key<<16));
-		while (sp_comb_hash.indices[hash%sp_comb_hash.num_buckets] != (uint64_t)-1)
-		{
-			hash++;
-		}
-		sp_comb_hash.keys[hash%sp_comb_hash.num_buckets]=key;
-		sp_comb_hash.indices[hash%sp_comb_hash.num_buckets] = i;
-	}
-
-}
-
-#define PARTICLE1 comb&0x000000000000FFFF
-#define PARTICLE2 comb&0x00000000FFFF0000
-#define PARTICLE3 comb&0x0000FFFF00000000
+#define PARTICLE1 (comb&0x000000000000FFFF)
+#define PARTICLE2 ((comb&0x00000000FFFF0000)>>16)
+#define PARTICLE3 ((comb&0x0000FFFF00000000)>>32)
 
 int combination_energy(uint64_t comb)
 {
@@ -114,9 +83,13 @@ int combination_M(uint64_t comb)
 
 size_t find_block_start(int energy,int M)
 {
+	printf("energy = %d\n",energy);
+	printf("M = %d\n",M);
 	for (size_t i = 0; i<num_sp_comb_ind_tables; i++)
 	{
 		uint64_t comb = sp_comb_ind_tables[i];
+		printf("comb.E = %d\n",combination_energy(comb));
+		printf("comb.M = %d\n",combination_M(comb));
 		if (energy == combination_energy(comb) &&
 		    M == combination_M(comb))
 			return i;
@@ -147,28 +120,99 @@ void reset_sp_comb_hash(size_t num_configurations)
 		if (sp_comb_hash.indices != NULL)
 			free(sp_comb_hash.indices);
 		sp_comb_hash.keys =
-		       	(configuration_t*)calloc(sp_comb_hash.num_buckets,
-						 sizeof(configuration_t));
+		       	(configuration_t*)malloc(sp_comb_hash.num_buckets*
+						 sizeof(configuration_t*));
 		sp_comb_hash.indices =
-			(size_t*)calloc(sp_comb_hash.num_buckets,
+			(size_t*)malloc(sp_comb_hash.num_buckets*
 					sizeof(size_t));
 	}
-	else
+	memset(sp_comb_hash.keys,
+	       0,
+	       sizeof(configuration_t)*sp_comb_hash.num_buckets);
+	for (size_t i = 0; i<sp_comb_hash.num_buckets; i++)
+		sp_comb_hash.indices[i] = no_index;
+}
+
+uint64_t configuration_hash_value(configuration_t configuration)
+{
+	uint64_t h = (uint64_t)(configuration.a_in) ^
+	       	((uint64_t)(configuration.a_out)<<47);
+#if !CFG_ANICR_ONE
+	h ^= ((uint64_t)(configuration.b_in)<<13) ^
+		((uint64_t)(configuration.b_out)<<31);
+#if !CFG_ANICR_TWO
+	h ^= ((uint64_t)(configuration.b_in)<<37) ^
+		((uint64_t)(configuration.b_out)<<17);
+#endif
+#endif
+	const uint64_t magic_number = 0xFEDCBA9876543210;
+	return h^magic_number;
+}
+
+int compare_configurations(configuration_t configuration_a,
+			   configuration_t configuration_b)
+{
+#if CFG_ANICR_ONE
+	int diff = configuration_a.a_in - configuration_b.a_in; 	
+	if (diff)
+		return diff;
+	return configuration_a.a_out - configuration_b.a_out;
+#elif CFG_ANICR_TWO
+	int diff = configuration_a.a_in - configuration_b.a_in; 	
+	if (diff)
+		return diff;
+	diff = configuration_a.b_in - configuration_b.b_in; 	
+	if (diff)
+		return diff;
+	diff = configuration_a.b_out - configuration_b.b_out; 	
+	if (diff)
+		return diff;
+	return configuration_a.a_out - configuration_b.a_out;
+#elif CFG_ANICR_THREE
+	int diff = configuration_a.a_in - configuration_b.a_in; 	
+	if (diff)
+		return diff;
+	diff = configuration_a.b_in - configuration_b.b_in; 	
+	if (diff)
+		return diff;
+	diff = configuration_a.c_in - configuration_b.c_in; 	
+	if (diff)
+		return diff;
+	diff = configuration_a.c_out - configuration_b.c_out; 	
+	if (diff)
+		return diff;
+	diff = configuration_a.b_out - configuration_b.b_out; 	
+	if (diff)
+		return diff;
+	return configuration_a.a_out - configuration_b.a_out;
+#endif
+}
+
+size_t find_bucket(configuration_t configuration)
+{
+	uint64_t hash = configuration_hash_value(configuration);
+	size_t bucket_index = hash % sp_comb_hash.num_buckets;
+	while (sp_comb_hash.indices[bucket_index] != no_index &&
+	       compare_configurations(sp_comb_hash.keys[bucket_index],
+				      configuration) != 0)
 	{
-		memset(sp_comb_hash.keys,
-		       0,
-		       sp_comb_hash.num_buckets*sizeof(configuration_t));
-		memset(sp_comb_hash.indices,
-		       0,
-		       sp_comb_hash.num_buckets*sizeof(size_t));
+		hash++;
+		bucket_index = hash % sp_comb_hash.num_buckets;
 	}
+	return bucket_index;
 }
 
 void insert_configuration(configuration_t configuration,
 			  size_t index)
 {
-	uint64_t hash = configuration_hash_value(configuration);
-	while (sp_comb_hash.
+	size_t bucket_index = find_bucket(configuration);
+	sp_comb_hash.keys[bucket_index] = configuration;
+	sp_comb_hash.indices[bucket_index] = index;
+}
+
+size_t get_configuration_index(configuration_t configuration)
+{
+	return sp_comb_hash.indices[find_bucket(configuration)];	
 }
 
 void setup_sp_comb_basis_and_hash(int energy_in,
@@ -190,36 +234,64 @@ void setup_sp_comb_basis_and_hash(int energy_in,
 	       	(configuration_t*)malloc(num_configurations*
 					 sizeof(configuration_t));
 	reset_sp_comb_hash(num_configurations);
+	printf("in_block_start = %lu\n",
+	      in_block_start); 
+	printf("out_block_start = %lu\n",
+	      out_block_start); 
+	printf("in_block_length = %lu\n",
+	      in_block_length); 
+	printf("out_block_length = %lu\n",
+	      out_block_length); 
 	for (size_t i = 0; i<in_block_length; i++)
 	{
 		uint64_t in_configuration =
 		       	sp_comb_ind_tables[i+in_block_start];
+		printf("in_configuration = 0x%016lX\n",
+		       in_configuration);
 		for (size_t j = 0; j<out_block_length; j++)
 		{
 			uint64_t out_configuration =
 				sp_comb_ind_tables[j+out_block_start];
+			printf("out_configuration = 0x%016lX\n",
+			       out_configuration);
 			size_t index = i*out_block_length+j;
 			configuration_t current = 
 			{
 #if CFG_ANICR_ONE
-				.a_in = in_configuration & 0x000000000000FFFF,
-				.a_out = out_configuration & 0x000000000000FFFF,
+				.a_in = (short)(in_configuration & 0x000000000000FFFF),
+				.a_out = (short)(out_configuration & 0x000000000000FFFF),
 #elif CFG_ANICR_TWO
-				.a_in = in_configuration & 0x000000000000FFFF,
-				.b_in = in_configuration & 0x00000000FFFF0000,
-				.a_out = out_configuration & 0x000000000000FFFF,
-				.b_out = out_configuration & 0x00000000FFFF0000,
+				.a_in = (short)(in_configuration & 0x000000000000FFFF),
+				.b_in = (short)((in_configuration & 0x00000000FFFF0000)>>16),
+				.a_out = (short)(out_configuration & 0x000000000000FFFF),
+				.b_out = (short)((out_configuration & 0x00000000FFFF0000)>>16),
 #elif CFG_ANICR_THREE
-				.a_in = in_configuration & 0x000000000000FFFF,
-				.b_in = in_configuration & 0x00000000FFFF0000,
-				.c_in = in_configuration & 0x0000FFFF00000000,
-				.a_out = out_configuration & 0x000000000000FFFF,
-				.b_out = out_configuration & 0x00000000FFFF0000,
-				.c_out = out_configuration & 0x0000FFFF00000000,
+				.a_in = (short)(in_configuration & 0x000000000000FFFF),
+				.b_in = (short)((in_configuration & 0x00000000FFFF0000)>>16),
+				.c_in = (short)((in_configuration & 0x0000FFFF00000000)>>32),
+				.a_out = (short)(out_configuration & 0x000000000000FFFF),
+				.b_out = (short)((out_configuration & 0x00000000FFFF0000)>>16),
+				.c_out = (short)((out_configuration & 0x0000FFFF00000000)>>32),
 #endif
 			};		
-			configurations[index] = current;
 			insert_configuration(current,index);	
+#if CFG_ANICR_ONE
+			current.a_in = _table_sp_states[current.a_in]._spi;
+			current.a_out = _table_sp_states[current.a_out]._spi;
+#elif CFG_ANICR_TWO
+			current.a_in = _table_sp_states[current.a_in]._spi;
+			current.b_in = _table_sp_states[current.b_in]._spi;
+			current.a_out = _table_sp_states[current.a_out]._spi;
+			current.b_out = _table_sp_states[current.b_out]._spi;
+#elif CFG_ANICR_THREE
+			current.a_in = _table_sp_states[current.a_in]._spi;
+			current.b_in = _table_sp_states[current.b_in]._spi;
+			current.c_in = _table_sp_states[current.c_in]._spi;
+			current.a_out = _table_sp_states[current.a_out]._spi;
+			current.b_out = _table_sp_states[current.b_out]._spi;
+			current.c_out = _table_sp_states[current.c_out]._spi;
+#endif
+			configurations[index] = current;
 		}
 	}
 	char file_name[2048];
@@ -245,28 +317,8 @@ void setup_sp_comb_basis_and_hash(int energy_in,
 	free(configurations);
 }
 
-size_t get_index(size_t comb)
-{
-	uint64_t key = comb;
-	size_t hash = (key^(key<<16));
-	while (sp_comb_hash.indices[hash%sp_comb_hash.num_buckets] != (uint64_t)-1 &&
-	       sp_comb_hash.keys[hash%sp_comb_hash.num_buckets] != key)
-	{
-		hash++;
-	}
-	return sp_comb_hash.indices[hash%sp_comb_hash.num_buckets];
-}
-
-#endif
 void initiate_index_file(size_t dim)
 {
-#if CFG_IND_OLD
-	char filename[256];
-	sprintf(filename,"%s_index_list",CFG_ANICR_IDENT);
-	outputfile = fopen(filename,"w");
-	fprintf(outputfile,"dim %ld\n",dim);
-#endif
-#if !CFG_IND_OLD
 
 	sprintf(foldername,"%s_index_lists",CFG_ANICR_IDENT);
 	{ // check if folder exists, and if not create it
@@ -305,8 +357,6 @@ void initiate_index_file(size_t dim)
 		fwrite(&outcomb,sizeof(uint64_t),1,confFile);
 	}
 	fclose(confFile);
-	initate_sp_comb_hash();
-#endif
 	fprintf(header,"IndexLists:\n");
 }
 
@@ -316,6 +366,8 @@ void new_output_block(int energy_in, int energy_out,
 		    int depth)
 {
 	char filename[256];
+	setup_sp_comb_basis_and_hash(energy_in,energy_out,
+				     M_in,M_out,depth);
 	if (outputfile_positive != NULL)
 	{
 		fclose(outputfile_positive);
@@ -378,42 +430,29 @@ void write_output(uint64_t i, uint64_t j,
 #endif
 	)
 {
-	//if (i>j)
-	//return;
-#if !CFG_IND_OLD
-	uint64_t combin = (uint64_t)ain&0xFFFF;
-	uint64_t combout = (uint64_t)aout&0xFFFF;
-#if CFG_ANICR_TWO || CFG_ANICR_THREE
-	combin |= ((uint64_t)bin&0xFFFF)<<16;
-	combout|= ((uint64_t)bout&0xFFFF)<<16;
-#endif
-#if CFG_ANICR_THREE
-	combin |= ((uint64_t)cin&0xFFFF)<<32;
-	combout|= ((uint64_t)cout&0xFFFF)<<32;
-#endif
-	size_t i_in = get_index(combin);
-	if (i_in == (uint64_t)-1)
+	configuration_t current_configuration =
 	{
-		fprintf(stderr,"Couldn't find combination (combin) in hash table\n");
-		fprintf(stderr,"combin = %lx\n",combin);
-		fprintf(stderr,"%ld %ld\n",i,j);
-		exit(1);
-	}
-	size_t i_out = get_index(combout);
-	if (i_out == (uint64_t)-1)
-	{
-		fprintf(stderr,"Couldn't find combination (combout) in hash table\n");
-		fprintf(stderr,"combout = %lx\n",combout);
-		exit(1);
-	}
-	// To square matrix
-	size_t k = i_in*num_sp_comb_ind_tables+i_out;
-
-
+#if CFG_ANICR_ONE
+		.a_in = ain,
+		.a_out = aout
+#elif CFG_ANICR_TWO
+		.a_in = ain,
+		.b_in = bin,
+		.a_out = aout,
+		.b_out = bout
+#elif CFG_ANICR_THREE
+		.a_in = ain,
+		.b_in = bin,
+		.c_in = cin,
+		.a_out = aout,
+		.b_out = bout,
+		.c_out = cout
+#endif
+	};
+	size_t k = get_configuration_index(current_configuration);
 	if (sgn>0)
 	{
 		outputfile_positive_num_writes++;
-		//printf("This happen\n");
 	}else{
 		outputfile_negative_num_writes++;
 	}
@@ -425,23 +464,8 @@ void write_output(uint64_t i, uint64_t j,
 	fprintf(outputfile,"%ld %ld %ld, %d %d %d %d\n",
 		i,j,k,ain,bin,aout,bout);
 #elif CFG_ANICR_THREE
-	fprintf(outputfile,"%ld %ld %ld, %d %d %d %d\n",
-		i,j,k,ain,bin,aout,bout);
-#endif
-	//fprintf(outputfile,"%ld %ld %ld\n",
-	//	i,j,k);
-#endif
-#if CFG_IND_OLD
-#if CFG_ANICR_ONE
-	fprintf(outputfile,"%ld %ld %d %d %d\n",
-		i,j,sgn,aout,ain);
-#elif CFG_ANICR_TWO
-	fprintf(outputfile,"%ld %ld %d %d %d %d %d\n",
-		i,j,sgn,aout,bout,ain,bin);
-#elif CFG_ANICR_THREE
-	fprintf(outputfile,"%ld %ld %d %d %d %d %d %d %d\n",
-		i,j,sgn,aout,bout,cout,ain,bin,cin);
-#endif
+	fprintf(outputfile,"%ld %ld %ld, %d %d %d %d %d %d\n",
+		i,j,k,ain,bin,cin,aout,bout,cout);
 #endif
 }
 
@@ -453,13 +477,9 @@ void write_marker(char* str)
 
 void close_file()
 {
-#if !CFG_IND_OLD
 	fclose(outputfile_positive);
 	fclose(outputfile_negative);
 	fclose(header);
-#else
-	fclose(outputfile);
-#endif
 }
 
 
