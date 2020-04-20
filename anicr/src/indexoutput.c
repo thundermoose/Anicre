@@ -96,6 +96,8 @@ size_t find_block_start(int energy)
 size_t determine_block_length(size_t block_start,
 			      int energy)
 {
+	if (block_start == no_index)
+		return 0;
 	for (size_t i = block_start; i<num_sp_comb_ind_tables; i++)
 	{
 		uint64_t comb = sp_comb_ind_tables[i];
@@ -216,28 +218,13 @@ void setup_sp_comb_basis_and_hash(int energy_in,
 				  int M_out,
 				  int depth_in)
 {
-	printf("setup_sp_comb_basis_and_hash(%d %d %d %d %d):",
+	printf("setup_sp_comb_basis_and_hash(%d %d %d %d %d):\n",
 	       energy_in,energy_out,M_in,M_out,depth_in);
-	int swaped = 0;
-	if (energy_in > energy_out)
-	{
-		int tmp = energy_in;
-		energy_in = energy_out;
-		energy_out = tmp;
-		tmp = M_in;
-		M_in = M_out;
-		M_out = tmp;
-		swaped = 1;
-	}
 	int difference_energy = energy_out-energy_in;
        	int depth_out = difference_energy+depth_in;	
+	printf("(difference_energy = %d, depth_in = %d, depth_out = %d\n",
+	       difference_energy, depth_in, depth_out);
 	int difference_M = M_out-M_in;
-	if (swaped)
-	{
-		int tmp = depth_in;
-		depth_in = depth_out;
-		depth_out = tmp;
-	}
 	size_t in_block_start = find_block_start(depth_in);
 	printf("depth_in = %d\n",depth_in);
 	size_t out_block_start = find_block_start(depth_out);
@@ -247,17 +234,19 @@ void setup_sp_comb_basis_and_hash(int energy_in,
 		printf("setup_sp_comb_basis_and_hash(%d %d %d %d %d):"
 		       " No such block\n",
 		       energy_in,energy_out,M_in,M_out,depth_in);
-		__builtin_trap();
 	}
 	size_t in_block_length = determine_block_length(in_block_start,
 						       	depth_in);
 	size_t out_block_length = determine_block_length(out_block_start,
 							 depth_out);
 	size_t num_configurations = in_block_length*out_block_length;
+	reset_sp_comb_hash(num_configurations);
+	if (num_configurations == 0)
+		return;
 	configuration_t *configurations =
 	       	(configuration_t*)malloc(num_configurations*
 					 sizeof(configuration_t));
-	reset_sp_comb_hash(num_configurations);
+
 	printf("in_block_start = %lu\n",
 	      in_block_start); 
 	printf("out_block_start = %lu\n",
@@ -380,9 +369,12 @@ void initiate_index_file(size_t dim)
 #if CFG_ANICR_ONE
 		outcomb = (uint64_t)(_table_sp_states[comb&0xFFFF]._spi);
 #elif CFG_ANICR_TWO
-		outcomb = (uint64_t)(_table_sp_states[comb&0xFFFF]._spi)|((uint64_t)(_table_sp_states[(comb>>16)&0xFFFF]._spi)<<16);
+		outcomb = (uint64_t)(_table_sp_states[comb&0xFFFF]._spi)|
+			((uint64_t)(_table_sp_states[(comb>>16)&0xFFFF]._spi)<<16);
 #elif CFG_ANICR_THREE
-		outcomb = (uint64_t)(_table_sp_states[comb&0xFFFF]._spi)|((uint64_t)(_table_sp_states[(comb>>16)&0xFFFF]._spi)<<16)|((uint64_t)(_table_sp_states[(comb>>32)&0xFFFF]._spi)<<32);
+		outcomb = (uint64_t)(_table_sp_states[comb&0xFFFF]._spi)|
+			((uint64_t)(_table_sp_states[(comb>>16)&0xFFFF]._spi)<<16)|
+			((uint64_t)(_table_sp_states[(comb>>32)&0xFFFF]._spi)<<32);
 #endif
 		fwrite(&outcomb,sizeof(uint64_t),1,confFile);
 	}
@@ -414,7 +406,14 @@ void new_output_block(int energy_in, int energy_out,
 	outputfile_negative_num_writes = 0;
 	sprintf(outputfile_positive_filename,
 		"%s/index_list_E_in%d_E_out%d_M_in%d_M_out%d_dE%d_dM%d_depth%d_pos",
-		foldername,energy_in,energy_out,M_in,M_out,difference_energy,difference_M,depth);
+		foldername,
+		energy_in,
+		energy_out,
+		M_in,
+		M_out,
+		difference_energy,
+		difference_M,
+		depth);
 	outputfile_positive = fopen(outputfile_positive_filename,"w");
 	if (outputfile_positive == NULL)
 	{
@@ -425,7 +424,14 @@ void new_output_block(int energy_in, int energy_out,
 	}
 	sprintf(outputfile_negative_filename,
 		"%s/index_list_E_in%d_E_out%d_M_in%d_M_out%d_dE%d_dM%d_depth%d_neg",
-		foldername,energy_in,energy_out,M_in,M_out,difference_energy,difference_M,depth);
+		foldername,
+		energy_in,
+		energy_out,
+		M_in,
+		M_out,
+		difference_energy,
+		difference_M,
+		depth);
 	outputfile_negative = fopen(outputfile_negative_filename,"w");
 	if (outputfile_negative == NULL)
 	{
