@@ -81,30 +81,25 @@ int combination_M(uint64_t comb)
 	return comb_M;
 }
 
-size_t find_block_start(int energy,int M)
+size_t find_block_start(int energy)
 {
-	printf("energy = %d\n",energy);
-	printf("M = %d\n",M);
 	for (size_t i = 0; i<num_sp_comb_ind_tables; i++)
 	{
 		uint64_t comb = sp_comb_ind_tables[i];
 		printf("comb.E = %d\n",combination_energy(comb));
-		printf("comb.M = %d\n",combination_M(comb));
-		if (energy == combination_energy(comb) &&
-		    M == combination_M(comb))
+		if (energy == combination_energy(comb))
 			return i;
 	}
 	return no_index;
 }
 
 size_t determine_block_length(size_t block_start,
-			      int energy,int M)
+			      int energy)
 {
 	for (size_t i = block_start; i<num_sp_comb_ind_tables; i++)
 	{
 		uint64_t comb = sp_comb_ind_tables[i];
-		if (energy != combination_energy(comb) ||
-		    M != combination_M(comb))
+		if (energy != combination_energy(comb))
 			return i-block_start+1;
 	}
 	return num_sp_comb_ind_tables-block_start;
@@ -221,14 +216,43 @@ void setup_sp_comb_basis_and_hash(int energy_in,
 				  int M_out,
 				  int depth_in)
 {
-	int difference_energy = energy_in-energy_out;
+	printf("setup_sp_comb_basis_and_hash(%d %d %d %d %d):",
+	       energy_in,energy_out,M_in,M_out,depth_in);
+	int swaped = 0;
+	if (energy_in > energy_out)
+	{
+		int tmp = energy_in;
+		energy_in = energy_out;
+		energy_out = tmp;
+		tmp = M_in;
+		M_in = M_out;
+		M_out = tmp;
+		swaped = 1;
+	}
+	int difference_energy = energy_out-energy_in;
        	int depth_out = difference_energy+depth_in;	
-	size_t in_block_start = find_block_start(depth_in,M_in);
-	size_t out_block_start = find_block_start(depth_out,M_out);
+	int difference_M = M_out-M_in;
+	if (swaped)
+	{
+		int tmp = depth_in;
+		depth_in = depth_out;
+		depth_out = tmp;
+	}
+	size_t in_block_start = find_block_start(depth_in);
+	printf("depth_in = %d\n",depth_in);
+	size_t out_block_start = find_block_start(depth_out);
+	printf("depth_out = %d\n",depth_out);
+	if (in_block_start == no_index || out_block_start == no_index)
+	{
+		printf("setup_sp_comb_basis_and_hash(%d %d %d %d %d):"
+		       " No such block\n",
+		       energy_in,energy_out,M_in,M_out,depth_in);
+		__builtin_trap();
+	}
 	size_t in_block_length = determine_block_length(in_block_start,
-							depth_in,M_in);
+						       	depth_in);
 	size_t out_block_length = determine_block_length(out_block_start,
-							 depth_out,M_out);
+							 depth_out);
 	size_t num_configurations = in_block_length*out_block_length;
 	configuration_t *configurations =
 	       	(configuration_t*)malloc(num_configurations*
@@ -242,16 +266,21 @@ void setup_sp_comb_basis_and_hash(int energy_in,
 	      in_block_length); 
 	printf("out_block_length = %lu\n",
 	      out_block_length); 
+	size_t block_index = 0;
 	for (size_t i = 0; i<in_block_length; i++)
 	{
 		uint64_t in_configuration =
 		       	sp_comb_ind_tables[i+in_block_start];
+		int M_ket = combination_M(in_configuration);
 		printf("in_configuration = 0x%016lX\n",
 		       in_configuration);
 		for (size_t j = 0; j<out_block_length; j++)
 		{
 			uint64_t out_configuration =
 				sp_comb_ind_tables[j+out_block_start];
+			int M_bra = combination_M(out_configuration);
+			if (M_bra != M_ket+difference_M)
+				continue;
 			printf("out_configuration = 0x%016lX\n",
 			       out_configuration);
 			size_t index = i*out_block_length+j;
@@ -274,7 +303,7 @@ void setup_sp_comb_basis_and_hash(int energy_in,
 				.c_out = (short)((out_configuration & 0x0000FFFF00000000)>>32),
 #endif
 			};		
-			insert_configuration(current,index);	
+			insert_configuration(current,block_index);	
 #if CFG_ANICR_ONE
 			current.a_in = _table_sp_states[current.a_in]._spi;
 			current.a_out = _table_sp_states[current.a_out]._spi;
@@ -291,7 +320,8 @@ void setup_sp_comb_basis_and_hash(int energy_in,
 			current.b_out = _table_sp_states[current.b_out]._spi;
 			current.c_out = _table_sp_states[current.c_out]._spi;
 #endif
-			configurations[index] = current;
+			configurations[block_index] = current;
+			block_index++;
 		}
 	}
 	char file_name[2048];
@@ -306,8 +336,8 @@ void setup_sp_comb_basis_and_hash(int energy_in,
 	}
 	if (fwrite(configurations,
 		   sizeof(configuration_t),
-		   num_configurations,
-		   configuration_file)<num_configurations)
+		   block_index,
+		   configuration_file)<block_index)
 	{
 		fprintf(stderr,"Could not write configurations to %s\n",
 			file_name);
