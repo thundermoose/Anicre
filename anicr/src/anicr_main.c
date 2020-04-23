@@ -868,7 +868,9 @@ int main(int argc, char *argv[])
 
 #if CFG_CONN_TABLES || CFG_IND_TABLES
 #if CFG_IND_TABLES
-   initiate_index_file(num_mp);
+   size_t max_num_blocks = CFG_MAX_SUM_E*_num_mp_cut_E_M;
+   initiate_index_file(num_mp,
+		       max_num_blocks);
    {
      // Lists all cuts
      size_t cut_i;
@@ -1002,7 +1004,7 @@ int main(int argc, char *argv[])
 
   printf ("Found mb state in hashtable %"PRIu64" of %"PRIu64" lookups.\n", _found, _lookups);
 #if CFG_IND_TABLES
-  close_file();
+  finalilze_index_files();
 #endif 
 #endif
   

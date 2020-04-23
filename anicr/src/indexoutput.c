@@ -30,24 +30,24 @@ typedef struct
 
 typedef struct _sp_comb_hash_
 {
+	int difference_energy;
+	int difference_M;
+	int depth;
 	configuration_t* keys;
 	size_t* indices;
 	size_t num_buckets;
 } sp_comb_hash_t;
 
-sp_comb_hash_t sp_comb_hash;
+sp_comb_hash_t *current_sp_comb_hash = NULL;
 
-typedef struct _block_
+typedef struct
 {
-	int E_in;
-	int E_out;
-	int M_in;
-	int M_out;
-	int depth;
-	uint64_t usage_status;
-} block_information_t;
+	sp_comb_hash_t **buckets;
+	size_t num_buckets;
+} block_hash_t;
 
-block_information_t current_block_info;
+block_hash_t block_hash = {NULL};
+
 char foldername[256];
 
 #define PARTICLE1 (comb&0x000000000000FFFF)
@@ -122,29 +122,6 @@ size_t determine_block_length(size_t block_start,
 	return num_sp_comb_ind_tables-block_start;
 }
 
-void reset_sp_comb_hash(size_t num_configurations)
-{
-	if (2*num_configurations > sp_comb_hash.num_buckets)
-	{
-		sp_comb_hash.num_buckets = 2*num_configurations;
-		if (sp_comb_hash.keys != NULL)
-			free(sp_comb_hash.keys);
-		if (sp_comb_hash.indices != NULL)
-			free(sp_comb_hash.indices);
-		sp_comb_hash.keys =
-		       	(configuration_t*)malloc(sp_comb_hash.num_buckets*
-						 sizeof(configuration_t*));
-		sp_comb_hash.indices =
-			(size_t*)malloc(sp_comb_hash.num_buckets*
-					sizeof(size_t));
-	}
-	memset(sp_comb_hash.keys,
-	       0,
-	       sizeof(configuration_t)*sp_comb_hash.num_buckets);
-	for (size_t i = 0; i<sp_comb_hash.num_buckets; i++)
-		sp_comb_hash.indices[i] = no_index;
-}
-
 uint64_t configuration_hash_value(configuration_t configuration)
 {
 	uint64_t h = (uint64_t)(configuration.a_in) ^
@@ -200,42 +177,41 @@ int compare_configurations(configuration_t configuration_a,
 #endif
 }
 
-size_t find_bucket(configuration_t configuration)
+size_t find_bucket(const sp_comb_hash_t *sp_comb_hash,
+		   configuration_t configuration)
 {
 	uint64_t hash = configuration_hash_value(configuration);
-	size_t bucket_index = hash % sp_comb_hash.num_buckets;
-	while (sp_comb_hash.indices[bucket_index] != no_index &&
-	       compare_configurations(sp_comb_hash.keys[bucket_index],
+	size_t bucket_index = hash % sp_comb_hash->num_buckets;
+	while (sp_comb_hash->indices[bucket_index] != no_index &&
+	       compare_configurations(sp_comb_hash->keys[bucket_index],
 				      configuration) != 0)
 	{
 		hash++;
-		bucket_index = hash % sp_comb_hash.num_buckets;
+		bucket_index = hash % sp_comb_hash->num_buckets;
 	}
 	return bucket_index;
 }
 
-void insert_configuration(configuration_t configuration,
+void insert_configuration(sp_comb_hash_t *sp_comb_hash,
+			  configuration_t configuration,
 			  size_t index)
 {
-	size_t bucket_index = find_bucket(configuration);
-	sp_comb_hash.keys[bucket_index] = configuration;
-	sp_comb_hash.indices[bucket_index] = index;
+	size_t bucket_index = find_bucket(sp_comb_hash, configuration);
+	sp_comb_hash->keys[bucket_index] = configuration;
+	sp_comb_hash->indices[bucket_index] = index;
 }
 
-size_t get_configuration_index(configuration_t configuration)
+size_t get_configuration_index(sp_comb_hash_t *sp_comb_hash,
+			       configuration_t configuration)
 {
-	return sp_comb_hash.indices[find_bucket(configuration)];	
+	return sp_comb_hash->indices[find_bucket(sp_comb_hash,configuration)];	
 }
 
-void setup_sp_comb_basis_and_hash(int energy_in,
-				  int energy_out,
-				  int M_in,
-				  int M_out,
-				  int depth_in)
+sp_comb_hash_t *setup_sp_comb_basis_and_hash(int difference_energy,
+					     int difference_M,
+					     int depth_in)
 {
-	int difference_energy = energy_out-energy_in;
        	int depth_out = difference_energy+depth_in;	
-	int difference_M = M_out-M_in;
 	size_t in_block_start = find_block_start(depth_in);
 	size_t out_block_start = find_block_start(depth_out);
 	size_t in_block_length = determine_block_length(in_block_start,
@@ -243,13 +219,25 @@ void setup_sp_comb_basis_and_hash(int energy_in,
 	size_t out_block_length = determine_block_length(out_block_start,
 							 depth_out);
 	size_t num_configurations = in_block_length*out_block_length;
-	reset_sp_comb_hash(num_configurations);
 	if (num_configurations == 0)
-		return;
+		return NULL;
 	configuration_t *configurations =
-	       	(configuration_t*)malloc(num_configurations*
+	       	(configuration_t*)
+		malloc(num_configurations*sizeof(configuration_t));
+	sp_comb_hash_t *sp_comb_hash =
+	       	(sp_comb_hash_t*)malloc(sizeof(sp_comb_hash_t));
+	sp_comb_hash->difference_energy = difference_energy;
+	sp_comb_hash->difference_M = difference_M;
+	sp_comb_hash->depth = depth_in;
+	sp_comb_hash->num_buckets = num_configurations;
+	sp_comb_hash->keys =
+	       	(configuration_t*)calloc(sp_comb_hash->num_buckets,
 					 sizeof(configuration_t));
-
+	sp_comb_hash->indices =
+	       	(size_t*)malloc(sp_comb_hash->num_buckets*
+				sizeof(size_t));
+	for (size_t i = 0; i<sp_comb_hash->num_buckets; i++)
+		sp_comb_hash->indices[i] = no_index;
 	size_t block_index = 0;
 	for (size_t i = 0; i<in_block_length; i++)
 	{
@@ -283,7 +271,7 @@ void setup_sp_comb_basis_and_hash(int energy_in,
 				.c_out = (short)((out_configuration & 0x0000FFFF00000000)>>32),
 #endif
 			};		
-			insert_configuration(current,block_index);	
+			insert_configuration(sp_comb_hash,current,block_index);	
 #if CFG_ANICR_ONE
 			current.a_in = _table_sp_states[current.a_in]._spi;
 			current.a_out = _table_sp_states[current.a_out]._spi;
@@ -305,8 +293,8 @@ void setup_sp_comb_basis_and_hash(int energy_in,
 		}
 	}
 	char file_name[2048];
-	sprintf(file_name,"%s/conn_E_in_%d_M_in_%d_E_out_%d_M_out_%d_depth_%d",
-		foldername,energy_in,M_in,energy_out,M_out,depth_in);
+	sprintf(file_name,"%s/conn_dE_%d_dM_%d_depth_%d",
+		foldername,difference_energy,difference_M,depth_in);
 	FILE *configuration_file = fopen(file_name,"w");
 	if (configuration_file == NULL)
 	{
@@ -325,15 +313,11 @@ void setup_sp_comb_basis_and_hash(int energy_in,
 	}
 	fclose(configuration_file);
 	free(configurations);
-	current_block_info.E_in = energy_in;
-	current_block_info.E_out = energy_out;
-	current_block_info.M_in  = M_in;
-	current_block_info.M_out = M_out;
-	current_block_info.depth = depth_in;
-	current_block_info.usage_status = 0;
+	return sp_comb_hash;
 }
 
-void initiate_index_file(size_t dim)
+void initiate_index_file(size_t dim,
+			 size_t max_num_blocks)
 {
 
 	sprintf(foldername,"%s_index_lists",CFG_ANICR_IDENT);
@@ -377,6 +361,63 @@ void initiate_index_file(size_t dim)
 	}
 	fclose(confFile);
 	fprintf(header,"IndexLists:\n");
+	block_hash.num_buckets = 4*max_num_blocks;
+	block_hash.buckets = (sp_comb_hash_t**)calloc(block_hash.num_buckets,
+						      sizeof(sp_comb_hash_t*));
+}
+
+uint64_t compute_block_hash(int difference_energy,
+			    int difference_M,
+			    int depth)
+{
+	uint64_t h1 = (uint64_t)(difference_energy) |
+		((uint64_t)(difference_M)<<31);
+	uint64_t h2 = (uint64_t)(depth) |
+		((uint64_t)(difference_energy)<<37);
+	uint64_t h3 = (uint64_t)(difference_M) |
+		((uint64_t)(depth)<<29);
+	const uint64_t magic_number = 0xFEDCBA9876543210;
+	return h1 ^ h2 ^ h3 ^ magic_number;
+}
+
+size_t find_block(int difference_energy,
+		  int difference_M,
+		  int depth)
+{
+	uint64_t hash = compute_block_hash(difference_energy,
+					   difference_M,
+					   depth);
+	size_t block_index = hash % block_hash.num_buckets;
+	while (block_hash.buckets[block_index] != NULL &&
+	       (block_hash.buckets[block_index]->difference_energy !=
+	       difference_energy ||
+	       block_hash.buckets[block_index]->difference_M != difference_M ||
+	       block_hash.buckets[block_index]->depth != depth))
+	{
+		hash++;
+		block_index = hash % block_hash.num_buckets;
+	}
+	return block_index;
+}
+
+void update_current_sp_comb_hash(int difference_energy,
+				 int difference_M,
+				 int depth)
+{
+	if (current_sp_comb_hash != NULL &&
+	    current_sp_comb_hash->difference_energy == difference_energy &&
+	    current_sp_comb_hash->difference_M == difference_M &&
+	    current_sp_comb_hash->depth == depth)
+		return;
+	size_t bucket_index = find_block(difference_energy,
+					 difference_M,
+					 depth);
+	if (block_hash.buckets[bucket_index] == NULL)
+		block_hash.buckets[bucket_index] =
+		       	setup_sp_comb_basis_and_hash(difference_energy,
+						     difference_M,
+						     depth);
+	current_sp_comb_hash = block_hash.buckets[bucket_index];
 }
 
 void new_output_block(int energy_in, int energy_out,
@@ -384,9 +425,10 @@ void new_output_block(int energy_in, int energy_out,
 		    int difference_energy,int difference_M,
 		    int depth)
 {
+	update_current_sp_comb_hash(difference_energy,
+				    difference_M,
+				    depth);
 	char filename[256];
-	setup_sp_comb_basis_and_hash(energy_in,energy_out,
-				     M_in,M_out,depth);
 	if (outputfile_positive != NULL)
 	{
 		fclose(outputfile_positive);
@@ -482,7 +524,8 @@ void write_output(uint64_t i, uint64_t j,
 		.c_out = cout
 #endif
 	};
-	size_t k = get_configuration_index(current_configuration);
+	size_t k = get_configuration_index(current_sp_comb_hash,
+					   current_configuration);
 	if (sgn>0)
 	{
 		outputfile_positive_num_writes++;
@@ -500,33 +543,6 @@ void write_output(uint64_t i, uint64_t j,
 	fprintf(outputfile,"%ld %ld %ld, %d %d %d %d %d %d\n",
 		i,j,k,ain,bin,cin,aout,bout,cout);
 #endif
-	if (current_block_info.usage_status == 0)
-	{
-		if (non_empty_block_record == NULL)
-		{
-			char file_name[2048];
-			sprintf(file_name,"%s/non_empty_block_record",
-				foldername);
-			non_empty_block_record = fopen(file_name,"w");
-			if (non_empty_block_record == NULL)
-			{
-				fprintf(stderr,"Could not open file \"%s\". %s\n",
-					file_name,
-					strerror(errno));
-				exit(EXIT_FAILURE);
-			}
-			fprintf(non_empty_block_record,
-				"E_in,\tEout,\tM_in,\tMout,\tdepth\n");
-		}
-		fprintf(non_empty_block_record,
-			"%4d,\t%4d,\t%4d,\t%4d,\t%4d\n",
-			current_block_info.E_in,
-			current_block_info.E_out,
-			current_block_info.M_in,
-			current_block_info.M_out,
-			current_block_info.depth);
-		current_block_info.usage_status = 1;
-	}
 }
 
 void write_marker(char* str)
@@ -537,12 +553,30 @@ void write_marker(char* str)
 
 void close_file()
 {
-	if (non_empty_block_record)
-		free(non_empty_block_record);
 	fclose(outputfile_positive);
 	fclose(outputfile_negative);
 	fclose(header);
 }
 
+void free_sp_comb_hash(sp_comb_hash_t *sp_comb_hash)
+{
+	free(sp_comb_hash->keys);
+	free(sp_comb_hash->indices);
+	free(sp_comb_hash);
+}
+
+void free_block_table()
+{
+	for (size_t i = 0; i<block_hash.num_buckets; i++)
+		if (block_hash.buckets[i] != NULL)
+			free_sp_comb_hash(block_hash.buckets[i]);
+	free(block_hash.buckets);
+}
+
+void finalilze_index_files()
+{
+	close_file();
+	free_block_table();
+}
 
 #endif

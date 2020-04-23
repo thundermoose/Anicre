@@ -6,7 +6,8 @@
 #if CFG_IND_TABLES
 uint64_t* sp_comb_ind_tables;
 size_t num_sp_comb_ind_tables;
-void initiate_index_file(size_t dim);
+void initiate_index_file(size_t dim,
+			 size_t max_num_blocks);
 
 void new_output_block(int energy_in, int energy_out,
 		int M_in, int M_out,
@@ -37,7 +38,7 @@ void write_output(uint64_t i, uint64_t j,
 #endif
 );
 //void write_marker(char* str);
-void close_file();
+void finalilze_index_files();
 #endif
 
 #endif
