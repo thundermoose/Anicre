@@ -28,14 +28,16 @@ typedef struct
 #endif
 } configuration_t;
 
-struct _sp_comb_hash_
+typedef struct _sp_comb_hash_
 {
 	configuration_t* keys;
 	size_t* indices;
 	size_t num_buckets;
-} sp_comb_hash;
+} sp_comb_hash_t;
 
-struct _block_
+sp_comb_hash_t sp_comb_hash;
+
+typedef struct _block_
 {
 	int E_in;
 	int E_out;
@@ -43,7 +45,8 @@ struct _block_
 	int M_out;
 	int depth;
 	uint64_t usage_status;
-} current_block_info;
+} block_information_t
+block_information_t current_block_info;
 char foldername[256];
 
 #define PARTICLE1 (comb&0x000000000000FFFF)
