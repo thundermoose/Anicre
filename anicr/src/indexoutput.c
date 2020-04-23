@@ -45,7 +45,8 @@ typedef struct _block_
 	int M_out;
 	int depth;
 	uint64_t usage_status;
-} block_information_t
+} block_information_t;
+
 block_information_t current_block_info;
 char foldername[256];
 
