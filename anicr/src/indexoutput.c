@@ -7,13 +7,14 @@
 #include <unistd.h>
 #if CFG_IND_TABLES
 const size_t no_index = (size_t)-1;
-FILE* header;
+FILE* header = NULL;
 int outputfile_positive_num_writes = 0;
 char outputfile_positive_filename[256];
 FILE* outputfile_positive = NULL;
 int outputfile_negative_num_writes = 0;
 char outputfile_negative_filename[256];
 FILE* outputfile_negative = NULL;
+FILE* non_empty_block_record = NULL;
 //uint64_t* sp_in_out_comb;
 //size_t num_in_out_comb;
 typedef struct
@@ -33,6 +34,16 @@ struct _sp_comb_hash_
 	size_t* indices;
 	size_t num_buckets;
 } sp_comb_hash;
+
+struct _block_
+{
+	int E_in;
+	int E_out;
+	int M_in;
+	int M_out;
+	int depth;
+	uint64_t usage_status;
+} current_block_info;
 char foldername[256];
 
 #define PARTICLE1 (comb&0x000000000000FFFF)
@@ -218,23 +229,11 @@ void setup_sp_comb_basis_and_hash(int energy_in,
 				  int M_out,
 				  int depth_in)
 {
-	printf("setup_sp_comb_basis_and_hash(%d %d %d %d %d):\n",
-	       energy_in,energy_out,M_in,M_out,depth_in);
 	int difference_energy = energy_out-energy_in;
        	int depth_out = difference_energy+depth_in;	
-	printf("(difference_energy = %d, depth_in = %d, depth_out = %d\n",
-	       difference_energy, depth_in, depth_out);
 	int difference_M = M_out-M_in;
 	size_t in_block_start = find_block_start(depth_in);
-	printf("depth_in = %d\n",depth_in);
 	size_t out_block_start = find_block_start(depth_out);
-	printf("depth_out = %d\n",depth_out);
-	if (in_block_start == no_index || out_block_start == no_index)
-	{
-		printf("setup_sp_comb_basis_and_hash(%d %d %d %d %d):"
-		       " No such block\n",
-		       energy_in,energy_out,M_in,M_out,depth_in);
-	}
 	size_t in_block_length = determine_block_length(in_block_start,
 						       	depth_in);
 	size_t out_block_length = determine_block_length(out_block_start,
@@ -247,22 +246,12 @@ void setup_sp_comb_basis_and_hash(int energy_in,
 	       	(configuration_t*)malloc(num_configurations*
 					 sizeof(configuration_t));
 
-	printf("in_block_start = %lu\n",
-	      in_block_start); 
-	printf("out_block_start = %lu\n",
-	      out_block_start); 
-	printf("in_block_length = %lu\n",
-	      in_block_length); 
-	printf("out_block_length = %lu\n",
-	      out_block_length); 
 	size_t block_index = 0;
 	for (size_t i = 0; i<in_block_length; i++)
 	{
 		uint64_t in_configuration =
 		       	sp_comb_ind_tables[i+in_block_start];
 		int M_ket = combination_M(in_configuration);
-		printf("in_configuration = 0x%016lX\n",
-		       in_configuration);
 		for (size_t j = 0; j<out_block_length; j++)
 		{
 			uint64_t out_configuration =
@@ -270,8 +259,6 @@ void setup_sp_comb_basis_and_hash(int energy_in,
 			int M_bra = combination_M(out_configuration);
 			if (M_bra != M_ket+difference_M)
 				continue;
-			printf("out_configuration = 0x%016lX\n",
-			       out_configuration);
 			size_t index = i*out_block_length+j;
 			configuration_t current = 
 			{
@@ -334,6 +321,12 @@ void setup_sp_comb_basis_and_hash(int energy_in,
 	}
 	fclose(configuration_file);
 	free(configurations);
+	current_block_info.E_in = energy_in;
+	current_block_info.E_out = energy_out;
+	current_block_info.M_in  = M_in;
+	current_block_info.M_out = M_out;
+	current_block_info.depth = depth_in;
+	current_block_info.usage_status = 0;
 }
 
 void initiate_index_file(size_t dim)
@@ -503,6 +496,33 @@ void write_output(uint64_t i, uint64_t j,
 	fprintf(outputfile,"%ld %ld %ld, %d %d %d %d %d %d\n",
 		i,j,k,ain,bin,cin,aout,bout,cout);
 #endif
+	if (current_block_info.usage_status == 0)
+	{
+		if (non_empty_block_record == NULL)
+		{
+			char file_name[2048];
+			sprintf(file_name,"%s/non_empty_block_record",
+				foldername);
+			non_empty_block_record = fopen(file_name,"w");
+			if (non_empty_block_record == NULL)
+			{
+				fprintf(stderr,"Could not open file \"%s\". %s\n",
+					file_name,
+					strerror(errno));
+				exit(EXIT_FAILURE);
+			}
+			fprintf(non_empty_block_record,
+				"E_in,\tEout,\tM_in,\tMout,\tdepth\n");
+		}
+		fprintf(non_empty_block_record,
+			"%4d,\t%4d,\t%4d,\t%4d,\t%4d\n",
+			current_block_info.E_in,
+			current_block_info.E_out,
+			current_block_info.M_in,
+			current_block_info.M_out,
+			current_block_info.depth);
+		current_block_info.usage_status = 1;
+	}
 }
 
 void write_marker(char* str)
@@ -513,6 +533,8 @@ void write_marker(char* str)
 
 void close_file()
 {
+	if (non_empty_block_record)
+		free(non_empty_block_record);
 	fclose(outputfile_positive);
 	fclose(outputfile_negative);
 	fclose(header);
