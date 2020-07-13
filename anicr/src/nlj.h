@@ -12,14 +12,14 @@ double norm(int na,int la,int ja,int nb,int lb,int jb,int J,int T);
 
 void*  readDumpfile(char *filename, size_t *num_nlj_items);
 
-nlj_hash_item *_nlj_items_nn;
-size_t     _num_nlj_items_nn;
-nlj_hash_item *_nlj_items_pp;
-size_t     _num_nlj_items_pp;
-nlj_hash_item *_nlj_items_np;
-size_t     _num_nlj_items_np;
-nlj_hash_item *_nlj_items_pn;
-size_t     _num_nlj_items_pn;
+extern nlj_hash_item *_nlj_items_nn;
+extern size_t     _num_nlj_items_nn;
+extern nlj_hash_item *_nlj_items_pp;
+extern size_t     _num_nlj_items_pp;
+extern nlj_hash_item *_nlj_items_np;
+extern size_t     _num_nlj_items_np;
+extern nlj_hash_item *_nlj_items_pn;
+extern size_t     _num_nlj_items_pn;
 
 typedef struct {
   double _nn;

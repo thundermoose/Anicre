@@ -29,7 +29,7 @@ extern hash_mp_wf *_hashed_mp;
 extern uint64_t _lookups;
 extern uint64_t _found;
 #if CFG_IND_TABLES
-size_t indin;
+extern size_t indin;
 #endif
 
 inline uint64_t packed_hash_key(uint64_t *key)

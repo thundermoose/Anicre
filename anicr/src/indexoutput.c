@@ -15,6 +15,9 @@ int outputfile_negative_num_writes = 0;
 char outputfile_negative_filename[256];
 FILE* outputfile_negative = NULL;
 FILE* non_empty_block_record = NULL;
+uint64_t* sp_comb_ind_tables;
+size_t num_sp_comb_ind_tables;
+size_t indin;
 //uint64_t* sp_in_out_comb;
 //size_t num_in_out_comb;
 typedef struct
@@ -197,6 +200,8 @@ void insert_configuration(sp_comb_hash_t *sp_comb_hash,
 			  size_t index)
 {
 	size_t bucket_index = find_bucket(sp_comb_hash, configuration);
+	if (bucket_index == no_index)
+		return;
 	sp_comb_hash->keys[bucket_index] = configuration;
 	sp_comb_hash->indices[bucket_index] = index;
 }
@@ -204,7 +209,10 @@ void insert_configuration(sp_comb_hash_t *sp_comb_hash,
 size_t get_configuration_index(sp_comb_hash_t *sp_comb_hash,
 			       configuration_t configuration)
 {
-	return sp_comb_hash->indices[find_bucket(sp_comb_hash,configuration)];	
+	size_t bucket_index = find_bucket(sp_comb_hash,configuration);
+	if (bucket_index == no_index)
+		return no_index;
+	return sp_comb_hash->indices[bucket_index];	
 }
 
 sp_comb_hash_t *setup_sp_comb_basis_and_hash(int difference_energy,
@@ -239,17 +247,32 @@ sp_comb_hash_t *setup_sp_comb_basis_and_hash(int difference_energy,
 	for (size_t i = 0; i<sp_comb_hash->num_buckets; i++)
 		sp_comb_hash->indices[i] = no_index;
 	size_t block_index = 0;
+	printf("Configurations in (%d %d %d)\n",
+	       difference_energy,
+	       difference_M,
+	       depth_in);
+	int is_diagonal = difference_energy == 0 && difference_M == 0;
 	for (size_t i = 0; i<in_block_length; i++)
 	{
 		uint64_t in_configuration =
 		       	sp_comb_ind_tables[i+in_block_start];
 		int M_ket = combination_M(in_configuration);
+		int E1 = combination_energy(in_configuration);
+		if (E1 != depth_in)
+			continue;
+		//for (size_t j = (is_diagonal ? i : 0);
 		for (size_t j = 0; j<out_block_length; j++)
 		{
 			uint64_t out_configuration =
 				sp_comb_ind_tables[j+out_block_start];
 			int M_bra = combination_M(out_configuration);
-			if (M_bra != M_ket+difference_M)
+			int E2 = combination_energy(out_configuration);
+			if (E2 != depth_out)
+				continue;
+			printf("M_ket = %d, M_bra = %d\n",
+			       M_ket,M_bra);
+			
+			if (M_bra - M_ket != difference_M)
 				continue;
 			size_t index = i*out_block_length+j;
 			configuration_t current = 
@@ -271,6 +294,30 @@ sp_comb_hash_t *setup_sp_comb_basis_and_hash(int difference_energy,
 				.c_out = (short)((out_configuration & 0x0000FFFF00000000)>>32),
 #endif
 			};		
+			printf("configuration: "
+#if CFG_ANICR_ONE
+			       "%d %d\n",
+			       current.a_in,
+			       current.a_out);
+#elif CFG_ANICR_TWO
+			"%d %d %d %d\n",
+			       current.a_in,
+			       current.b_in,
+			       current.a_out,
+			       current.b_out);
+#elif CFG_ANICR_THREE
+			"%d %d %d %d %d %d\n",
+			       current.a_in,
+			       current.b_in,
+			       current.c_in,
+			       current.a_out,
+			       current.b_out,
+			       current.c_out);
+#endif
+			printf("E1 = %d, E2 = %d\n",
+			       E1,E2);
+			printf("block_index = %lu\n",
+			       block_index);
 			insert_configuration(sp_comb_hash,current,block_index);	
 #if CFG_ANICR_ONE
 			current.a_in = _table_sp_states[current.a_in]._spi;
@@ -288,6 +335,26 @@ sp_comb_hash_t *setup_sp_comb_basis_and_hash(int difference_energy,
 			current.b_out = _table_sp_states[current.b_out]._spi;
 			current.c_out = _table_sp_states[current.c_out]._spi;
 #endif
+			printf("configuration: "
+#if CFG_ANICR_ONE
+			       "%d %d\n",
+			       current.a_in,
+			       current.a_out);
+#elif CFG_ANICR_TWO
+			"%d %d %d %d\n",
+			       current.a_in,
+			       current.b_in,
+			       current.a_out,
+			       current.b_out);
+#elif CFG_ANICR_THREE
+			"%d %d %d %d %d %d\n",
+			       current.a_in,
+			       current.b_in,
+			       current.c_in,
+			       current.a_out,
+			       current.b_out,
+			       current.c_out);
+#endif
 			configurations[block_index] = current;
 			block_index++;
 		}
@@ -295,6 +362,8 @@ sp_comb_hash_t *setup_sp_comb_basis_and_hash(int difference_energy,
 	char file_name[2048];
 	sprintf(file_name,"%s/conn_dE_%d_dM_%d_depth_%d",
 		foldername,difference_energy,difference_M,depth_in);
+	printf("Writing %lu number of connections to %s\n",
+	       block_index,file_name);
 	FILE *configuration_file = fopen(file_name,"w");
 	if (configuration_file == NULL)
 	{
@@ -341,6 +410,18 @@ void initiate_index_file(size_t dim,
 #endif
 	sprintf(filename,"%s/conf_list",foldername);
 	fprintf(header,"Configurations: %s\n",filename);
+	printf("Single particle basis:\n");
+	for (size_t i = 0; i<CFG_NUM_SP_STATES0+CFG_NUM_SP_STATES1; i++)
+	{
+		printf("(%lu): %d %d %d %d %d %d\n",
+		       i,
+		       _table_sp_states[i]._n,
+		       _table_sp_states[i]._l,
+		       _table_sp_states[i]._j,
+		       _table_sp_states[i]._m,
+		       _table_sp_states[i]._nlj,
+		       _table_sp_states[i]._spi);
+	}
 	FILE* confFile = fopen(filename,"w");
 	size_t i;
 	for (i = 0; i<num_sp_comb_ind_tables; i++)
@@ -361,7 +442,8 @@ void initiate_index_file(size_t dim,
 	}
 	fclose(confFile);
 	fprintf(header,"IndexLists:\n");
-	block_hash.num_buckets = 4*max_num_blocks;
+	printf("max_num_blocks = %lu\n",max_num_blocks);
+	block_hash.num_buckets = 4*(max_num_blocks+1);
 	block_hash.buckets = (sp_comb_hash_t**)calloc(block_hash.num_buckets,
 						      sizeof(sp_comb_hash_t*));
 }
@@ -384,6 +466,8 @@ size_t find_block(int difference_energy,
 		  int difference_M,
 		  int depth)
 {
+	if (block_hash.num_buckets == 0)
+		return no_index;
 	uint64_t hash = compute_block_hash(difference_energy,
 					   difference_M,
 					   depth);
@@ -481,6 +565,33 @@ void new_output_block(int energy_in, int energy_out,
 	}
 }
 
+void flip_configuration(configuration_t *configuration)
+{
+	int tmp;
+#if CFG_ANICR_ONE
+	tmp = configuration->a_in;
+	configuration->a_in = configuration->a_out;
+	configuration->a_out = tmp;
+#elif CFG_ANICR_TWO
+	tmp = configuration->a_in;
+	configuration->a_in = configuration->a_out;
+	configuration->a_out = tmp;
+	tmp = configuration->b_in;
+	configuration->b_in = configuration->b_out;
+	configuration->b_out = tmp;
+#elif CFG_ANICR_THREE
+	tmp = configuration->a_in;
+	configuration->a_in = configuration->a_out;
+	configuration->a_out = tmp;
+	tmp = configuration->b_in;
+	configuration->b_in = configuration->b_out;
+	configuration->b_out = tmp;
+	tmp = configuration->c_in;
+	configuration->c_in = configuration->c_out;
+	configuration->c_out = tmp;
+#endif
+}
+
 void write_output(uint64_t i, uint64_t j,
 		 int sgn,
 #if CFG_ANICR_ONE
@@ -511,12 +622,12 @@ void write_output(uint64_t i, uint64_t j,
 		.a_in = ain,
 		.a_out = aout
 #elif CFG_ANICR_TWO
-		.a_in = ain,
+			.a_in = ain,
 		.b_in = bin,
 		.a_out = aout,
 		.b_out = bout
 #elif CFG_ANICR_THREE
-		.a_in = ain,
+			.a_in = ain,
 		.b_in = bin,
 		.c_in = cin,
 		.a_out = aout,
@@ -524,8 +635,52 @@ void write_output(uint64_t i, uint64_t j,
 		.c_out = cout
 #endif
 	};
+	printf("current_configuration: "
+#if CFG_ANICR_ONE
+	       "%d %d\n",
+	       current_configuration.a_in,
+	       current_configuration.a_out);
+#elif CFG_ANICR_TWO
+	"%d %d %d %d\n",
+		current_configuration.a_in,
+		current_configuration.b_in,
+		current_configuration.a_out,
+		current_configuration.b_out);
+#elif CFG_ANICR_THREE
+	"%d %d %d %d %d %d\n",
+		current_configuration.a_in,
+		current_configuration.b_in,
+		current_configuration.c_in,
+		current_configuration.a_out,
+		current_configuration.b_out,
+		current_configuration.c_out);
+#endif
 	size_t k = get_configuration_index(current_sp_comb_hash,
 					   current_configuration);
+	if (k == no_index)
+	{
+		printf("This does indeed happen\n");
+		flip_configuration(&current_configuration);
+		k = get_configuration_index(current_sp_comb_hash,
+					    current_configuration);
+	}
+	printf("k = %lu\n",k);
+	if (k == no_index)
+	{
+		printf("Can't find configuration "
+#if CFG_ANICR_ONE
+		       "%d %d\n",
+		       ain,aout);
+#elif CFG_ANICR_TWO
+		"%d %d %d %d\n",
+			ain,bin,aout,bout);
+#elif CFG_ANICR_THREE
+		"%d %d %d %d %d %d\n",
+			ain,bin,cin,
+			aout,bout,cout);
+#endif
+		exit(EXIT_FAILURE);
+	}
 	if (sgn>0)
 	{
 		outputfile_positive_num_writes++;
@@ -534,14 +689,20 @@ void write_output(uint64_t i, uint64_t j,
 	}
 	FILE* outputfile = sgn>0 ? outputfile_positive : outputfile_negative;
 #if CFG_ANICR_ONE
-	fprintf(outputfile,"%ld %ld %ld, %d %d\n",
-		i,j,k,ain,aout);
+	fprintf(outputfile,"%ld %ld %ld, %d %d phase: %d\n",
+		i,j,k,ain,aout,sgn);
+	printf("%ld %ld %ld, %d %d phase: %d\n",
+	       i,j,k,ain,aout,sgn);
 #elif CFG_ANICR_TWO
-	fprintf(outputfile,"%ld %ld %ld, %d %d %d %d\n",
-		i,j,k,ain,bin,aout,bout);
+	fprintf(outputfile,"%ld %ld %ld, %d %d %d %d phase: %d\n",
+		i,j,k,ain,bin,aout,bout,sgn);
+	printf("%ld %ld %ld, %d %d %d %d phase: %d\n",
+	       i,j,k,ain,bin,aout,bout,sgn);
 #elif CFG_ANICR_THREE
-	fprintf(outputfile,"%ld %ld %ld, %d %d %d %d %d %d\n",
-		i,j,k,ain,bin,cin,aout,bout,cout);
+	fprintf(outputfile,"%ld %ld %ld, %d %d %d %d %d %d phase: %d\n",
+		i,j,k,ain,bin,cin,aout,bout,cout,sgn);
+	printf("%ld %ld %ld, %d %d %d %d %d %d phase: %d\n",
+	       i,j,k,ain,bin,cin,aout,bout,cout,sgn);
 #endif
 }
 

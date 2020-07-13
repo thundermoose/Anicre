@@ -452,11 +452,11 @@ int main(int argc, char *argv[])
 	  currentid->_tot_size = 0;
 	  _cblockids.erase(currentid);
 
-	  if (_cblockids.size() % 500 == 0)
-	    {
-	      printf ("%zd  \r", _cblockids.size());
-	      fflush(stdout);
-	    }
+	  //if (_cblockids.size() % 500 == 0)
+	  //  {
+	  //    printf ("%zd  \r", _cblockids.size());
+	  //    fflush(stdout);
+	  //  }
 	}
     }
 

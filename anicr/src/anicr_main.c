@@ -171,7 +171,6 @@ size_t sort_mp_by_E_M(size_t num_mp)
 
       mp += CFG_PACK_WORDS;     
     }  
-  
   qsort (_mp, num_mp, sizeof (uint64_t) * CFG_PACK_WORDS,
 	 compare_packed_mp_state_E_M);
 #if CFG_CONN_TABLES
@@ -883,7 +882,16 @@ int main(int argc, char *argv[])
      fprintf(cut_out_list,
 	     "E\tM\tstart\tend\n");
      size_t mps_i = 0;
-     for (cut_i = 0; cut_i< _num_mp_cut_E_M; cut_i++)
+     size_t num_states  = 0;
+     for (cut_i = 0; cut_i < _num_mp_cut_E_M; cut_i++)
+     {
+	num_states += 
+		CFG_NUM_SP_STATES0*
+		(_mp_cut_E_M[cut_i+1]._start-_mp_cut_E_M[cut_i]._start);
+     }
+     int *states = (int*)malloc(num_states*sizeof(int));
+     size_t state_i = 0;
+     for (cut_i = 0; cut_i < _num_mp_cut_E_M; cut_i++)
        {
 	 fprintf(cut_out_list,
 		 "%d\t%d\t%d\t%d\n",
@@ -900,6 +908,7 @@ int main(int argc, char *argv[])
 	   fprintf(basis_list,"(%ld): ",mps_i++);
 	   for (j = 0; j<CFG_NUM_SP_STATES0; j++){
 	     fprintf(basis_list,"%d ",_table_sp_states[list[j]]._spi);
+	     states[state_i++] = _table_sp_states[list[j]]._spi;
 	   }
 	   fprintf(basis_list,"\n");
 	   mp+=CFG_PACK_WORDS;
@@ -907,6 +916,22 @@ int main(int argc, char *argv[])
        }
      fclose(cut_out_list);
      fclose(basis_list);
+     sprintf(filename,"%s_basis_out_list.bin",CFG_ANICR_IDENT);
+     FILE* basis_list_bin = fopen(filename,"w");
+     if (basis_list_bin == NULL)
+     {
+	fprintf("Could not open file %s\n",filename);
+     }
+     else if (fwrite(states,
+		     num_states,
+		     sizeof(int),
+		     basis_list_bin) < num_states)
+     {
+	fprintf("Could not write basis to %s\n",filename);
+     }
+     if (basis_list_bin)
+       fclose(basis_list_bin);
+     free(states);
    }
 #endif
    

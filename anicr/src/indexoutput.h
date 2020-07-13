@@ -4,8 +4,8 @@
 #include <stdlib.h>
 #include "anicr_config.h"
 #if CFG_IND_TABLES
-uint64_t* sp_comb_ind_tables;
-size_t num_sp_comb_ind_tables;
+extern uint64_t* sp_comb_ind_tables;
+extern size_t num_sp_comb_ind_tables;
 void initiate_index_file(size_t dim,
 			 size_t max_num_blocks);
 

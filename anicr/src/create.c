@@ -289,7 +289,7 @@ void annihilate_states(int *in_sp_other,
 
   /* Print the state. */
 
-#if DEBUG_ANICR
+//#if DEBUG_ANICR
   printf ("==============================================================================\n");
   for (i = 0; i < CFG_NUM_SP_STATES0; i++)
     printf (" %4d", in_sp[i]);
@@ -299,7 +299,7 @@ void annihilate_states(int *in_sp_other,
     printf (" %4d", in_sp_other[i]);
 #endif
   printf ("\n");
-#endif
+//#endif
 
   /* Delete 1 state. */
 
@@ -1615,16 +1615,7 @@ void created_state(int *in_sp_other,
   //uint64_t ind;
   //printf("phase_i = %ld\n",phase_i);
   int sign = 1-2*(phase_i&1);
-  write_output(indin,indout,sign,
-#if CFG_ANICR_TWO || CFG_ANICR_THREE
-		sp_crea1
-		,sp_crea2
-#else
-		sp_crea
-#endif
-#if CFG_ANICR_THREE
-		,sp_crea3
-#endif
+  write_output(indin,indout,sign
 #if CFG_ANICR_TWO || CFG_ANICR_THREE
 		,sp_anni1
 		,sp_anni2
@@ -1633,6 +1624,15 @@ void created_state(int *in_sp_other,
 #endif
 #if CFG_ANICR_THREE
 		,sp_anni3
+#endif
+#if CFG_ANICR_TWO || CFG_ANICR_THREE
+		,sp_crea1
+		,sp_crea2
+#else
+		,sp_crea
+#endif
+#if CFG_ANICR_THREE
+		,sp_crea3
 #endif
 	      );
   

@@ -17,6 +17,15 @@
 #include <gsl/gsl_errno.h>
 #include "gsl/gsl_sf_coupling.h"
 
+nlj_hash_item *_nlj_items_nn;
+size_t     _num_nlj_items_nn;
+nlj_hash_item *_nlj_items_pp;
+size_t     _num_nlj_items_pp;
+nlj_hash_item *_nlj_items_np;
+size_t     _num_nlj_items_np;
+nlj_hash_item *_nlj_items_pn;
+size_t     _num_nlj_items_pn;
+
 int compare_nlj_item(const void *p1, const void *p2)
 {
   uint64_t key1 = ((const nlj_hash_item *) p1)->_key;
