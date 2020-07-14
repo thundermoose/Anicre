@@ -8,12 +8,8 @@
 #if CFG_IND_TABLES
 const size_t no_index = (size_t)-1;
 FILE* header = NULL;
-int outputfile_positive_num_writes = 0;
-char outputfile_positive_filename[256];
-FILE* outputfile_positive = NULL;
-int outputfile_negative_num_writes = 0;
-char outputfile_negative_filename[256];
-FILE* outputfile_negative = NULL;
+char outputfile_filename[256];
+FILE* outputfile= NULL;
 FILE* non_empty_block_record = NULL;
 uint64_t* sp_comb_ind_tables;
 size_t num_sp_comb_ind_tables;
@@ -513,22 +509,8 @@ void new_output_block(int energy_in, int energy_out,
 				    difference_M,
 				    depth);
 	char filename[256];
-	if (outputfile_positive != NULL)
-	{
-		fclose(outputfile_positive);
-		outputfile_positive = NULL;
-		fprintf(header,"%s\n",outputfile_positive_filename);
-	}
-	outputfile_positive_num_writes = 0;
-	if (outputfile_negative != NULL)
-	{
-		fclose(outputfile_negative);
-		outputfile_negative = NULL;
-		fprintf(header,"%s\n",outputfile_negative_filename);
-	}
-	outputfile_negative_num_writes = 0;
-	sprintf(outputfile_positive_filename,
-		"%s/index_list_E_in%d_E_out%d_M_in%d_M_out%d_dE%d_dM%d_depth%d_pos",
+	sprintf(outputfile_filename,
+		"%s/index_list_E_in%d_E_out%d_M_in%d_M_out%d_dE%d_dM%d_depth%d",
 		foldername,
 		energy_in,
 		energy_out,
@@ -537,28 +519,10 @@ void new_output_block(int energy_in, int energy_out,
 		difference_energy,
 		difference_M,
 		depth);
-	outputfile_positive = fopen(outputfile_positive_filename,"w");
-	if (outputfile_positive == NULL)
+	outputfile = fopen(outputfile_filename,"w");
+	if (outputfile == NULL)
 	{
-		fprintf(stderr,"file_name: %s\n",outputfile_positive_filename);
-		fprintf(stderr,"Something is terrible wrong, %s\n",
-			strerror(errno));
-		exit(1);
-	}
-	sprintf(outputfile_negative_filename,
-		"%s/index_list_E_in%d_E_out%d_M_in%d_M_out%d_dE%d_dM%d_depth%d_neg",
-		foldername,
-		energy_in,
-		energy_out,
-		M_in,
-		M_out,
-		difference_energy,
-		difference_M,
-		depth);
-	outputfile_negative = fopen(outputfile_negative_filename,"w");
-	if (outputfile_negative == NULL)
-	{
-		fprintf(stderr,"file_name: %s\n",outputfile_negative_filename);
+		fprintf(stderr,"file_name: %s\n",outputfile_filename);
 		fprintf(stderr,"Something is terrible wrong, %s\n",
 			strerror(errno));
 		exit(1);
@@ -681,26 +645,19 @@ void write_output(uint64_t i, uint64_t j,
 #endif
 		exit(EXIT_FAILURE);
 	}
-	if (sgn>0)
-	{
-		outputfile_positive_num_writes++;
-	}else{
-		outputfile_negative_num_writes++;
-	}
-	FILE* outputfile = sgn>0 ? outputfile_positive : outputfile_negative;
 #if CFG_ANICR_ONE
-	fprintf(outputfile,"%ld %ld %ld, %d %d phase: %d\n",
-		i,j,k,ain,aout,sgn);
+	fprintf(outputfile,"%ld %ld %c%ld\n",
+		i,j,sgn> 0 ? '+' : '-',k);
 	printf("%ld %ld %ld, %d %d phase: %d\n",
 	       i,j,k,ain,aout,sgn);
 #elif CFG_ANICR_TWO
-	fprintf(outputfile,"%ld %ld %ld, %d %d %d %d phase: %d\n",
-		i,j,k,ain,bin,aout,bout,sgn);
+	fprintf(outputfile,"%ld %ld %c%ld\n",
+		i,j,sgn>0 ? '+' : '-',k);
 	printf("%ld %ld %ld, %d %d %d %d phase: %d\n",
 	       i,j,k,ain,bin,aout,bout,sgn);
 #elif CFG_ANICR_THREE
-	fprintf(outputfile,"%ld %ld %ld, %d %d %d %d %d %d phase: %d\n",
-		i,j,k,ain,bin,cin,aout,bout,cout,sgn);
+	fprintf(outputfile,"%ld %ld %c%ld\n",
+		i,j,sgn > 0 ? '+' : '-',k);
 	printf("%ld %ld %ld, %d %d %d %d %d %d phase: %d\n",
 	       i,j,k,ain,bin,cin,aout,bout,cout,sgn);
 #endif
@@ -708,14 +665,12 @@ void write_output(uint64_t i, uint64_t j,
 
 void write_marker(char* str)
 {
-	fprintf(outputfile_positive,"%s\n",str);
-	fprintf(outputfile_negative,"%s\n",str);
+	fprintf(outputfile,"%s\n",str);
 }
 
 void close_file()
 {
-	fclose(outputfile_positive);
-	fclose(outputfile_negative);
+	fclose(outputfile);
 	fclose(header);
 }
 
