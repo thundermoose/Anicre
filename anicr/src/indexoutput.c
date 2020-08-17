@@ -14,8 +14,7 @@ FILE* non_empty_block_record = NULL;
 uint64_t* sp_comb_ind_tables;
 size_t num_sp_comb_ind_tables;
 size_t indin;
-//uint64_t* sp_in_out_comb;
-//size_t num_in_out_comb;
+
 typedef struct
 {
 #if CFG_ANICR_ONE	
