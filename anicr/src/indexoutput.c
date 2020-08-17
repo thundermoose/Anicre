@@ -39,6 +39,17 @@ typedef struct
 #endif
 } configuration_t;
 
+typedef struct
+{
+#if CFG_ANICR_ONE	
+	short a;
+#elif CFG_ANICR_TWO
+	short a,b;
+#elif CFG_ANICR_THREE
+	short a,b,c;
+#endif
+} basis_state_t;
+
 typedef struct _sp_comb_hash_
 {
 	int difference_energy;
@@ -461,6 +472,58 @@ void initiate_index_file(size_t dim,
 	block_hash.num_buckets = 4*(max_num_blocks+1);
 	block_hash.buckets = (sp_comb_hash_t**)calloc(block_hash.num_buckets,
 						      sizeof(sp_comb_hash_t*));
+}
+
+void setup_basis_file(int energy)
+{		
+	size_t block_start = find_block_start(energy);
+	size_t block_length = determine_block_length(block_start,energy);
+	basis_state_t *basis_states =
+	       	(basis_state_t*)malloc(block_length*sizeof(basis_state_t));
+	size_t basis_i;
+	for (basis_i = 0; basis_i < block_length; basis_i++)
+	{
+		uint64_t state = sp_comb_ind_tables[basis_i + block_start];
+		basis_state_t current_state =
+		{
+			.a = (short)(state  & first_particle_mask),
+#if CFG_ANICR_TWO || CFG_ANICR_THREE
+			.b = (short)((state & second_particle_mask)>>16),
+#endif
+#if CFG_ANICR_THREE
+			.c = (short)((state & third_particle_mask)>>32)
+#endif
+		};
+		current_state.a = _table_sp_states[current_state.a]._spi;
+#if CFG_ANICR_TWO || CFG_ANICR_THREE
+		current_state.b = _table_sp_states[current_state.b]._spi;
+#endif
+#if CFG_ANICR_THREE
+		current_state.c = _table_sp_states[current_state.c]._spi;
+#endif
+		basis_states[basis_i] = current_state;
+	}
+	char filename[32];
+	sprintf(filename,"%s/basis_energy_%d",foldername,energy);
+	FILE *basis_file = fopen(filename,"w");
+	if (basis_file == NULL)
+	{
+		fprintf(stderr,"Could not create \"%s\". %s\n",
+			filename,strerror(errno));
+		exit(EXIT_FAILURE);
+	}
+	if (fwrite(basis_states,
+		   sizeof(basis_state_t),
+		   block_length,
+		   basis_file)!=block_length)
+	{
+		fprintf(stderr,"Could not write %lu bytes to file \"%s\"\n",
+			sizeof(basis_state_t)*block_length,
+			basis_file);
+		exit(EXIT_FAILURE);
+	}
+	fclose(basis_file);
+	free(basis_states);
 }
 
 uint64_t compute_block_hash(int difference_energy,
