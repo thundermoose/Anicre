@@ -264,7 +264,7 @@ sp_comb_hash_t *setup_sp_comb_basis_and_hash(int difference_energy,
 		int M_ket = combination_M(in_configuration);
 		int E1 = combination_energy(in_configuration);
 		if (E1 != depth_in)
-			continue;
+			break;
 		//for (size_t j = (is_diagonal ? i : 0);
 		for (size_t j = 0; j<out_block_length; j++)
 		{
@@ -273,7 +273,7 @@ sp_comb_hash_t *setup_sp_comb_basis_and_hash(int difference_energy,
 			int M_bra = combination_M(out_configuration);
 			int E2 = combination_energy(out_configuration);
 			if (E2 != depth_out)
-				continue;
+				break;
 			printf("M_ket = %d, M_bra = %d\n",
 			       M_ket,M_bra);
 			
