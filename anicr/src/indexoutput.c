@@ -265,7 +265,6 @@ sp_comb_hash_t *setup_sp_comb_basis_and_hash(int difference_energy,
 		int E1 = combination_energy(in_configuration);
 		if (E1 != depth_in)
 			break;
-		//for (size_t j = (is_diagonal ? i : 0);
 		for (size_t j = 0; j<out_block_length; j++)
 		{
 			uint64_t out_configuration =
@@ -331,10 +330,9 @@ sp_comb_hash_t *setup_sp_comb_basis_and_hash(int difference_energy,
 			       current.b_out,
 			       current.c_out);
 #endif
-			printf("E1 = %d, E2 = %d\n",
-			       E1,E2);
-			printf("block_index = %lu\n",
-			       block_index);
+			printf("E1 = %d, E2 = %d\n", E1,E2);
+			printf("block_index = %lu\n", block_index);
+			printf("matrix_index = %lu\n", i*out_block_length + j);
 			insert_configuration(sp_comb_hash,current,block_index);	
 #if CFG_ANICR_ONE
 			current.a_in = _table_sp_states[current.a_in]._spi;
