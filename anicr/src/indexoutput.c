@@ -6,7 +6,20 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #if CFG_IND_TABLES
+
+// Macros
+#define PARTICLE1 (comb&first_particle_mask)
+#define PARTICLE2 ((comb&second_particle_mask)>>16)
+#define PARTICLE3 ((comb&third_particle_mask)>>32)
+
+// Constants
 const size_t no_index = (size_t)-1;
+
+const uint64_t first_particle_mask  = 0x000000000000FFFF;
+const uint64_t second_particle_mask = 0x00000000FFFF0000;
+const uint64_t third_particle_mask  = 0x0000FFFF00000000;
+
+// Evil global variables
 FILE* header = NULL;
 char outputfile_filename[256];
 FILE* outputfile= NULL;
@@ -48,9 +61,6 @@ block_hash_t block_hash = {NULL};
 
 char foldername[256];
 
-#define PARTICLE1 (comb&0x000000000000FFFF)
-#define PARTICLE2 ((comb&0x00000000FFFF0000)>>16)
-#define PARTICLE3 ((comb&0x0000FFFF00000000)>>32)
 
 int combination_energy(uint64_t comb)
 {
@@ -273,20 +283,32 @@ sp_comb_hash_t *setup_sp_comb_basis_and_hash(int difference_energy,
 			configuration_t current = 
 			{
 #if CFG_ANICR_ONE
-				.a_in = (short)(in_configuration & 0x000000000000FFFF),
-				.a_out = (short)(out_configuration & 0x000000000000FFFF),
+				.a_in  = (short)(in_configuration   & 
+						 first_particle_mask),
+				.a_out = (short)(out_configuration  & 
+						 first_particle_mask),
 #elif CFG_ANICR_TWO
-				.a_in = (short)(in_configuration & 0x000000000000FFFF),
-				.b_in = (short)((in_configuration & 0x00000000FFFF0000)>>16),
-				.a_out = (short)(out_configuration & 0x000000000000FFFF),
-				.b_out = (short)((out_configuration & 0x00000000FFFF0000)>>16),
+				.a_in  = (short)(in_configuration   & 
+						 first_particle_mask),
+				.a_out = (short)(out_configuration  & 
+						 first_particle_mask),
+				.b_in  = (short)((in_configuration  & 
+						  second_particle_mask)>>16),
+				.b_out = (short)((out_configuration & 
+						  second_particle_mask)>>16),
 #elif CFG_ANICR_THREE
-				.a_in = (short)(in_configuration & 0x000000000000FFFF),
-				.b_in = (short)((in_configuration & 0x00000000FFFF0000)>>16),
-				.c_in = (short)((in_configuration & 0x0000FFFF00000000)>>32),
-				.a_out = (short)(out_configuration & 0x000000000000FFFF),
-				.b_out = (short)((out_configuration & 0x00000000FFFF0000)>>16),
-				.c_out = (short)((out_configuration & 0x0000FFFF00000000)>>32),
+				.a_in  = (short)(in_configuration   & 
+						 first_particle_mask),
+				.a_out = (short)(out_configuration  & 
+						 first_particle_mask),
+				.b_in  = (short)((in_configuration  & 
+						  second_particle_mask)>>16),
+				.b_out = (short)((out_configuration & 
+						  second_particle_mask)>>16),
+				.c_in  = (short)((in_configuration  & 
+						  second_particle_mask)>>32),
+				.c_out = (short)((out_configuration & 
+						  second_particle_mask)>>32),
 #endif
 			};		
 			printf("configuration: "
