@@ -481,6 +481,7 @@ void setup_basis_file(int energy)
 	basis_state_t *basis_states =
 	       	(basis_state_t*)malloc(block_length*sizeof(basis_state_t));
 	size_t basis_i;
+	printf("setup_basis_file(%d):\n",energy);
 	for (basis_i = 0; basis_i < block_length; basis_i++)
 	{
 		uint64_t state = sp_comb_ind_tables[basis_i + block_start];
@@ -502,6 +503,10 @@ void setup_basis_file(int energy)
 		current_state.c = _table_sp_states[current_state.c]._spi;
 #endif
 		basis_states[basis_i] = current_state;
+		printf("(%lu): M = %d\n",
+		       basis_i,
+		       combination_M(state));
+
 	}
 	char filename[32];
 	sprintf(filename,"%s/basis_energy_%d",foldername,energy);
