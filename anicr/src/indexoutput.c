@@ -132,11 +132,11 @@ size_t determine_block_length(size_t block_start,
 {
 	if (block_start == no_index)
 		return 0;
-	for (size_t i = block_start; i<num_sp_comb_ind_tables; i++)
+	for (size_t i = block_start+1; i<num_sp_comb_ind_tables; i++)
 	{
 		uint64_t comb = sp_comb_ind_tables[i];
 		if (energy != combination_energy(comb))
-			return i-block_start+1;
+			return i-block_start;
 	}
 	return num_sp_comb_ind_tables-block_start;
 }
@@ -503,10 +503,10 @@ void setup_basis_file(int energy)
 		current_state.c = _table_sp_states[current_state.c]._spi;
 #endif
 		basis_states[basis_i] = current_state;
-		printf("(%lu): M = %d\n",
+		printf("(%lu): M = %d E = %d\n",
 		       basis_i,
-		       combination_M(state));
-
+		       combination_M(state),
+		       combination_energy(state));
 	}
 	char filename[32];
 	sprintf(filename,"%s/basis_energy_%d",foldername,energy);
