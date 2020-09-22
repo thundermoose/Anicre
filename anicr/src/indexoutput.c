@@ -503,8 +503,23 @@ void setup_basis_file(int energy)
 		current_state.c = _table_sp_states[current_state.c]._spi;
 #endif
 		basis_states[basis_i] = current_state;
-		printf("(%lu): M = %d E = %d\n",
+		printf("(%lu): "
+		       "%d "
+#if CFG_ANICR_TWO || CFG_ANICR_THREE
+		       "%d "
+#endif
+#if CFG_ANICR_THREE
+		       "%d "
+#endif
+		       "M = %d E = %d\n",
 		       basis_i,
+		       current_state.a,
+#if CFG_ANICR_TWO || CFG_ANICR_THREE
+		       current_state.b,
+#endif
+#if CFG_ANICR_THREE
+		       current_state.c,
+#endif
 		       combination_M(state),
 		       combination_energy(state));
 	}
@@ -606,6 +621,8 @@ void new_output_block(int energy_in, int energy_out,
 		difference_energy,
 		difference_M,
 		depth);
+	if (outputfile != NULL)
+		fclose(outputfile);
 	outputfile = fopen(outputfile_filename,"w");
 	if (outputfile == NULL)
 	{
