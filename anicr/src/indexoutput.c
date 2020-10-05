@@ -316,24 +316,27 @@ sp_comb_hash_t *setup_sp_comb_basis_and_hash(int difference_energy,
 				.b_out = (short)((out_configuration & 
 						  second_particle_mask)>>16),
 				.c_in  = (short)((in_configuration  & 
-						  second_particle_mask)>>32),
+						  third_particle_mask)>>32),
 				.c_out = (short)((out_configuration & 
-						  second_particle_mask)>>32),
+						  third_particle_mask)>>32),
 #endif
 			};		
-			printf("configuration: "
+			printf("configuration (%lu): "
 #if CFG_ANICR_ONE
 			       "%d %d\n",
+			       j,
 			       current.a_in,
 			       current.a_out);
 #elif CFG_ANICR_TWO
 			"%d %d %d %d\n",
+				j,
 			       current.a_in,
 			       current.b_in,
 			       current.a_out,
 			       current.b_out);
 #elif CFG_ANICR_THREE
 			"%d %d %d %d %d %d\n",
+				j,
 			       current.a_in,
 			       current.b_in,
 			       current.c_in,
