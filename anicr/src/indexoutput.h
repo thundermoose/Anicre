@@ -9,6 +9,8 @@ extern size_t num_sp_comb_ind_tables;
 void initiate_index_file(size_t dim,
 			 size_t max_num_blocks);
 
+void setup_basis_files();
+
 void setup_basis_file(int energy);
 
 void new_output_block(int energy_in, int energy_out,

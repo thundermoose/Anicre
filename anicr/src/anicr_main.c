@@ -662,17 +662,17 @@ hash_mp_wf *setup_hash_table(uint64_t *mp,
 
 extern double one_coeff[CFG_NUM_SP_STATES][CFG_NUM_SP_STATES];
 
-#if CFG_IND_TABLES
-void setup_basis_files()
-{
-	size_t cut_i;
-	for (cut_i = 0; cut_i < _num_mp_cut_E_M; cut_i++)
-	{
-		mp_cut_E_M *cut = _mp_cut_E_M + cut_i;
-		setup_basis_file(cut->_E);
-	}
-}
-#endif
+//#if CFG_IND_TABLES
+//void setup_basis_files()
+//{
+//	size_t cut_i;
+//	for (cut_i = 0; cut_i < _num_mp_cut_E_M; cut_i++)
+//	{
+//		mp_cut_E_M *cut = _mp_cut_E_M + cut_i;
+//		setup_basis_file(cut->_E);
+//	}
+//}
+//#endif
 
 int main(int argc, char *argv[])
 {

@@ -477,6 +477,20 @@ void initiate_index_file(size_t dim,
 						      sizeof(sp_comb_hash_t*));
 }
 
+int compute_max_sp_comb_energy()
+{
+	uint64_t last_combination =
+		sp_comb_ind_tables[num_sp_comb_ind_tables-1];
+	return combination_energy(last_combination);	
+}
+
+void setup_basis_files()
+{
+	int max_sp_comb_energy = compute_max_sp_comb_energy();
+	for (int energy = 0; energy <= max_sp_comb_energy; energy++)
+		setup_basis_file(energy);
+}
+
 void setup_basis_file(int energy)
 {		
 	size_t block_start = find_block_start(energy);
