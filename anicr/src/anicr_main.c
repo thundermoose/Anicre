@@ -699,12 +699,12 @@ int main(int argc, char *argv[])
 #endif
 
 	size_t mp_sz = sizeof (uint64_t) * (CFG_PACK_WORDS) * num_mp;
-#if !CFG_CONN_TABLES
+#if !CFG_CONN_TABLES && !CFG_IND_TABLES
 	size_t wf_sz = sizeof (double)   * (CFG_WAVEFCNS) * num_mp;
 #endif
 
 	_mp = (uint64_t *) malloc (mp_sz);
-#if !CFG_CONN_TABLES
+#if !CFG_CONN_TABLES && !CFG_IND_TABLES
 	_wf = (double *)   malloc (wf_sz);
 #endif
 
@@ -714,7 +714,7 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
-#if !CFG_CONN_TABLES
+#if !CFG_CONN_TABLES && !CFG_IND_TABLES
 	if (!_wf)
 	{
 		fprintf (stderr, "Memory allocation error (wf, %zd bytes).\n", wf_sz);
@@ -740,7 +740,7 @@ int main(int argc, char *argv[])
 
 	printf ("Read %zd mp states.\n", num_mp);
 
-#if !CFG_CONN_TABLES
+#if !CFG_CONN_TABLES && !CFG_IND_TABLES
 	fd = open ("wavefcn_all_orig.bin", O_RDONLY);
 
 	if (fd == -1)
