@@ -18,6 +18,8 @@ void new_output_block(int energy_in, int energy_out,
 		int difference_E,int difference_M,
 		int depth);
 
+void close_output_block();
+
 void write_output(uint64_t i, uint64_t j,
 		int sgn,
 #if CFG_ANICR_ONE
@@ -42,7 +44,7 @@ void write_output(uint64_t i, uint64_t j,
 #endif
 );
 //void write_marker(char* str);
-void finalilze_index_files();
+void finalize_index_files();
 #endif
 
 #endif

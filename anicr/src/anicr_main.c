@@ -716,6 +716,9 @@ void process_mp_cut(mp_cut_E_M *cut_ini,
 			mp += CFG_PACK_WORDS;
 
 		}
+#if CFG_IND_TABLES
+		close_output_block();
+#endif
 #if CFG_CONN_TABLES
 		printf (TABLE_PREFIX "_" "CONN "
 			"%2d %3d  ->  %2d %3d  : %2d :  "
