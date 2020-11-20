@@ -808,7 +808,7 @@ void write_output(uint64_t i, uint64_t j,
 		exit(EXIT_FAILURE);
 	}
 	index_triple_buffer[num_triples_in_buffer].i = i;
-	index_triple_buffer[num_triples_in_buffer].j = i;
+	index_triple_buffer[num_triples_in_buffer].j = j;
 	index_triple_buffer[num_triples_in_buffer].k = 
 		k | (sgn<0 ? 0x80000000 : 0);
 	num_triples_in_buffer++;
