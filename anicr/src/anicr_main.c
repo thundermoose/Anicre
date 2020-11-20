@@ -1011,6 +1011,10 @@ int main(int argc, char *argv[])
 		free(states);
 	}
 #endif
+#if CFG_CONN_TABLES
+	printf("_num_mp_cut_E_M = %lu\n",
+	       _num_mp_cut_E_M);
+#endif
 
 #if CFG_IND_TABLES
 	setup_basis_files();	
@@ -1023,32 +1027,46 @@ int main(int argc, char *argv[])
 	size_t tot_ini_states = 0;
 
 	uint64_t prev_found = 0;
-
-	for (cut_ini_i = 0; cut_ini_i < _num_mp_cut_E_M; cut_ini_i++)
+	if (argc == 3)
 	{
+		cut_ini_i = atoll(argv[1]);
+		cut_fin_i = atoll(argv[2]);
 		mp_cut_E_M *cut_ini = _mp_cut_E_M + cut_ini_i;
-
-		for (cut_fin_i = 0; cut_fin_i < _num_mp_cut_E_M; cut_fin_i++)
-			//for (cut_fin_i = 0; cut_fin_i <= cut_ini_i; cut_fin_i++)
-		{
-			mp_cut_E_M *cut_fin = _mp_cut_E_M + cut_fin_i;
-
-			size_t mp_states = (cut_ini+1)->_start - cut_ini->_start;
-
-			_hashed_mp = cut_fin->_hashed_mp;
-
-			process_mp_cut(cut_ini,
-				       cut_fin,
-				       mp_states,
-				       &tot_ini_states);
-			fprintf (stderr,
-				 "anicr %zd : %zd / %zd   \r",
-				 cut_ini_i+1, cut_fin_i+1, _num_mp_cut_E_M);
-			fflush (stderr);
-		}
-
+		mp_cut_E_M *cut_fin = _mp_cut_E_M + cut_fin_i;
+		size_t mp_states = (cut_ini+1)->_start - cut_ini->_start;
+		_hashed_mp = cut_fin->_hashed_mp;
+		process_mp_cut(cut_ini,
+			       cut_fin,
+			       mp_states,
+			       &tot_ini_states);
 	}
+	else
+	{
+		for (cut_ini_i = 0; cut_ini_i < _num_mp_cut_E_M; cut_ini_i++)
+		{
+			mp_cut_E_M *cut_ini = _mp_cut_E_M + cut_ini_i;
 
+			for (cut_fin_i = 0; cut_fin_i < _num_mp_cut_E_M; cut_fin_i++)
+				//for (cut_fin_i = 0; cut_fin_i <= cut_ini_i; cut_fin_i++)
+			{
+				mp_cut_E_M *cut_fin = _mp_cut_E_M + cut_fin_i;
+
+				size_t mp_states = (cut_ini+1)->_start - cut_ini->_start;
+
+				_hashed_mp = cut_fin->_hashed_mp;
+
+				process_mp_cut(cut_ini,
+					       cut_fin,
+					       mp_states,
+					       &tot_ini_states);
+				fprintf (stderr,
+					 "anicr %zd : %zd / %zd   \r",
+					 cut_ini_i+1, cut_fin_i+1, _num_mp_cut_E_M);
+				fflush (stderr);
+			}
+
+		}
+	}
 	printf ("Annihilated-created for %zd mp states "
 		"in %zd * %zd E-M combinations.\n",
 		tot_ini_states,
