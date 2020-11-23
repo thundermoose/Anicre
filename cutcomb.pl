@@ -585,7 +585,7 @@ for my $key (sort keys %E_M_E_M_array)
     my $D1   = $6;
 
     print sprintf ("%-4s %3d %3d  %3d %3d  %3d  %10d  ".
-		   "# ARRAY:%6d=%10d\n",
+		   "# ARRAY:%10d=%12d\n",
 		   $type,
 		   $E1, $M1, $E2, $M2, $D1, $E_M_E_M_conn{$key},
 		   $E_M_E_M_array{$key}, $E_M_E_M_conn{$key} * 12);
@@ -671,7 +671,7 @@ foreach my $Vkey (sort keys %V_E_M_E_M_use)
     printf sprintf("%-3s %3d %3d  %3d   ".
 		   "%-3s %3d %3d  %3d   ".
 		   "%8d %8d  %12d  ".
-		   "# ARRAY:%6d=%12d\n",
+		   "# ARRAY:%10d=%12d\n",
 		   $vectp[0],$vectp[1],$vectp[2],$vectp[3],
 		   $vectn[0],$vectn[1],$vectn[2],$vectn[3],
 		   $numVp, $numVn, $sizeV,
@@ -710,7 +710,7 @@ foreach my $Vkey (sort keys %V_E_M_use)
 
     printf sprintf("%-3s %3d %3d  %3d   ".
 		   "%8d  %12d  ".
-		   "# ARRAY:%6d=%12d\n",
+		   "# ARRAY:%10d=%12d\n",
 		   $vectx[0],$vectx[1],$vectx[2],$vectx[3],
 		   $numVx, $sizeV,
 		   $V_E_M_array{$Vkey}, $sizeV * 8);
