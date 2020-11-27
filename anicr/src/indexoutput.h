@@ -7,7 +7,7 @@
 extern uint64_t* sp_comb_ind_tables;
 extern size_t num_sp_comb_ind_tables;
 void initiate_index_file(size_t dim,
-			 size_t max_num_blocks);
+			 size_t max_hash_memory_use);
 
 void setup_basis_files();
 

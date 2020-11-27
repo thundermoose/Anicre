@@ -13,7 +13,7 @@
 #define PARTICLE2 ((comb&second_particle_mask)>>16)
 #define PARTICLE3 ((comb&third_particle_mask)>>32)
 
-#define INDEX_TRIPLE_BUFFER_SIZE 256
+#define INDEX_TRIPLE_BUFFER_SIZE 4096
 
 // Constants
 const size_t no_index = (size_t)-1;
@@ -64,6 +64,7 @@ typedef struct
 {
 	sp_comb_hash_t **buckets;
 	size_t num_buckets;
+	size_t used_size;
 } block_hash_t;
 
 // Evil global variables
@@ -74,6 +75,7 @@ FILE* non_empty_block_record = NULL;
 uint64_t* sp_comb_ind_tables;
 size_t num_sp_comb_ind_tables;
 size_t indin;
+size_t max_used;
 sp_comb_hash_t *current_sp_comb_hash = NULL;
 block_hash_t block_hash = {NULL};
 
@@ -425,7 +427,7 @@ sp_comb_hash_t *setup_sp_comb_basis_and_hash(int difference_energy,
 }
 
 void initiate_index_file(size_t dim,
-			 size_t max_num_blocks)
+			 size_t max_hash_memory_use)
 {
 
 	sprintf(foldername,"%s_index_lists",CFG_ANICR_IDENT);
@@ -482,7 +484,8 @@ void initiate_index_file(size_t dim,
 	fclose(confFile);
 	fprintf(header,"IndexLists:\n");
 	//printf("max_num_blocks = %lu\n",max_num_blocks);
-	block_hash.num_buckets = 4*(max_num_blocks+1);
+	block_hash.num_buckets = 256;
+	max_used = max_hash_memory_use;
 	block_hash.buckets = (sp_comb_hash_t**)calloc(block_hash.num_buckets,
 						      sizeof(sp_comb_hash_t*));
 }
@@ -597,15 +600,6 @@ size_t find_block(int difference_energy,
 					   difference_M,
 					   depth);
 	size_t block_index = hash % block_hash.num_buckets;
-	while (block_hash.buckets[block_index] != NULL &&
-	       (block_hash.buckets[block_index]->difference_energy !=
-	       difference_energy ||
-	       block_hash.buckets[block_index]->difference_M != difference_M ||
-	       block_hash.buckets[block_index]->depth != depth))
-	{
-		hash++;
-		block_index = hash % block_hash.num_buckets;
-	}
 	return block_index;
 }
 
@@ -621,25 +615,47 @@ void update_current_sp_comb_hash(int difference_energy,
 	size_t bucket_index = find_block(difference_energy,
 					 difference_M,
 					 depth);
-	if (block_hash.buckets[bucket_index] == NULL)
+	sp_comb_hash_t *sp_comb_hash = block_hash.buckets[bucket_index];
+	if (sp_comb_hash == NULL ||
+	    (sp_comb_hash->difference_energy != difference_energy ||
+	     sp_comb_hash->difference_M != difference_M ||
+	     sp_comb_hash->depth != depth))
 	{
-		//printf("setup of sp comb hash %lu\n",bucket_index);
-		//struct timespec t_start,t_end;
-		//clock_gettime(CLOCK_REALTIME,&t_start);
-		block_hash.buckets[bucket_index] =
-		       	setup_sp_comb_basis_and_hash(difference_energy,
+
+		size_t used = block_hash.used_size; 
+		if (sp_comb_hash)
+		{
+			used -= sp_comb_hash->num_buckets * 
+				sizeof(configuration_t) * sizeof(size_t);
+			free_sp_comb_hash(sp_comb_hash);
+		}
+		sp_comb_hash =
+			setup_sp_comb_basis_and_hash(difference_energy,
 						     difference_M,
 						     depth);
-		//clock_gettime(CLOCK_REALTIME,&t_end);
-		//double time_s = (t_end.tv_sec-t_start.tv_sec)*1.0 +
-		//	(t_end.tv_nsec-t_start.tv_nsec)*1.0e-9;
-		//printf("setup sp comb basis hash needs %lg s\n",
-		//       time_s);
+		if (sp_comb_hash)
+		{
+			used = used + 
+				sp_comb_hash->num_buckets * 
+				sizeof(configuration_t) * sizeof(size_t);
+			if (used >= max_used)
+			{
+				for (size_t i = 1; i<block_hash.num_buckets; i++)
+				{
+					sp_comb_hash_t *hash_to_free =
+						block_hash.buckets[bucket_index+i];
+					block_hash.buckets[bucket_index+i] = NULL;
+					used-=hash_to_free->num_buckets*
+						sizeof(configuration_t) * sizeof(size_t);
+					free_sp_comb_hash(hash_to_free);
+					if (used < max_used)
+						break;
+				}
+			}	
+		}
+		block_hash.buckets[bucket_index] = sp_comb_hash;
+		block_hash.used_size = used;
 	}
-	//else
-	//{
-	//	printf("sp comb hash %lu already exists\n",bucket_index);
-	//}
 	current_sp_comb_hash = block_hash.buckets[bucket_index];
 }
 
@@ -761,26 +777,6 @@ void write_output(uint64_t i, uint64_t j,
 		.c_out = cout
 #endif
 	};
-//	printf("current_configuration: "
-//#if CFG_ANICR_ONE
-//	       "%d %d\n",
-//	       current_configuration.a_in,
-//	       current_configuration.a_out);
-//#elif CFG_ANICR_TWO
-//	"%d %d %d %d\n",
-//		current_configuration.a_in,
-//		current_configuration.b_in,
-//		current_configuration.a_out,
-//		current_configuration.b_out);
-//#elif CFG_ANICR_THREE
-//	"%d %d %d %d %d %d\n",
-//		current_configuration.a_in,
-//		current_configuration.b_in,
-//		current_configuration.c_in,
-//		current_configuration.a_out,
-//		current_configuration.b_out,
-//		current_configuration.c_out);
-//#endif
 	size_t k = get_configuration_index(current_sp_comb_hash,
 					   current_configuration);
 	if (k == no_index)
@@ -814,24 +810,6 @@ void write_output(uint64_t i, uint64_t j,
 	num_triples_in_buffer++;
 	if (num_triples_in_buffer == INDEX_TRIPLE_BUFFER_SIZE)
 		write_buffer_to_file();
-	/*
-#if CFG_ANICR_ONE
-	fprintf(outputfile,"%ld %ld %c%ld\n",
-		i,j,sgn> 0 ? '+' : '-',k);
-	//printf("%ld %ld %ld, %d %d phase: %d\n",
-	//       i,j,k,ain,aout,sgn);
-#elif CFG_ANICR_TWO
-	fprintf(outputfile,"%ld %ld %c%ld\n",
-		i,j,sgn>0 ? '+' : '-',k);
-	//printf("%ld %ld %ld, %d %d %d %d phase: %d\n",
-	//       i,j,k,ain,bin,aout,bout,sgn);
-#elif CFG_ANICR_THREE
-	fprintf(outputfile,"%ld %ld %c%ld\n",
-		i,j,sgn > 0 ? '+' : '-',k);
-	//printf("%ld %ld %ld, %d %d %d %d %d %d phase: %d\n",
-	//       i,j,k,ain,bin,cin,aout,bout,cout,sgn);
-#endif
-	*/
 }
 
 void write_marker(char* str)

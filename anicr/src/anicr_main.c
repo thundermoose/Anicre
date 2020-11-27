@@ -18,6 +18,8 @@
 #include <string.h>
 #include <assert.h>
 
+#define MEM_GB(a) (size_t)(a)<<30
+
 void packed_to_int_list(int *list, const uint64_t *packed);
 void int_list2_to_packed(uint64_t *packed, const int *list0, const int *list1);
 
@@ -944,9 +946,8 @@ int main(int argc, char *argv[])
 
 #if CFG_CONN_TABLES || CFG_IND_TABLES
 #if CFG_IND_TABLES
-	size_t max_num_blocks = CFG_MAX_SUM_E*_num_mp_cut_E_M;
 	initiate_index_file(num_mp,
-			    max_num_blocks);
+			    MEM_GB(80));
 	{
 		// Lists all cuts
 		size_t cut_i;
