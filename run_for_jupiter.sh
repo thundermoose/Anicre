@@ -22,7 +22,7 @@ $MFR_PATH/$compile_directory/nnn_tables_anicr > nnn_table.txt
 $MFR_PATH/cutcomb.pl {p,pp,ppp,n,nn,nnn}_table.txt > comb.txt
 num_proton_mp_states=$(grep -P -o "(?<=_num_mp_cut_E_M = ).*" p_table.txt)
 num_neutron_mp_states=$(grep -P -o "(?<=_num_mp_cut_E_M = ).*" n_table.txt)
-num_cpu_cores=$(grep ^cpu\\scores /proc/cpuinfo | uniq | awk '{print $4}')
+: ${num_cpu_cores:=$(grep ^cpu\\scores /proc/cpuinfo | uniq | awk '{print $4}')}
 echo " "
 echo "$num_proton_mp_states $num_neutron_mp_states"
 launch_p_case () {
