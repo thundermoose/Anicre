@@ -484,7 +484,7 @@ void initiate_index_file(size_t dim,
 	fclose(confFile);
 	fprintf(header,"IndexLists:\n");
 	//printf("max_num_blocks = %lu\n",max_num_blocks);
-	block_hash.num_buckets = 256;
+	block_hash.num_buckets = 1;
 	max_used = max_hash_memory_use;
 	block_hash.buckets = (sp_comb_hash_t**)calloc(block_hash.num_buckets,
 						      sizeof(sp_comb_hash_t*));
