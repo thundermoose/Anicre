@@ -26,26 +26,26 @@ num_neutron_mp_states=$(grep -P -o "(?<=_num_mp_cut_E_M = ).*" n_table.txt)
 echo " "
 echo "$num_proton_mp_states $num_neutron_mp_states"
 launch_p_case () {
-	$MFR_PATH/$compile_directory/p_inds_anicr $1 $2 > p_ind_$1-$2.txt
+	/usr/bin/time -v $MFR_PATH/$compile_directory/p_inds_anicr $1 $2 > p_ind_$1-$2.txt 2>1
 }
 
 launch_n_case () {
-	$MFR_PATH/$compile_directory/n_inds_anicr $1 $2 > n_ind_$1-$2.txt
+	/usr/bin/time -v $MFR_PATH/$compile_directory/n_inds_anicr $1 $2 > n_ind_$1-$2.txt 2>1
 }
 
 launch_pp_case () {
-	$MFR_PATH/$compile_directory/pp_inds_anicr $1 $2 > pp_ind_$1-$2.txt
+	/usr/bin/time -v $MFR_PATH/$compile_directory/pp_inds_anicr $1 $2 > pp_ind_$1-$2.txt 2>1
 }
 
 launch_nn_case () {
-	$MFR_PATH/$compile_directory/nn_inds_anicr $1 $2 > nn_ind_$1-$2.txt
+	/usr/bin/time -v $MFR_PATH/$compile_directory/nn_inds_anicr $1 $2 > nn_ind_$1-$2.txt 2>1
 }
 launch_ppp_case () {
-	$MFR_PATH/$compile_directory/ppp_inds_anicr $1 $2 > ppp_ind_$1-$2.txt
+	/usr/bin/time -v $MFR_PATH/$compile_directory/ppp_inds_anicr $1 $2 > ppp_ind_$1-$2.txt 2>1
 }
 
 launch_nnn_case () {
-	$MFR_PATH/$compile_directory/nnn_inds_anicr $1 $2 > nnn_ind_$1-$2.txt
+	/usr/bin/tim -v $MFR_PATH/$compile_directory/nnn_inds_anicr $1 $2 > nnn_ind_$1-$2.txt 2>1
 }
 num_running_threads=0
 for m in $(seq 0 $((num_proton_mp_states - 1)))
