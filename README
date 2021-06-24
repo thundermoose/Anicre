@@ -1,3 +1,14 @@
+========== Anicre  ========== 
+This is Anicre, a program that computes among other things transition densities
+needed for JupiterNCSM.
+
+========== License ==========
+
+This software is published under GPL v 2, and comes without any warranty.
+See LICENSE for more details.
+
+==========  Usage  ==========
+This is a quick note on how to use Anicre
 
 Build mfr:
 
@@ -16,3 +27,14 @@ Execute anicr:
 cd <anicr-build-dir>
 ./anicr
 
+To generate index lists for JupiterNCSM
+run
+./compile_for_jupiter.sh <A><nucleus>_<Nmax>
+./run_for_jupiter.sh <A><nucleus>_<Nmax>
+
+========== Authors ==========
+
+* Daniel Sääf Primary developer			epost: daniel.saaf@gmail.com
+* Christian Forssén Contact and maintainer	epost: christian.forssen@chalmers.se
+* Håkan T. Johansson				epost: f96hajo@chalmers.se
+* Tor Djärv					epost: djarv@chalmers.se
