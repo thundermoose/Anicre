@@ -11,35 +11,26 @@ See LICENSE for more details.
 This is a quick note on how to use Anicre
 
 Build mfr:
----
+
 make
 
+Preprocess an .egv file:
+
+./mfr path-to-file.egv --td-dir=<anicr-build-dir>
+
+Build the specialised anicr executable:
+
+make anicr-<anicr-build-dir>
+
+Execute anicr:
+
+cd <anicr-build-dir>
+./anicr
+
 To generate index lists for JupiterNCSM
----
-1. Prerequisites:
-- pAntoine wave function file exists in
-<egv_dir>/<egv_name>.egv
-
-- all run files will be generated in the scratch dir
-<rundir>/anicr_runs/<egv_name>.jtd
-
-- the mfr executable is in the present working directory
-
-2. Set envvars (here assuming bash):
-export WAVEFUNCTION_PATH=<egv_dir>
-export SCRATCHDIR=<rundir>
-export MFR_PATH=$PWD
-
-3. Build greedyorder:
-g++ --std=c++11 -Wall -W -o greedyorder greedyorder.cc -O3
-
-4. Run:
-./compile_for_jupiter.sh <egv_name>
-./run_for_jupiter.sh <egv_name>
-
-5. Output in:
-<rundir>/anicr_runs/<egv_name>.jtd/
-
+run
+./compile_for_jupiter.sh <A><nucleus>_<Nmax>
+./run_for_jupiter.sh <A><nucleus>_<Nmax>
 
 ========== Authors ==========
 
