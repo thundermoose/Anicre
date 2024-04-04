@@ -553,7 +553,7 @@ void setup_basis_file(int energy)
 //		       combination_M(state),
 //		       combination_energy(state));
 	}
-	char filename[32];
+	char filename[282];
 	sprintf(filename,"%s/basis_energy_%d",foldername,energy);
 	FILE *basis_file = fopen(filename,"w");
 	if (basis_file == NULL)
