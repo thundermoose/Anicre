@@ -569,7 +569,7 @@ void setup_basis_file(int energy)
 	{
 		fprintf(stderr,"Could not write %lu bytes to file \"%s\"\n",
 			sizeof(basis_state_t)*block_length,
-			basis_file);
+			filename);
 		exit(EXIT_FAILURE);
 	}
 	fclose(basis_file);
