@@ -84,6 +84,7 @@ char foldername[256];
 index_triple_t index_triple_buffer[INDEX_TRIPLE_BUFFER_SIZE];
 size_t num_triples_in_buffer = 0;
 
+void free_sp_comb_hash(sp_comb_hash_t *sp_comb_hash);
 
 int combination_energy(uint64_t comb)
 {

@@ -998,14 +998,14 @@ int main(int argc, char *argv[])
 		FILE* basis_list_bin = fopen(filename,"w");
 		if (basis_list_bin == NULL)
 		{
-			fprintf("Could not open file %s\n",filename);
+			fprintf(stderr, "Could not open file %s\n",filename);
 		}
 		else if (fwrite(states,
 				num_states,
 				sizeof(int),
 				basis_list_bin) < num_states)
 		{
-			fprintf("Could not write basis to %s\n",filename);
+			fprintf(stderr, "Could not write basis to %s\n",filename);
 		}
 		if (basis_list_bin)
 			fclose(basis_list_bin);

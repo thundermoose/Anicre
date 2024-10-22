@@ -4,8 +4,8 @@ EGVFILE=$1
 
 #./mfr /net/data1/saaf/trdens-sample/$EGVFILE.egv --td-dir=$EGVFILE.jupiter
 #./mfr /net/data1/saaf/trdens-sample/$EGVFILE.egv --dump=full > $EGVFILE.jupiter/$EGVFILE-basis.jupiter
-./mfr /home/thundermoose/Work/wave_functions/$EGVFILE.egv --td-dir=$EGVFILE.jupiter
-./mfr /home/thundermoose/Work/wave_functions/$EGVFILE.egv --dump=full > $EGVFILE.jupiter/$EGVFILE-basis.jupiter
+./mfr $WAVE_FUNCTION_PATH/$EGVFILE.egv --td-dir=$EGVFILE.jupiter
+./mfr $WAVE_FUNCTION_PATH/$EGVFILE.egv --dump=full > $EGVFILE.jupiter/$EGVFILE-basis.jupiter
 
 for part in "n" "nn" "nnn" "p" "pp" "ppp"
 do

@@ -135,11 +135,11 @@ done
 wait $(jobs -p)
 
 
-for nforce in 1 2 3
-do
-	for blocksz in 1 8 16
-	do
-		time $MFR_PATH/greedyorder $nforce $blocksz < comb.txt >\
-			greedy_${nforce}_${blocksz}.txt 
-	done
-done
+# for nforce in 1 2 3
+# do
+# 	for blocksz in 1 8 16
+# 	do
+# 		time $MFR_PATH/greedyorder $nforce $blocksz < comb.txt >\
+# 			greedy_${nforce}_${blocksz}.txt 
+# 	done
+# done
